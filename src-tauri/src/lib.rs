@@ -398,7 +398,12 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         )
         .separator()
         .item(
-            &MenuItemBuilder::with_id("close-pane", "Close Pane")
+            &MenuItemBuilder::with_id("reload", "Reload")
+                .accelerator("CmdOrCtrl+R")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("close-pane", "Close Tab")
                 .accelerator("CmdOrCtrl+W")
                 .build(app)?,
         )
@@ -413,11 +418,16 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         .paste()
         .item(
             &MenuItemBuilder::with_id("paste-plain", "Paste and Match Style")
-                .accelerator("Shift+CmdOrCtrl+V")
+                .accelerator("Shift+Alt+CmdOrCtrl+V")
                 .build(app)?,
         )
         .select_all()
         .separator()
+        .item(
+            &MenuItemBuilder::with_id("copy-path", "Copy Path")
+                .accelerator("CmdOrCtrl+Alt+C")
+                .build(app)?,
+        )
         .item(
             &MenuItemBuilder::with_id("format", "Format Document")
                 .accelerator("Shift+Alt+F")
@@ -428,45 +438,28 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
     let view_menu = SubmenuBuilder::new(app, "View")
         .item(
             &MenuItemBuilder::with_id("mode-editor", "Editor Only")
-                .accelerator("CmdOrCtrl+1")
+                .accelerator("CmdOrCtrl+Alt+1")
                 .build(app)?,
         )
         .item(
             &MenuItemBuilder::with_id("mode-split", "Editor & Preview")
-                .accelerator("CmdOrCtrl+2")
+                .accelerator("CmdOrCtrl+Alt+2")
                 .build(app)?,
         )
         .item(
             &MenuItemBuilder::with_id("mode-preview", "Preview Only")
-                .accelerator("CmdOrCtrl+3")
+                .accelerator("CmdOrCtrl+Alt+3")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("toggle-preview", "Toggle Editor / Preview")
+                .accelerator("Shift+CmdOrCtrl+V")
                 .build(app)?,
         )
         .separator()
         .item(
             &MenuItemBuilder::with_id("toggle-outline", "Toggle Outline")
                 .accelerator("Ctrl+CmdOrCtrl+O")
-                .build(app)?,
-        )
-        .separator()
-        .item(
-            &MenuItemBuilder::with_id("split-right", "Split Right")
-                .accelerator("CmdOrCtrl+D")
-                .build(app)?,
-        )
-        .item(
-            &MenuItemBuilder::with_id("split-down", "Split Down")
-                .accelerator("Shift+CmdOrCtrl+D")
-                .build(app)?,
-        )
-        .separator()
-        .item(
-            &MenuItemBuilder::with_id("focus-next", "Focus Next Pane")
-                .accelerator("Ctrl+Tab")
-                .build(app)?,
-        )
-        .item(
-            &MenuItemBuilder::with_id("focus-prev", "Focus Previous Pane")
-                .accelerator("Ctrl+Shift+Tab")
                 .build(app)?,
         )
         .separator()
@@ -487,6 +480,76 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         )
         .build()?;
 
+    // Browser-style tab navigation.
+    let tabs_menu = SubmenuBuilder::new(app, "Tabs")
+        .item(
+            &MenuItemBuilder::with_id("focus-next", "Next Tab")
+                .accelerator("Ctrl+Tab")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("focus-prev", "Previous Tab")
+                .accelerator("Ctrl+Shift+Tab")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-next", "Select Next Tab")
+                .accelerator("Shift+CmdOrCtrl+]")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-prev", "Select Previous Tab")
+                .accelerator("Shift+CmdOrCtrl+[")
+                .build(app)?,
+        )
+        .separator()
+        .item(
+            &MenuItemBuilder::with_id("tab-1", "Tab 1")
+                .accelerator("CmdOrCtrl+1")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-2", "Tab 2")
+                .accelerator("CmdOrCtrl+2")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-3", "Tab 3")
+                .accelerator("CmdOrCtrl+3")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-4", "Tab 4")
+                .accelerator("CmdOrCtrl+4")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-5", "Tab 5")
+                .accelerator("CmdOrCtrl+5")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-6", "Tab 6")
+                .accelerator("CmdOrCtrl+6")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-7", "Tab 7")
+                .accelerator("CmdOrCtrl+7")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-8", "Tab 8")
+                .accelerator("CmdOrCtrl+8")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("tab-9", "Tab 9")
+                .accelerator("CmdOrCtrl+9")
+                .build(app)?,
+        )
+        .build()?;
+
     let window_menu = SubmenuBuilder::new(app, "Window")
         .minimize()
         .item(&PredefinedMenuItem::maximize(app, Some("Zoom"))?)
@@ -495,7 +558,14 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         .build()?;
 
     let menu = MenuBuilder::new(app)
-        .items(&[&app_menu, &file_menu, &edit_menu, &view_menu, &window_menu])
+        .items(&[
+            &app_menu,
+            &file_menu,
+            &edit_menu,
+            &view_menu,
+            &tabs_menu,
+            &window_menu,
+        ])
         .build()?;
     app.set_menu(menu)?;
     Ok(())

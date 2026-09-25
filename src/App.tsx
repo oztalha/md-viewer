@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { useStore } from "./store";
 import { TitleBar } from "./components/TitleBar";
+import { TabBar } from "./components/TabBar";
 import { Workspace } from "./components/Workspace";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { RemotePrompt } from "./components/RemotePrompt";
@@ -24,6 +25,7 @@ export default function App() {
   return (
     <div className="app">
       <TitleBar />
+      <TabBar />
       <Workspace />
       {dropping && (
         <div className="drop-overlay">
