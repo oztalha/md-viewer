@@ -259,6 +259,16 @@ export function initApp(): void {
 
   void listen<string>("menu", (event) => handleMenu(event.payload));
 
+  // ⌘+ (⇧⌘=) zooms in like in browsers. The menu accelerator is ⌘= because a
+  // literal "+" can't be a menu key, and ⇧⌘= doesn't match it.
+  window.addEventListener("keydown", (event) => {
+    if (event.metaKey && !event.altKey && !event.ctrlKey && event.key === "+") {
+      event.preventDefault();
+      const s = useStore.getState();
+      s.setZoom(s.zoom + 0.1);
+    }
+  });
+
   void listen<string[]>("open-files", (event) => {
     void useStore.getState().openPaths(event.payload);
   });

@@ -173,7 +173,9 @@ export function captureKeybind(
 export function formatKeybind(key: string): string {
   if (!key) return "—";
   return key
-    .split(/[-+]/)
+    // Split on separators only between parts, so the "-" / "+" keys themselves
+    // (e.g. "CmdOrCtrl+-" for zoom out) survive as the final part.
+    .split(/(?<=.)[-+](?=.)/)
     .map((part) => {
       switch (part) {
         case "Mod":
@@ -205,6 +207,11 @@ export function formatKeybind(key: string): string {
           return "←";
         case "ArrowRight":
           return "→";
+        // Zoom keys, shown the way macOS apps label them (⌘+ also works; see init.ts).
+        case "=":
+          return "+";
+        case "-":
+          return "−";
         default:
           return part.length === 1 ? part.toUpperCase() : part;
       }
