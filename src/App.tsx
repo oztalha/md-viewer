@@ -5,6 +5,7 @@ import { TabBar } from "./components/TabBar";
 import { Workspace } from "./components/Workspace";
 import { SettingsPanel } from "./components/SettingsPanel";
 import { RemoteBrowser } from "./components/RemoteBrowser";
+import { AboutDialog } from "./components/AboutDialog";
 import { AnnotationLayer } from "./components/AnnotationLayer";
 
 export default function App() {
@@ -39,6 +40,7 @@ export default function App() {
       )}
       <SettingsPanel />
       <RemoteBrowser />
+      <AboutDialog />
       <AnnotationLayer />
     </div>
   );

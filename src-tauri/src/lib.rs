@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 
 use tauri::menu::{
-    AboutMetadata, Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder,
+    Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder,
 };
 use tauri::{AppHandle, Emitter, Manager, State, Wry};
 
@@ -383,12 +383,9 @@ fn register_as_default_markdown_app() {
 
 fn build_menu(app: &AppHandle) -> tauri::Result<()> {
     let app_menu = SubmenuBuilder::new(app, "Markdown")
-        // macOS's About panel only shows plain "credits" text (no website
-        // field); the clickable link lives in Help → md-viewer on GitHub.
-        .about(Some(AboutMetadata {
-            credits: Some("github.com/oztalha/md-viewer".into()),
-            ..Default::default()
-        }))
+        // Our own About window (not the predefined panel): macOS's native one
+        // only shows plain text, so the project link couldn't be clickable.
+        .item(&MenuItemBuilder::with_id("about", "About Markdown").build(app)?)
         .separator()
         .item(
             &MenuItemBuilder::with_id("settings", "Settings…")

@@ -78,6 +78,8 @@ interface AppState {
   lightboxSrc: string | null;
   /** Remote file browser: which flow it's showing, or null when closed. */
   remoteBrowser: "open" | "save" | null;
+  /** Whether the About window is showing. */
+  aboutOpen: boolean;
 
   // --- selectors -----------------------------------------------------------
   /** The single visible leaf, synthesized from activeId + its view state. */
@@ -91,6 +93,7 @@ interface AppState {
   setZoom(value: number): void;
   setLightbox(src: string | null): void;
   setRemoteBrowser(mode: "open" | "save" | null): void;
+  setAboutOpen(open: boolean): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
   setSidebarWidth(width: number): void;
@@ -150,6 +153,7 @@ export const useStore = create<AppState>()((set, get) => ({
   zoom: initialZoom,
   lightboxSrc: null,
   remoteBrowser: null,
+  aboutOpen: false,
 
   activeLeaf() {
     const { activeId, views } = get();
@@ -184,6 +188,10 @@ export const useStore = create<AppState>()((set, get) => ({
 
   setLightbox(src) {
     if (get().lightboxSrc !== src) set({ lightboxSrc: src });
+  },
+
+  setAboutOpen(open) {
+    if (get().aboutOpen !== open) set({ aboutOpen: open });
   },
 
   setRemoteBrowser(mode) {

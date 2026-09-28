@@ -1939,3 +1939,47 @@ html.no-caret-animation .editor .cm-cursor {
   user-select: none;
   -webkit-user-select: none;
 }
+
+/* About window */
+.about-dialog {
+  width: min(360px, calc(100vw - 48px));
+  padding: 26px 24px 20px;
+  text-align: center;
+}
+.about-icon {
+  width: 88px;
+  height: 88px;
+}
+.about-name {
+  margin: 8px 0 2px;
+  font-size: 17px;
+  font-weight: 700;
+}
+.about-version {
+  margin: 0 0 12px;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.about-tagline {
+  margin: 0 0 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+.about-links {
+  margin: 0 0 10px;
+  font-size: 12.5px;
+  color: var(--fg-faint);
+}
+.about-links a {
+  color: var(--accent);
+  text-decoration: none;
+  cursor: pointer;
+}
+.about-links a:hover {
+  text-decoration: underline;
+}
+.about-credit {
+  margin: 0;
+  font-size: 11px;
+  color: var(--fg-faint);
+}

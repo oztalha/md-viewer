@@ -11,8 +11,7 @@ import { formatDocument } from "./format";
 import { useStore } from "./store";
 import { displayTitle } from "./types";
 import { getEditorView } from "./editor/registry";
-
-const REPO_URL = "https://github.com/oztalha/md-viewer";
+import { REPO_URL } from "./links";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|heic|heif|bmp|tiff?)$/i;
 
@@ -150,6 +149,9 @@ function handleMenu(id: string) {
       break;
     case "select-all":
       selectAll();
+      break;
+    case "about":
+      s.setAboutOpen(true);
       break;
     case "help-github":
       void openUrl(REPO_URL);
