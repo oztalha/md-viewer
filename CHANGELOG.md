@@ -3,6 +3,19 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.2.2] — 2026-09-28
+
+### Fixed
+- Closing the window failed with "window|destroy not allowed by ACL" and
+  left the app open.
+- Downloaded builds no longer risk being reported as "damaged": the whole app
+  bundle is now ad-hoc signed, so macOS offers **Open Anyway** in Privacy &
+  Security on first launch.
+
+### Added
+- **Help** menu with *md-viewer on GitHub* and *Report an Issue…*; the About
+  panel shows the project address.
+
 ## [0.2.1] — 2026-09-28
 
 ### Fixed
@@ -45,6 +58,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.2.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.2
 [0.2.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.1
 [0.2.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MaxLeiter/md-viewer

@@ -35,8 +35,11 @@ On a `v*` tag it runs on GitHub's Apple Silicon runner (`macos-14`):
 3. Takes that version's section from `CHANGELOG.md`, appends install steps,
    and publishes a GitHub release with the DMG.
 
-It builds for Apple Silicon only. The app isn't code-signed or notarized, which
-is why the install steps include clearing the quarantine attribute.
+It builds for Apple Silicon only. The app is ad-hoc signed
+(`bundle.macOS.signingIdentity: "-"`) but not notarized, so on first launch
+users approve it once via **Privacy & Security → Open Anyway** (or `xattr` on
+managed Macs that hide that button). Keep the ad-hoc signing: without a sealed
+bundle signature, macOS calls the download "damaged" and offers no Open Anyway.
 
 ## If it fails
 

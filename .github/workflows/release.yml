@@ -48,7 +48,11 @@ jobs:
           cat >> notes.md <<'EOF'
 
           ## Install (Apple Silicon)
-          Open the DMG and drag **Markdown.app** to Applications. The app isn't code-signed yet, so clear the quarantine once:
+          Open the DMG and drag **Markdown.app** to Applications.
+
+          **First launch:** macOS will say it can't verify the app (it isn't notarized yet). Click **Done**, then go to **System Settings → Privacy & Security → Security** and click **Open Anyway**. Once only.
+
+          If Open Anyway isn't offered (some managed Macs), run once instead:
           ```sh
           xattr -dr com.apple.quarantine /Applications/Markdown.app
           ```

@@ -1,7 +1,7 @@
 {
   "name": "md-viewer",
   "private": true,
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "A minimal, fast, native-feeling markdown editor/viewer for macOS.",
   "author": "Max Leiter",
   "license": "MIT",

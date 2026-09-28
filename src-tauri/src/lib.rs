@@ -383,7 +383,12 @@ fn register_as_default_markdown_app() {
 
 fn build_menu(app: &AppHandle) -> tauri::Result<()> {
     let app_menu = SubmenuBuilder::new(app, "Markdown")
-        .about(Some(AboutMetadata::default()))
+        // macOS's About panel only shows plain "credits" text (no website
+        // field); the clickable link lives in Help → md-viewer on GitHub.
+        .about(Some(AboutMetadata {
+            credits: Some("github.com/oztalha/md-viewer".into()),
+            ..Default::default()
+        }))
         .separator()
         .item(
             &MenuItemBuilder::with_id("settings", "Settings…")
@@ -618,6 +623,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         .fullscreen()
         .build()?;
 
+    let help_menu = SubmenuBuilder::new(app, "Help")
+        .item(&MenuItemBuilder::with_id("help-github", "md-viewer on GitHub").build(app)?)
+        .item(&MenuItemBuilder::with_id("help-issue", "Report an Issue…").build(app)?)
+        .build()?;
+
     let menu = MenuBuilder::new(app)
         .items(&[
             &app_menu,
@@ -626,6 +636,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
             &view_menu,
             &tabs_menu,
             &window_menu,
+            &help_menu,
         ])
         .build()?;
     app.set_menu(menu)?;

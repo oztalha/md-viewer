@@ -14,8 +14,15 @@ nothing to install on the remote side.
 
 **[Download the latest DMG](https://github.com/oztalha/md-viewer/releases/latest/download/Markdown_aarch64.dmg)**
 ([release notes](https://github.com/oztalha/md-viewer/releases/latest)), open
-it, and drag **Markdown.app** to Applications. The app isn't code-signed yet, so
-clear the download quarantine once:
+it, and drag **Markdown.app** to Applications.
+
+**First launch:** the app isn't notarized by Apple yet, so macOS will say it
+can't verify it. Click **Done**, then open **System Settings → Privacy &
+Security**, scroll to **Security**, and click **Open Anyway** next to
+*"Markdown" was blocked*. You only do this once.
+
+If your Mac doesn't offer Open Anyway (some company-managed Macs hide it), run
+this once instead:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/Markdown.app

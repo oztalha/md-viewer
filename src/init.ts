@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import type { EditorView } from "@codemirror/view";
 import { readText } from "@tauri-apps/plugin-clipboard-manager";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { allowAsset, confirmDiscardAll, frontendReady, quitApp } from "./ipc";
 import { applySettings, useSettings } from "./settings";
 import { clearRecents, initRecents } from "./recent";
@@ -10,6 +11,8 @@ import { formatDocument } from "./format";
 import { useStore } from "./store";
 import { displayTitle } from "./types";
 import { getEditorView } from "./editor/registry";
+
+const REPO_URL = "https://github.com/oztalha/md-viewer";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|heic|heif|bmp|tiff?)$/i;
 
@@ -147,6 +150,12 @@ function handleMenu(id: string) {
       break;
     case "select-all":
       selectAll();
+      break;
+    case "help-github":
+      void openUrl(REPO_URL);
+      break;
+    case "help-issue":
+      void openUrl(`${REPO_URL}/issues/new`);
       break;
     case "clear-recent":
       clearRecents();
