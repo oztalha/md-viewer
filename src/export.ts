@@ -1,4 +1,9 @@
 import { renderDocumentHtml } from "./markdown";
+import katexPackage from "katex/package.json";
+
+// Exported files are standalone, so math styling comes from the CDN build of
+// the same KaTeX version the app renders with (fonts load from there too).
+const KATEX_CSS = `https://cdn.jsdelivr.net/npm/katex@${katexPackage.version}/dist/katex.min.css`;
 
 function escapeHtml(s: string): string {
   return s
@@ -62,7 +67,7 @@ export function buildExportHtml(source: string, title: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
-<style>
+${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
 ${EXPORT_CSS}
 </style>
 </head>

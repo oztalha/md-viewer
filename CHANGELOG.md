@@ -3,6 +3,15 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.3.0] — 2026-09-28
+
+### Added
+- **LaTeX math** with KaTeX: `$inline$`, `$$display$$`, and ```` ```math ````
+  blocks (GitHub's syntax), including environments like `aligned` and
+  `pmatrix`. Prices like "$5 and $10" stay plain text, and invalid TeX shows in
+  red instead of breaking the page. Works offline; exported HTML includes the
+  KaTeX stylesheet when a document has math.
+
 ## [0.2.2] — 2026-09-28
 
 ### Fixed
@@ -58,6 +67,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.3.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.3.0
 [0.2.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.2
 [0.2.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.1
 [0.2.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.0

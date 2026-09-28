@@ -50,10 +50,13 @@ for what's new in each version.
 - Semi-WYSIWYG editing: `**bold**` renders bold with the markers still visible
 - GitHub-flavored preview: tables, task lists, alerts, footnotes, highlighted
   code, images; CSV/TSV files open as tables
+- LaTeX math with KaTeX: `$inline$`, `$$display$$`, and ```` ```math ```` blocks
 - Highlight passages and attach notes in the preview
 - Format with Prettier, export to HTML, light and dark themes
 
 ![Editor and preview side by side](docs/editor-split.png)
+
+![LaTeX math rendered with KaTeX](docs/math.png)
 
 ## Remote files
 

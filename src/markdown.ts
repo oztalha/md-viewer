@@ -3,6 +3,7 @@ import taskLists from "markdown-it-task-lists";
 import footnote from "markdown-it-footnote";
 import { full as emoji } from "markdown-it-emoji";
 import githubAlerts from "markdown-it-github-alerts";
+import mathKatex from "@vscode/markdown-it-katex";
 import DOMPurify from "dompurify";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { createHighlighter, bundledLanguages, type Highlighter, type BundledLanguage } from "shiki";
@@ -162,6 +163,10 @@ const md: MarkdownIt = new MarkdownIt({
 // That default is fine for un-highlighted code; we don't need to override it.
 
 md.use(taskLists, { label: true }).use(footnote).use(emoji).use(githubAlerts);
+// LaTeX math via KaTeX: $inline$, $$display$$, and ```math fences (GitHub
+// syntax). Synchronous, so it fits the per-block render cache. Bad TeX renders
+// as a red error span instead of throwing.
+md.use(mathKatex, { enableFencedBlocks: true, throwOnError: false });
 
 // Local image paths (relative to the document, or absolute) are rewritten to
 // the asset protocol so the webview can actually load them. Remote URLs pass

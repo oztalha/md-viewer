@@ -1,7 +1,7 @@
 {
   "name": "md-viewer",
   "private": true,
-  "version": "0.2.2",
+  "version": "0.3.0",
   "description": "A minimal, fast, native-feeling markdown editor/viewer for macOS.",
   "author": "Max Leiter",
   "license": "MIT",
@@ -32,7 +32,9 @@
     "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-opener": "^2",
+    "@vscode/markdown-it-katex": "^1.1.2",
     "dompurify": "^3.4.5",
+    "katex": "^0.18.9",
     "markdown-it": "^14.2.0",
     "markdown-it-emoji": "^3.0.0",
     "markdown-it-footnote": "^4.0.0",
