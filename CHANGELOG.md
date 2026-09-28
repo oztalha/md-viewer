@@ -3,6 +3,12 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.2.1] — 2026-09-28
+
+### Fixed
+- Nested lists no longer have a paragraph-sized gap above them; sublists now
+  sit directly under their parent item.
+
 ## [0.2.0] — 2026-09-28
 
 ### Added
@@ -39,5 +45,6 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.2.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.1
 [0.2.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.0
 [0.1.0]: https://github.com/MaxLeiter/md-viewer

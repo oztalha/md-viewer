@@ -1,0 +1,65 @@
+# Build the Apple Silicon DMG and publish a GitHub release whenever a version
+# tag (v1.2.3) is pushed:  git tag v0.2.1 && git push origin v0.2.1
+# Release notes come from that version's section in CHANGELOG.md.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  macos-arm64:
+    runs-on: macos-14 # Apple Silicon runner
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+
+      - name: Check tag matches app version
+        run: |
+          app="v$(jq -r .version src-tauri/tauri.conf.json)"
+          if [ "$app" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not match tauri.conf.json version $app"
+            exit 1
+          fi
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build app and DMG
+        run: bun run tauri build
+
+      - name: Extract release notes from CHANGELOG.md
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v v="$version" '
+            $0 ~ "^## \\[" v "\\]" { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          cat >> notes.md <<'EOF'
+
+          ## Install (Apple Silicon)
+          Open the DMG and drag **Markdown.app** to Applications. The app isn't code-signed yet, so clear the quarantine once:
+          ```sh
+          xattr -dr com.apple.quarantine /Applications/Markdown.app
+          ```
+          EOF
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          dmg=$(ls src-tauri/target/release/bundle/dmg/*.dmg)
+          gh release create "$GITHUB_REF_NAME" "$dmg" \
+            --title "md-viewer ${GITHUB_REF_NAME#v} (Apple Silicon)" \
+            --notes-file notes.md \
+            --verify-tag
