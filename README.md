@@ -12,10 +12,10 @@ nothing to install on the remote side.
 
 ## Install (Apple Silicon)
 
-Download `Markdown_<version>_aarch64.dmg` from
-[Releases](https://github.com/oztalha/md-viewer/releases), open it, and drag
-**Markdown.app** to Applications. The app isn't code-signed yet, so clear the
-download quarantine once:
+**[Download the latest DMG](https://github.com/oztalha/md-viewer/releases/latest/download/Markdown_aarch64.dmg)**
+([release notes](https://github.com/oztalha/md-viewer/releases/latest)), open
+it, and drag **Markdown.app** to Applications. The app isn't code-signed yet, so
+clear the download quarantine once:
 
 ```sh
 xattr -dr com.apple.quarantine /Applications/Markdown.app

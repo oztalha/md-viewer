@@ -21,7 +21,10 @@ version tag is pushed. Nothing is built on your machine.
    ```
 
 4. Watch it in the **Actions** tab (or `gh run watch`). When it finishes, the
-   release appears under **Releases** with `Markdown_X.Y.Z_aarch64.dmg` attached.
+   release appears under **Releases** with two copies of the DMG:
+   `Markdown_X.Y.Z_aarch64.dmg`, and `Markdown_aarch64.dmg`, the stable name
+   the README's download link points at
+   (`releases/latest/download/Markdown_aarch64.dmg`).
 
 ## What the workflow does
 

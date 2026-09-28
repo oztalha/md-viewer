@@ -59,7 +59,10 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           dmg=$(ls src-tauri/target/release/bundle/dmg/*.dmg)
-          gh release create "$GITHUB_REF_NAME" "$dmg" \
+          # Also attach an unversioned copy, so the README can link straight to
+          # releases/latest/download/Markdown_aarch64.dmg for every release.
+          cp "$dmg" Markdown_aarch64.dmg
+          gh release create "$GITHUB_REF_NAME" "$dmg" Markdown_aarch64.dmg \
             --title "md-viewer ${GITHUB_REF_NAME#v} (Apple Silicon)" \
             --notes-file notes.md \
             --verify-tag
