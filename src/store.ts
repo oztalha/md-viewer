@@ -76,8 +76,8 @@ interface AppState {
   zoom: number;
   /** Image currently shown in the lightbox, if any. */
   lightboxSrc: string | null;
-  /** Whether the "Open Remote…" prompt is showing. */
-  remotePromptOpen: boolean;
+  /** Remote file browser: which flow it's showing, or null when closed. */
+  remoteBrowser: "open" | "save" | null;
 
   // --- selectors -----------------------------------------------------------
   /** The single visible leaf, synthesized from activeId + its view state. */
@@ -90,7 +90,7 @@ interface AppState {
   setDropping(value: boolean): void;
   setZoom(value: number): void;
   setLightbox(src: string | null): void;
-  setRemotePrompt(open: boolean): void;
+  setRemoteBrowser(mode: "open" | "save" | null): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
   setSidebarWidth(width: number): void;
@@ -118,6 +118,8 @@ interface AppState {
   saveDoc(docId: string, saveAs?: boolean): Promise<boolean>;
   reloadDoc(docId: string): Promise<void>;
   copyDocPath(docId: string): Promise<void>;
+  /** Write the doc to host:path over SSH and make it a remote document. */
+  saveToRemote(docId: string, host: string, path: string): Promise<boolean>;
   closeTab(docId?: string): Promise<void>;
 }
 
@@ -147,7 +149,7 @@ export const useStore = create<AppState>()((set, get) => ({
   dropping: false,
   zoom: initialZoom,
   lightboxSrc: null,
-  remotePromptOpen: false,
+  remoteBrowser: null,
 
   activeLeaf() {
     const { activeId, views } = get();
@@ -184,8 +186,8 @@ export const useStore = create<AppState>()((set, get) => ({
     if (get().lightboxSrc !== src) set({ lightboxSrc: src });
   },
 
-  setRemotePrompt(open) {
-    if (get().remotePromptOpen !== open) set({ remotePromptOpen: open });
+  setRemoteBrowser(mode) {
+    if (get().remoteBrowser !== mode) set({ remoteBrowser: mode });
   },
 
   setContent(docId, content) {
@@ -540,6 +542,38 @@ export const useStore = create<AppState>()((set, get) => ({
       return;
     }
     if (doc.path) await copyToClipboard(doc.path);
+  },
+
+  async saveToRemote(docId, host, path) {
+    const doc = get().docs[docId];
+    if (!doc) return false;
+    if (!isValidHost(host)) {
+      await showError(`Invalid SSH host: ${host}`);
+      return false;
+    }
+    // The live editor view is the source of truth (store sync is coalesced).
+    const view = getEditorView(docId);
+    const content = view ? view.state.doc.toString() : doc.content;
+    try {
+      await writeRemoteFile(host, path, content);
+    } catch (err) {
+      await showError(String(err));
+      return false;
+    }
+    // The document now lives on the remote: later ⌘S writes straight back there.
+    const remote: RemoteRef = { host, path };
+    set((s) => {
+      const current = s.docs[docId];
+      if (!current) return s;
+      return {
+        docs: {
+          ...s.docs,
+          [docId]: { ...current, path: null, remote, title: basename(path), content, saved: content },
+        },
+      };
+    });
+    addRecent(remoteUrl(remote), `${basename(path)} — ${host}`);
+    return true;
   },
 
   async closeTab(docId) {

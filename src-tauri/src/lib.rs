@@ -106,6 +106,55 @@ async fn read_remote(host: String, path: String) -> Result<String, String> {
     .map_err(|e| e.to_string())?
 }
 
+#[derive(serde::Serialize)]
+struct RemoteEntry {
+    name: String,
+    #[serde(rename = "isDir")]
+    is_dir: bool,
+}
+
+#[derive(serde::Serialize)]
+struct RemoteListing {
+    /// Absolute, resolved directory (`~` expanded by the remote shell).
+    dir: String,
+    entries: Vec<RemoteEntry>,
+}
+
+/// List a remote directory over SSH, for the remote file browser. Prints the
+/// resolved directory, then one entry per line; `ls -p` marks directories with
+/// a trailing `/` and `-L` follows symlinks so linked folders browse as folders.
+#[tauri::command]
+async fn list_remote(host: String, path: String) -> Result<RemoteListing, String> {
+    validate_host(&host)?;
+    tauri::async_runtime::spawn_blocking(move || -> Result<RemoteListing, String> {
+        let q = shell_quote(if path.is_empty() { "~" } else { &path });
+        let output = ssh_base()
+            // `--` ends ssh option parsing; the host can never be read as a flag.
+            .arg("--")
+            .arg(&host)
+            .arg(format!("cd -- {q} && pwd && {{ ls -1ApL 2>/dev/null || true; }}"))
+            .output()
+            .map_err(|e| format!("Could not run ssh: {e}"))?;
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Could not list {host}:{path}\n{}", err.trim()));
+        }
+        let text = String::from_utf8_lossy(&output.stdout);
+        let mut lines = text.lines();
+        let dir = lines.next().unwrap_or("/").to_string();
+        let entries = lines
+            .filter(|l| !l.is_empty())
+            .map(|l| match l.strip_suffix('/') {
+                Some(name) => RemoteEntry { name: name.to_string(), is_dir: true },
+                None => RemoteEntry { name: l.to_string(), is_dir: false },
+            })
+            .collect();
+        Ok(RemoteListing { dir, entries })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Write a file to a remote host over SSH, atomically (temp file + mv).
 #[tauri::command]
 async fn write_remote(host: String, path: String, contents: String) -> Result<(), String> {
@@ -388,6 +437,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         )
         .item(
             &MenuItemBuilder::with_id("save-as", "Save As…")
+                .accelerator("Alt+CmdOrCtrl+S")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("save-remote", "Save to Remote…")
                 .accelerator("Shift+CmdOrCtrl+S")
                 .build(app)?,
         )
@@ -421,7 +475,14 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .accelerator("Shift+Alt+CmdOrCtrl+V")
                 .build(app)?,
         )
-        .select_all()
+        // Custom (not the predefined item): the native selectAll does nothing when
+        // no text field has focus — e.g. in preview mode. The frontend picks the
+        // right target (input, editor, or rendered preview).
+        .item(
+            &MenuItemBuilder::with_id("select-all", "Select All")
+                .accelerator("CmdOrCtrl+A")
+                .build(app)?,
+        )
         .separator()
         .item(
             &MenuItemBuilder::with_id("copy-path", "Copy Path")
@@ -600,6 +661,7 @@ pub fn run() {
             read_file,
             write_file,
             read_remote,
+            list_remote,
             write_remote,
             allow_asset,
             path_exists,

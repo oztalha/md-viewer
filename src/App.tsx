@@ -4,7 +4,7 @@ import { TitleBar } from "./components/TitleBar";
 import { TabBar } from "./components/TabBar";
 import { Workspace } from "./components/Workspace";
 import { SettingsPanel } from "./components/SettingsPanel";
-import { RemotePrompt } from "./components/RemotePrompt";
+import { RemoteBrowser } from "./components/RemoteBrowser";
 import { AnnotationLayer } from "./components/AnnotationLayer";
 
 export default function App() {
@@ -38,7 +38,7 @@ export default function App() {
         </div>
       )}
       <SettingsPanel />
-      <RemotePrompt />
+      <RemoteBrowser />
       <AnnotationLayer />
     </div>
   );

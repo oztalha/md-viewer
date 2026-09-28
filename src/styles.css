@@ -1438,6 +1438,160 @@ html.no-caret-animation .editor .cm-cursor {
   border-radius: 3px;
 }
 
+/* Remote file browser (Open Remote… / Save to Remote…) */
+.remote-browser {
+  width: min(680px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rb-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.rb-header .remote-prompt-label {
+  margin-bottom: 0;
+}
+.rb-hidden-toggle {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.rb-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.rb-location .remote-prompt-input {
+  width: auto;
+  padding: 6px 9px;
+  font-size: 12.5px;
+}
+.rb-host {
+  flex: 0 0 110px;
+}
+.rb-path {
+  flex: 1;
+  min-width: 0;
+}
+.rb-colon {
+  color: var(--fg-faint);
+  font-family: var(--font-mono);
+}
+.rb-icon-btn {
+  all: unset;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  font-family: var(--font-mono);
+  color: var(--fg-muted);
+  cursor: default;
+}
+.rb-icon-btn:hover {
+  background: var(--code-bg);
+  color: var(--fg);
+}
+.rb-list {
+  position: relative;
+  height: min(52vh, 440px);
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.rb-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: var(--fg);
+  cursor: default;
+}
+.rb-row:hover {
+  background: var(--code-bg);
+}
+.rb-row.selected {
+  background: var(--accent);
+  color: #fff;
+}
+.rb-row svg {
+  flex: none;
+  color: var(--fg-muted);
+}
+.rb-row.rb-dir svg {
+  color: var(--accent);
+}
+.rb-row.selected svg {
+  color: #fff;
+}
+.rb-row.rb-other {
+  color: var(--fg-muted);
+}
+.rb-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rb-status {
+  padding: 14px 10px;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+  white-space: pre-wrap;
+}
+.rb-error {
+  color: #e5534b;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+/* Thin progress bar while a listing loads over SSH. */
+.rb-loading {
+  position: sticky;
+  bottom: 0;
+  height: 2px;
+  background: var(--accent);
+  animation: fade-in 300ms ease-in-out infinite alternate;
+}
+.rb-save {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rb-save-label {
+  flex: none;
+  font-size: 12.5px;
+  color: var(--fg-muted);
+}
+.rb-save .remote-prompt-input {
+  padding: 6px 9px;
+  font-size: 13px;
+}
+.remote-browser .remote-prompt-actions {
+  align-items: center;
+  margin-top: 0;
+}
+.rb-where {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--fg-faint);
+}
+
 /* "Open Remote…" prompt */
 .remote-prompt {
   width: min(440px, calc(100vw - 48px));

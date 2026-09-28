@@ -85,6 +85,35 @@ function insertDroppedImages(paths: string[], point: { x: number; y: number } | 
   view.focus();
 }
 
+/**
+ * ⌘A. Replaces the native Select All, which does nothing unless a text field
+ * has focus (e.g. in preview mode). Picks the target the user means: a focused
+ * input, else the editor when it's focused or the only pane, else the preview.
+ */
+function selectAll() {
+  const focused = document.activeElement;
+  if (focused instanceof HTMLInputElement || focused instanceof HTMLTextAreaElement) {
+    focused.select();
+    return;
+  }
+  const s = useStore.getState();
+  const mode = s.views[s.activeId]?.mode;
+  const view = getEditorView(s.activeId);
+  if (view && (view.hasFocus || mode === "editor")) {
+    view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
+    view.focus();
+    return;
+  }
+  const preview = document.querySelector<HTMLElement>(".tile .preview");
+  if (preview && mode !== "editor") {
+    const range = document.createRange();
+    range.selectNodeContents(preview);
+    const selection = window.getSelection();
+    selection?.removeAllRanges();
+    selection?.addRange(range);
+  }
+}
+
 declare global {
   interface Window {
     __MD_VIEWER_INITIALIZED__?: boolean;
@@ -111,7 +140,13 @@ function handleMenu(id: string) {
       void s.openViaDialog();
       break;
     case "open-remote":
-      s.setRemotePrompt(true);
+      s.setRemoteBrowser("open");
+      break;
+    case "save-remote":
+      s.setRemoteBrowser("save");
+      break;
+    case "select-all":
+      selectAll();
       break;
     case "clear-recent":
       clearRecents();

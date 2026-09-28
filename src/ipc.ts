@@ -42,6 +42,17 @@ export function readRemoteFile(host: string, path: string): Promise<string> {
   return invoke<string>("read_remote", { host, path });
 }
 
+export interface RemoteListing {
+  /** Resolved absolute directory. */
+  dir: string;
+  entries: { name: string; isDir: boolean }[];
+}
+
+/** List a remote directory over SSH (for the remote file browser). */
+export function listRemoteDir(host: string, path: string): Promise<RemoteListing> {
+  return invoke<RemoteListing>("list_remote", { host, path });
+}
+
 /** Write a remote file over SSH (atomic on the remote side). */
 export function writeRemoteFile(host: string, path: string, contents: string): Promise<void> {
   return invoke<void>("write_remote", { host, path, contents });
@@ -88,6 +99,16 @@ export function confirmReloadDiscard(title: string): Promise<boolean> {
     title: "Unsaved Changes",
     kind: "warning",
     okLabel: "Reload",
+    cancelLabel: "Cancel",
+  });
+}
+
+/** Confirm replacing an existing file (remote save). */
+export function confirmOverwrite(name: string): Promise<boolean> {
+  return confirm(`“${name}” already exists. Do you want to replace it?`, {
+    title: "Replace File",
+    kind: "warning",
+    okLabel: "Replace",
     cancelLabel: "Cancel",
   });
 }
