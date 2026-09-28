@@ -998,6 +998,13 @@ html.no-caret-animation .editor .cm-cursor {
   padding-left: 1.5em;
 }
 
+/* A sublist continues its parent item, so it hugs it (GitHub-style) instead of
+   getting the top-level list's paragraph-sized gap. */
+.preview-content li > ul,
+.preview-content li > ol {
+  margin: 0;
+}
+
 /* List items are contiguous source lines in the editor (no blank line between
    them), so they get no extra vertical gap here either. */
 .preview-content li {
