@@ -3,6 +3,23 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.4.0] — 2026-09-28
+
+### Added
+- **Publish…** (⇧⌘P): share the document as a GitHub Gist (via `gh`), or to
+  places you add in `~/.config/md-viewer/publish.json`: tool calls on a local
+  MCP server, or a shell command. Republishing updates the same document, so
+  the link stays the same; the link is copied when publishing finishes. See
+  [docs/PUBLISHING.md](docs/PUBLISHING.md).
+- A publish button in the title bar shows where the document is published,
+  with clickable links.
+- **About Markdown** opens the app's own About window with clickable links to
+  the project and issue tracker.
+
+### Fixed
+- Settings showed Zoom out as just "⌘"; zoom shortcuts now read ⌘+ / ⌘−, and
+  ⌘+ (⇧⌘=) zooms in as well as ⌘=.
+
 ## [0.3.0] — 2026-09-28
 
 ### Added
@@ -67,6 +84,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.4.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.0
 [0.3.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.3.0
 [0.2.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.2
 [0.2.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.1

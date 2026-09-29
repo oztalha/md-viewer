@@ -137,3 +137,72 @@ export function confirmDiscardAll(count: number): Promise<boolean> {
 export async function showError(text: string): Promise<void> {
   await message(text, { title: "Markdown", kind: "error" });
 }
+
+// --- publishing (see src-tauri/src/publish.rs) ------------------------------
+
+export interface PublishStep {
+  tool: string;
+  args?: unknown;
+  save?: Record<string, string>;
+}
+
+export interface PublishTarget {
+  id: string;
+  label: string;
+  kind: "mcp" | "gist" | "command";
+  create: PublishStep[];
+  update: PublishStep[];
+  urlTemplate?: string;
+  public?: boolean;
+  format?: "markdown" | "html";
+}
+
+/** Publish targets from ~/.config/md-viewer/publish.json (gist only if absent). */
+export function publishTargets(): Promise<PublishTarget[]> {
+  return invoke<PublishTarget[]>("publish_targets");
+}
+
+/** Create the config file if needed and open it in the default text editor. */
+export function editPublishConfig(): Promise<string> {
+  return invoke<string>("publish_edit_config");
+}
+
+export function writePublishTemp(name: string, contents: string): Promise<string> {
+  return invoke<string>("publish_write_temp", { name, contents });
+}
+
+export function mcpOpen(targetId: string): Promise<number> {
+  return invoke<number>("publish_mcp_open", { targetId });
+}
+
+export function mcpCall(session: number, tool: string, args: unknown): Promise<McpResult> {
+  return invoke<McpResult>("publish_mcp_call", { session, tool, args });
+}
+
+export function mcpClose(session: number): Promise<void> {
+  return invoke<void>("publish_mcp_close", { session });
+}
+
+export interface McpResult {
+  content?: { type: string; text?: string }[];
+  structuredContent?: unknown;
+  isError?: boolean;
+}
+
+export function publishGist(
+  targetId: string,
+  file: string,
+  title: string,
+  existing: string | null,
+): Promise<{ id: string; url: string }> {
+  return invoke("publish_gist", { targetId, file, title, existing });
+}
+
+export function publishCommand(
+  targetId: string,
+  file: string,
+  title: string,
+  existing: string | null,
+): Promise<{ id: string; url: string }> {
+  return invoke("publish_command", { targetId, file, title, existing });
+}

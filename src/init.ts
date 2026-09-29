@@ -150,6 +150,9 @@ function handleMenu(id: string) {
     case "select-all":
       selectAll();
       break;
+    case "publish":
+      s.setPublishOpen(true);
+      break;
     case "about":
       s.setAboutOpen(true);
       break;

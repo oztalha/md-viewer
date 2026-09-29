@@ -54,6 +54,11 @@ for what's new in each version.
 - Highlight passages and attach notes in the preview
 - Format with Prettier, export to HTML, light and dark themes
 
+**Publishing**
+- **Publish…** (⇧⌘P) shares a document as a GitHub Gist, or to any place you add
+  through a local MCP server or a command; republishing updates the same link.
+  See [docs/PUBLISHING.md](docs/PUBLISHING.md).
+
 ![Editor and preview side by side](docs/editor-split.png)
 
 ![LaTeX math rendered with KaTeX](docs/math.png)
@@ -95,6 +100,7 @@ mdv <your-ssh-alias>:/abs/path/to/file.md
 | Open Remote… / Save to Remote… | ⇧⌘O / ⇧⌘S |
 | Reload | ⌘R |
 | Copy path | ⌥⌘C |
+| Publish… | ⇧⌘P |
 | Export as HTML… | ⇧⌘E |
 | Go to tab 1–9 | ⌘1 … ⌘9 |
 | Next / previous tab | ⌃Tab / ⌃⇧Tab, or ⇧⌘] / ⇧⌘[ |

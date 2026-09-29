@@ -6,6 +6,9 @@ import type { ViewMode } from "../types";
 import { getEditorView } from "../editor/registry";
 import { insertTable } from "../editor/commands";
 import { showTileContextMenu } from "../contextMenu";
+import { openUrl } from "@tauri-apps/plugin-opener";
+import { copyToClipboard, publishTargets } from "../ipc";
+import { publishedFor } from "../publish";
 
 const MODES: { mode: ViewMode; label: string; shortcut: string }[] = [
   { mode: "editor", label: "Editor only", shortcut: "⌘⌥1" },
@@ -56,6 +59,107 @@ function TableIcon() {
       <line x1="5.5" y1="4.5" x2="5.5" y2="12.5" stroke="currentColor" strokeWidth="1" />
       <line x1="10" y1="4.5" x2="10" y2="12.5" stroke="currentColor" strokeWidth="1" />
     </svg>
+  );
+}
+
+function PublishIcon() {
+  return (
+    <svg width="15" height="14" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M8 10.5V2.5M5 5.5l3-3 3 3M3 9.5v3c0 .6.4 1 1 1h8c.6 0 1-.4 1-1v-3"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Where the active document is published: a dot on the icon when it is, and a
+ * popover with each link (click to open, Copy) plus "Publish…".
+ */
+function PublishButton({ docId }: { docId: string }) {
+  const doc = useStore((s) => s.docs[docId]);
+  useStore((s) => s.publishTick); // re-read saved links after a publish
+  const [open, setOpen] = useState(false);
+  const [labels, setLabels] = useState<Record<string, string>>({});
+  const [copied, setCopied] = useState<string | null>(null);
+  const records = publishedFor(doc);
+  const entries = Object.entries(records);
+
+  const attachMenu = useCallback((menu: HTMLDivElement | null) => {
+    if (!menu) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const root = menu.parentElement;
+      if (root && !root.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, []);
+
+  const toggle = () => {
+    if (!open) {
+      void publishTargets()
+        .then((ts) => setLabels(Object.fromEntries(ts.map((t) => [t.id, t.label]))))
+        .catch(() => {});
+    }
+    setOpen((v) => !v);
+  };
+
+  return (
+    <div className="table-button">
+      <button
+        className={`titlebar-btn publish-btn${open ? " active" : ""}`}
+        data-tip={entries.length ? "Published · ⇧⌘P" : "Publish · ⇧⌘P"}
+        onClick={toggle}
+      >
+        <PublishIcon />
+        {entries.length > 0 && <span className="publish-dot" />}
+      </button>
+      {open && (
+        <div className="table-picker publish-menu" ref={attachMenu}>
+          {entries.length === 0 && <div className="publish-menu-empty">Not published yet</div>}
+          {entries.map(([targetId, rec]) => (
+            <div key={targetId} className="publish-menu-row">
+              <span className="publish-menu-label">{labels[targetId] ?? targetId}</span>
+              <a
+                href={rec.url}
+                title={rec.url}
+                onClick={(event) => {
+                  event.preventDefault();
+                  void openUrl(rec.url);
+                  setOpen(false);
+                }}
+              >
+                {rec.url.replace(/^https?:\/\//, "")}
+              </a>
+              <button
+                className="publish-copy"
+                onClick={() => {
+                  void copyToClipboard(rec.url);
+                  setCopied(targetId);
+                  setTimeout(() => setCopied(null), 1500);
+                }}
+              >
+                {copied === targetId ? "Copied" : "Copy"}
+              </button>
+            </div>
+          ))}
+          <button
+            className="publish-menu-action"
+            onClick={() => {
+              setOpen(false);
+              useStore.getState().setPublishOpen(true);
+            }}
+          >
+            Publish…
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -194,6 +298,7 @@ export function TitleBar() {
       </div>
       {doc && (
         <div className="titlebar-actions">
+          <PublishButton docId={doc.id} />
           <button
             className={`titlebar-btn${sidebarOpen ? " active" : ""}`}
             data-tip="Toggle sidebar"

@@ -80,6 +80,10 @@ interface AppState {
   remoteBrowser: "open" | "save" | null;
   /** Whether the About window is showing. */
   aboutOpen: boolean;
+  /** Whether the Publish dialog is showing. */
+  publishOpen: boolean;
+  /** Bumped after each publish so views re-read saved links. */
+  publishTick: number;
 
   // --- selectors -----------------------------------------------------------
   /** The single visible leaf, synthesized from activeId + its view state. */
@@ -94,6 +98,8 @@ interface AppState {
   setLightbox(src: string | null): void;
   setRemoteBrowser(mode: "open" | "save" | null): void;
   setAboutOpen(open: boolean): void;
+  setPublishOpen(open: boolean): void;
+  bumpPublished(): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
   setSidebarWidth(width: number): void;
@@ -154,6 +160,8 @@ export const useStore = create<AppState>()((set, get) => ({
   lightboxSrc: null,
   remoteBrowser: null,
   aboutOpen: false,
+  publishOpen: false,
+  publishTick: 0,
 
   activeLeaf() {
     const { activeId, views } = get();
@@ -188,6 +196,14 @@ export const useStore = create<AppState>()((set, get) => ({
 
   setLightbox(src) {
     if (get().lightboxSrc !== src) set({ lightboxSrc: src });
+  },
+
+  bumpPublished() {
+    set((s) => ({ publishTick: s.publishTick + 1 }));
+  },
+
+  setPublishOpen(open) {
+    if (get().publishOpen !== open) set({ publishOpen: open });
   },
 
   setAboutOpen(open) {

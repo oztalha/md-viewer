@@ -1,5 +1,7 @@
 use std::sync::Mutex;
 
+mod publish;
+
 use tauri::menu::{
     Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder,
 };
@@ -448,6 +450,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .build(app)?,
         )
         .item(
+            &MenuItemBuilder::with_id("publish", "Publish…")
+                .accelerator("Shift+CmdOrCtrl+P")
+                .build(app)?,
+        )
+        .item(
             &MenuItemBuilder::with_id("export-html", "Export as HTML…")
                 .accelerator("Shift+CmdOrCtrl+E")
                 .build(app)?,
@@ -665,11 +672,20 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState(Mutex::new(PendingFiles::default())))
+        .manage(publish::SessionState::default())
         .invoke_handler(tauri::generate_handler![
             read_file,
             write_file,
             read_remote,
             list_remote,
+            publish::publish_targets,
+            publish::publish_edit_config,
+            publish::publish_write_temp,
+            publish::publish_mcp_open,
+            publish::publish_mcp_call,
+            publish::publish_mcp_close,
+            publish::publish_gist,
+            publish::publish_command,
             write_remote,
             allow_asset,
             path_exists,
