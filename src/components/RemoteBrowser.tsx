@@ -83,8 +83,12 @@ function Browser({ mode }: { mode: "open" | "save" }) {
   const [showHidden, setShowHidden] = useState(false);
   const [fileName, setFileName] = useState(initial.name);
   const request = useRef(0);
+  // True once the user types/pastes in the path bar; a listing that finishes
+  // afterwards must not overwrite what they entered.
+  const pathEdited = useRef(false);
 
-  const load = useCallback(async (h: string, dir: string) => {
+  const load = useCallback(async (h: string, dir: string, fromTyping = false) => {
+    if (!fromTyping) pathEdited.current = false;
     if (!isValidHost(h)) {
       setListing(null);
       setError(h ? `Invalid SSH host: ${h}` : "Enter an SSH host (an alias from ~/.ssh/config works).");
@@ -105,7 +109,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
           : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
       );
       setListing(result);
-      setPathDraft(result.dir);
+      if (!pathEdited.current) setPathDraft(result.dir);
       localStorage.setItem(HOST_KEY, h);
       localStorage.setItem(dirKey(h), result.dir);
     } catch (err) {
@@ -216,10 +220,17 @@ function Browser({ mode }: { mode: "open" | "save" }) {
             spellCheck={false}
             autoCapitalize="off"
             autoCorrect="off"
-            onChange={(event) => setPathDraft(event.target.value)}
+            // Opening: focus and select the path so ⌘V replaces it and Enter opens.
+            autoFocus={mode === "open"}
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => {
+              pathEdited.current = true;
+              setPathDraft(event.target.value);
+            }}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
+                pathEdited.current = false;
                 submitPath();
               }
             }}

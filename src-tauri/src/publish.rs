@@ -201,11 +201,26 @@ fn login_path() -> &'static str {
             let end = s[start..].find("__MDV__")? + start;
             Some(s[start..end].to_string())
         });
-        match found {
+        let path = match found {
             Some(p) if !p.is_empty() => format!("{p}:{fallback}"),
             _ => fallback.to_string(),
-        }
+        };
+        path.split(':').filter(|d| !is_protected_dir(d)).collect::<Vec<_>>().join(":")
     })
+}
+
+/// Folders macOS guards with a privacy prompt (TCC). Merely checking whether a
+/// command exists in one of them (e.g. a PATH entry under ~/Downloads) makes
+/// macOS ask the user to grant the app access, so they're left out of PATH.
+fn is_protected_dir(dir: &str) -> bool {
+    let home = std::env::var("HOME").unwrap_or_default();
+    let dir = expand_home(dir);
+    ["Downloads", "Desktop", "Documents", "Library/Mobile Documents"]
+        .iter()
+        .any(|p| {
+            let root = format!("{home}/{p}");
+            dir == root || dir.starts_with(&format!("{root}/"))
+        })
 }
 
 fn expand_home(s: &str) -> String {
@@ -514,6 +529,16 @@ mod tests {
     fn finds_first_url() {
         assert_eq!(first_url("Created https://gist.github.com/abc123.\n").as_deref(), Some("https://gist.github.com/abc123"));
         assert_eq!(first_url("no link here"), None);
+    }
+
+    #[test]
+    fn skips_protected_dirs() {
+        let home = std::env::var("HOME").unwrap();
+        assert!(is_protected_dir(&format!("{home}/Downloads/apache-maven/bin")));
+        assert!(is_protected_dir("~/Desktop"));
+        assert!(!is_protected_dir(&format!("{home}/.toolbox/bin")));
+        assert!(!is_protected_dir(&format!("{home}/DownloadsX/bin")));
+        assert!(!is_protected_dir("/opt/homebrew/bin"));
     }
 
     #[test]
