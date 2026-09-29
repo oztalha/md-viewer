@@ -45,8 +45,14 @@ Other places are added in a config file, `~/.config/md-viewer/publish.json`.
 
 MCP servers that md-viewer can start, in the same shape as the `mcpServers`
 entries in Claude or Kiro config: `command`, optional `args` and `env`. Only
-local (stdio) servers are supported. Commands are looked up on your login
-shell's `PATH`, and `~` is expanded.
+local (stdio) servers are supported. `~` is expanded, and bare command names
+are looked up in the top-level `"path"` list (e.g. `"path": ["~/tools/bin"]`),
+then the `PATH` your login shell's profile files set (`~/.zprofile` and friends,
+not `~/.zshrc`), then `~/.local/bin`, `~/.cargo/bin`, `~/.bun/bin` and Homebrew.
+If a tool is only on your `PATH` through `~/.zshrc`, add its folder to `"path"`
+or give its full path as `command`. Folders under
+Downloads, Desktop, Documents and iCloud Drive are skipped, so macOS never asks
+to grant the app access to them.
 
 ### `targets`
 

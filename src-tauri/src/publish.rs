@@ -80,6 +80,9 @@ impl Target {
 
 #[derive(Deserialize, Default)]
 struct Config {
+    /// Extra folders to search for commands, before the defaults.
+    #[serde(default)]
+    path: Vec<String>,
     #[serde(default)]
     servers: HashMap<String, ServerCfg>,
     #[serde(default)]
@@ -119,7 +122,7 @@ fn load_config() -> Result<Config, String> {
             }
             Ok(config)
         }
-        Err(_) => Ok(Config { servers: HashMap::new(), targets: default_targets() }),
+        Err(_) => Ok(Config { path: vec![], servers: HashMap::new(), targets: default_targets() }),
     }
 }
 
@@ -183,15 +186,32 @@ pub fn publish_write_temp(name: String, contents: String) -> Result<String, Stri
 
 // --- environment -------------------------------------------------------------
 
-/// PATH from the user's login shell. Apps launched from Finder get a minimal
-/// PATH, which misses Homebrew, and tools installed under your home directory.
+/// PATH for finding tools. Apps launched from Finder get a minimal PATH, which
+/// misses Homebrew and tools installed under your home directory.
+///
+/// Uses a *non-interactive* login shell (profile files, not ~/.zshrc): an
+/// interactive startup runs commands, and zsh looks each one up along PATH, so
+/// a PATH entry under e.g. ~/Downloads makes macOS prompt for Downloads access
+/// on the app's behalf. Common per-user tool dirs are added explicitly instead.
 fn login_path() -> &'static str {
     static PATH: OnceLock<String> = OnceLock::new();
     PATH.get_or_init(|| {
-        let fallback = "/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";
+        let home = std::env::var("HOME").unwrap_or_default();
+        // "path" from publish.json first, then common per-user tool dirs.
+        let configured = load_config().map(|c| c.path).unwrap_or_default();
+        let extras: Vec<String> = configured
+            .iter()
+            .map(|d| expand_home(d))
+            .chain([".local/bin", ".cargo/bin", ".bun/bin"].iter().map(|d| format!("{home}/{d}")))
+            .filter(|d| std::path::Path::new(d).is_dir())
+            .collect();
+        let fallback = format!(
+            "{}:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin",
+            extras.join(":")
+        );
         let shell = std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".into());
         let out = Command::new(shell)
-            .args(["-ilc", "printf '__MDV__%s__MDV__' \"$PATH\""])
+            .args(["-lc", "printf '__MDV__%s__MDV__' \"$PATH\""])
             .stdin(Stdio::null())
             .stderr(Stdio::null())
             .output();
@@ -203,7 +223,7 @@ fn login_path() -> &'static str {
         });
         let path = match found {
             Some(p) if !p.is_empty() => format!("{p}:{fallback}"),
-            _ => fallback.to_string(),
+            _ => fallback,
         };
         path.split(':').filter(|d| !is_protected_dir(d)).collect::<Vec<_>>().join(":")
     })
@@ -536,7 +556,7 @@ mod tests {
         let home = std::env::var("HOME").unwrap();
         assert!(is_protected_dir(&format!("{home}/Downloads/apache-maven/bin")));
         assert!(is_protected_dir("~/Desktop"));
-        assert!(!is_protected_dir(&format!("{home}/.toolbox/bin")));
+        assert!(!is_protected_dir(&format!("{home}/.local/bin")));
         assert!(!is_protected_dir(&format!("{home}/DownloadsX/bin")));
         assert!(!is_protected_dir("/opt/homebrew/bin"));
     }

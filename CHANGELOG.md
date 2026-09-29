@@ -3,6 +3,21 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [0.4.1] — 2026-09-29
+
+### Fixed
+- Publishing could make macOS ask to give the app access to the Downloads
+  folder when a `PATH` entry pointed there (e.g. a tool unpacked in
+  `~/Downloads`). The app now reads `PATH` from a non-interactive login shell
+  and never searches Downloads, Desktop, Documents or iCloud Drive.
+- **Open Remote…** focuses and selects the path field, so you can press ⌘V and
+  Enter to open a path from the clipboard. A folder listing that finishes after
+  you've typed or pasted no longer overwrites the path.
+
+### Added
+- `publish.json` accepts a top-level `"path"` list of extra folders to search
+  for commands.
+
 ## [0.4.0] — 2026-09-28
 
 ### Added
@@ -84,6 +99,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.4.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.1
 [0.4.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.0
 [0.3.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.3.0
 [0.2.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.2.2
