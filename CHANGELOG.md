@@ -12,6 +12,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   pale blue looked disabled.
 
 ### Fixed
+- Enter didn't publish when the Publish dialog opened: focus stayed in the
+  document. The Publish/Update button now gets focus, and Enter publishes
+  from anywhere in the dialog (e.g. after picking a target).
 - The Publish dialog kept showing the previous document's result after
   switching documents while it was open.
 

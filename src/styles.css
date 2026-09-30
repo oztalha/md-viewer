@@ -1687,6 +1687,12 @@ html.no-caret-animation .editor .cm-cursor {
   filter: brightness(1.1);
 }
 
+.remote-prompt-open:focus-visible,
+.remote-prompt-open:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .remote-prompt-open:disabled {
   opacity: 0.4;
 }

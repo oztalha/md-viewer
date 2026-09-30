@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import { copyToClipboard, editPublishConfig, publishTargets } from "../ipc";
@@ -57,12 +57,28 @@ function Publish() {
       })
       .catch((err) => setLoadError(String(err)));
 
+  // Latest publish(), for the window-level Enter handler below.
+  const publishRef = useRef<() => void>(() => {});
+  const inFlight = useRef(false);
+  const publishButton = useRef<HTMLButtonElement | null>(null);
+
   useEffect(() => {
     void load();
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return;
+      if (event.key === "Escape") {
+        event.stopPropagation();
+        useStore.getState().setPublishOpen(false);
+        return;
+      }
+      // Enter publishes from anywhere while the dialog is open (e.g. after
+      // clicking a target), and never reaches the editor underneath. On a
+      // focused button or link, let that element handle it natively.
+      if (event.key !== "Enter") return;
+      const el = event.target as HTMLElement | null;
+      if (el?.closest("button, a")) return;
+      event.preventDefault();
       event.stopPropagation();
-      useStore.getState().setPublishOpen(false);
+      publishRef.current();
     };
     window.addEventListener("keydown", onKeyDown, true);
     return () => window.removeEventListener("keydown", onKeyDown, true);
@@ -73,7 +89,8 @@ function Publish() {
   const busy = status.kind === "busy";
 
   const publish = async () => {
-    if (!doc || !target || busy) return;
+    if (!doc || !target || busy || inFlight.current) return;
+    inFlight.current = true;
     localStorage.setItem(LAST_TARGET_KEY, target.id);
     setStatus({ kind: "busy", label: target.label });
     try {
@@ -81,8 +98,17 @@ function Publish() {
       setStatus({ kind: "done", url: out.url, updated: out.updated, label: target.label });
     } catch (err) {
       setStatus({ kind: "error", message: err instanceof Error ? err.message : String(err) });
+    } finally {
+      inFlight.current = false;
     }
   };
+  publishRef.current = () => void publish();
+
+  // Focus Publish/Update once the targets are in, so Enter presses it.
+  const ready = !!targets && !!target;
+  useEffect(() => {
+    if (ready) publishButton.current?.focus();
+  }, [ready]);
 
   const link = (href: string) => (event: React.MouseEvent) => {
     event.preventDefault();
@@ -94,9 +120,6 @@ function Publish() {
       <div
         className="remote-prompt publish-dialog"
         onClick={(event) => event.stopPropagation()}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") void publish();
-        }}
       >
         <span className="remote-prompt-label">
           Publish {doc ? `“${displayTitle(doc)}”` : ""}
@@ -191,7 +214,12 @@ function Publish() {
           <button className="remote-prompt-cancel" onClick={close} disabled={busy}>
             {status.kind === "done" ? "Close" : "Cancel"}
           </button>
-          <button className="remote-prompt-open" onClick={() => void publish()} disabled={!target || busy}>
+          <button
+            ref={publishButton}
+            className="remote-prompt-open"
+            onClick={() => void publish()}
+            disabled={!target || busy}
+          >
             {busy ? "Publishing…" : existing && !asNew ? "Update" : "Publish"}
           </button>
         </div>
