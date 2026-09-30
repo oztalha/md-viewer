@@ -1,20 +1,41 @@
 import { useSyncExternalStore } from "react";
 import { useStore } from "../store";
 import { basename, displayTitle, isDirty } from "../types";
-import { clearRecents, getRecents, removeRecent, subscribeRecents } from "../recent";
+import {
+  clearRecents,
+  getRecents,
+  removeRecent,
+  subscribeRecents,
+} from "../recent";
 import type { RecentEntry } from "../recent";
 import { parseOpenSpec, remoteUrl } from "../remote";
 import { CloseIcon, SwapIcon } from "./icons";
 import { showRecentContextMenu, showTileContextMenu } from "../contextMenu";
+import { OutlineList } from "./Outline";
 
 /** Name + a dim hint of where it lives: the host, or "local". */
-function describeRecent(entry: RecentEntry): { name: string; hint: string; remote: boolean; title: string } {
+function describeRecent(entry: RecentEntry): {
+  name: string;
+  hint: string;
+  remote: boolean;
+  title: string;
+} {
   const spec = parseOpenSpec(entry.spec, "");
   if (spec.kind === "remote") {
     const { host, path } = spec.ref;
-    return { name: basename(path), hint: host, remote: true, title: `${host}:${path}` };
+    return {
+      name: basename(path),
+      hint: host,
+      remote: true,
+      title: `${host}:${path}`,
+    };
   }
-  return { name: basename(spec.path), hint: "local", remote: false, title: spec.path };
+  return {
+    name: basename(spec.path),
+    hint: "local",
+    remote: false,
+    title: spec.path,
+  };
 }
 
 /**
@@ -39,6 +60,8 @@ export function Sidebar() {
   const selectTab = useStore((s) => s.selectTab);
   const closeTab = useStore((s) => s.closeTab);
   const width = useStore((s) => s.sidebarWidth);
+  const tab = useStore((s) => s.sidebarTab);
+  const setTab = useStore((s) => s.setSidebarTab);
 
   // Drag the right edge to resize; width is clamped + persisted in the store.
   const startResize = (event: React.PointerEvent) => {
@@ -60,81 +83,65 @@ export function Sidebar() {
 
   return (
     <aside className="sidebar" style={{ width }}>
-      <div className="sidebar-header">Open</div>
-      <nav className="sidebar-list">
-        {tabs.map((docId) => {
-          const doc = docs[docId];
-          if (!doc) return null;
-          const active = docId === activeId;
-          return (
-            <div
-              key={docId}
-              className={`sidebar-item${active ? " active" : ""}`}
-              onPointerDown={() => selectTab(docId)}
-              onContextMenu={(e) => {
-                e.preventDefault();
-                void showTileContextMenu(docId);
-              }}
-              title={displayTitle(doc)}
-            >
-              {doc.remote && (
-                <span className="remote-badge" data-tip={`SSH · ${doc.remote.host}`}>
-                  <SwapIcon size={11} />
-                </span>
-              )}
-              <span className="sidebar-name">{displayTitle(doc)}</span>
-              {isDirty(doc) && <span className="dirty-dot" aria-label="Unsaved changes" />}
-              <button
-                className="sidebar-close"
-                data-tip="Close tab · ⌘W"
-                onPointerDown={(e) => e.stopPropagation()}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  void closeTab(docId);
-                }}
-              >
-                <CloseIcon size={11} />
-              </button>
-            </div>
-          );
-        })}
-      </nav>
-      {recentList.length > 0 && (
+      <div className="sidebar-tabs" role="tablist">
+        <button
+          role="tab"
+          aria-selected={tab === "files"}
+          className={tab === "files" ? "active" : ""}
+          onClick={() => setTab("files")}
+        >
+          Files
+        </button>
+        <button
+          role="tab"
+          aria-selected={tab === "outline"}
+          className={tab === "outline" ? "active" : ""}
+          data-tip="Outline · ⇧⌘0 toggles"
+          onClick={() => setTab("outline")}
+        >
+          Outline
+        </button>
+      </div>
+      {tab === "outline" ? (
+        <OutlineList />
+      ) : (
         <>
-          <div className="sidebar-divider" />
-          <div className="sidebar-header sidebar-header-row">
-            <span>Recent</span>
-            <button className="sidebar-clear" onClick={clearRecents} data-tip="Clear recent files">
-              Clear
-            </button>
-          </div>
-          <nav className="sidebar-list sidebar-recent">
-            {recentList.map((entry) => {
-              const r = describeRecent(entry);
+          <div className="sidebar-header">Open</div>
+          <nav className="sidebar-list">
+            {tabs.map((docId) => {
+              const doc = docs[docId];
+              if (!doc) return null;
+              const active = docId === activeId;
               return (
                 <div
-                  key={entry.spec}
-                  className="sidebar-item"
-                  title={r.title}
-                  onClick={() => void useStore.getState().openPaths([entry.spec])}
+                  key={docId}
+                  className={`sidebar-item${active ? " active" : ""}`}
+                  onPointerDown={() => selectTab(docId)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    void showRecentContextMenu(entry.spec);
+                    void showTileContextMenu(docId);
                   }}
+                  title={displayTitle(doc)}
                 >
-                  {r.remote && (
-                    <span className="remote-badge">
+                  {doc.remote && (
+                    <span
+                      className="remote-badge"
+                      data-tip={`SSH · ${doc.remote.host}`}
+                    >
                       <SwapIcon size={11} />
                     </span>
                   )}
-                  <span className="sidebar-name">{r.name}</span>
-                  {r.hint && <span className="sidebar-hint">{r.hint}</span>}
+                  <span className="sidebar-name">{displayTitle(doc)}</span>
+                  {isDirty(doc) && (
+                    <span className="dirty-dot" aria-label="Unsaved changes" />
+                  )}
                   <button
                     className="sidebar-close"
-                    data-tip="Remove from recents"
+                    data-tip="Close tab · ⌘W"
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.stopPropagation();
-                      removeRecent(entry.spec);
+                      void closeTab(docId);
                     }}
                   >
                     <CloseIcon size={11} />
@@ -143,6 +150,58 @@ export function Sidebar() {
               );
             })}
           </nav>
+          {recentList.length > 0 && (
+            <>
+              <div className="sidebar-divider" />
+              <div className="sidebar-header sidebar-header-row">
+                <span>Recent</span>
+                <button
+                  className="sidebar-clear"
+                  onClick={clearRecents}
+                  data-tip="Clear recent files"
+                >
+                  Clear
+                </button>
+              </div>
+              <nav className="sidebar-list sidebar-recent">
+                {recentList.map((entry) => {
+                  const r = describeRecent(entry);
+                  return (
+                    <div
+                      key={entry.spec}
+                      className="sidebar-item"
+                      title={r.title}
+                      onClick={() =>
+                        void useStore.getState().openPaths([entry.spec])
+                      }
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        void showRecentContextMenu(entry.spec);
+                      }}
+                    >
+                      {r.remote && (
+                        <span className="remote-badge">
+                          <SwapIcon size={11} />
+                        </span>
+                      )}
+                      <span className="sidebar-name">{r.name}</span>
+                      {r.hint && <span className="sidebar-hint">{r.hint}</span>}
+                      <button
+                        className="sidebar-close"
+                        data-tip="Remove from recents"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeRecent(entry.spec);
+                        }}
+                      >
+                        <CloseIcon size={11} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </nav>
+            </>
+          )}
         </>
       )}
       <div className="sidebar-resizer" onPointerDown={startResize} />

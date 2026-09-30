@@ -244,7 +244,7 @@ export function TitleBar() {
   const activeId = useStore((s) => s.activeId);
   const doc = useStore((s) => s.docs[s.activeId] ?? null);
   const mode = useStore((s) => s.views[s.activeId]?.mode ?? "split");
-  const outline = useStore((s) => s.views[s.activeId]?.outline ?? false);
+  const outline = useStore((s) => s.sidebarOpen && s.sidebarTab === "outline");
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const setMode = useStore((s) => s.setMode);
   const settings = useSettings((s) => s.settings);
@@ -281,7 +281,7 @@ export function TitleBar() {
           <button
             className={`titlebar-btn${outline ? " active" : ""}`}
             data-tip={`Outline · ${keyFor("toggle-outline")}`}
-            onClick={() => useStore.getState().toggleOutline(activeId)}
+            onClick={() => useStore.getState().toggleOutline()}
           >
             <OutlineIcon />
             <Keycap show={modHeld} label={keyFor("toggle-outline")} />

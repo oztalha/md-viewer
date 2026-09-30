@@ -6,7 +6,6 @@ import { getEditorView } from "../editor/registry";
 import { EditorView } from "@codemirror/view";
 import { Editor } from "./Editor";
 import { Preview } from "./Preview";
-import { Outline } from "./Outline";
 
 /** 1-based markdown line at the top of the editor viewport. */
 function editorTopLine(view: EditorView): number {
@@ -230,7 +229,6 @@ export function Tile({ leaf }: { leaf: LeafNode }) {
   return (
     <section className="tile" onContextMenu={onContextMenu}>
       <div className="tile-body" ref={attachBody}>
-        {leaf.outline && <Outline leaf={leaf} />}
         <div className={`pane${showEditor ? "" : " pane-hidden"}`} style={{ flex: editorFlex }}>
           <Editor doc={doc} />
         </div>

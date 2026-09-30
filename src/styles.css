@@ -2230,3 +2230,37 @@ html.no-caret-animation .editor .cm-cursor {
 .sidebar-item.active .sidebar-close {
   visibility: visible;
 }
+
+/* Sidebar: Files | Outline switch */
+.sidebar-tabs {
+  flex: none;
+  display: flex;
+  gap: 2px;
+  margin: 8px 10px 4px;
+  padding: 2px;
+  border-radius: 7px;
+  background: var(--code-bg);
+}
+.sidebar-tabs button {
+  all: unset;
+  flex: 1;
+  padding: 3px 0;
+  border-radius: 5px;
+  text-align: center;
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--fg-muted);
+  cursor: default;
+}
+.sidebar-tabs button:hover {
+  color: var(--fg);
+}
+.sidebar-tabs button.active {
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.sidebar .outline-list {
+  flex: 1;
+  padding-top: 4px;
+}

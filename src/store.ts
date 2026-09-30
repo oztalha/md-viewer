@@ -49,6 +49,7 @@ function makeView(mode: ViewMode): TabView {
 }
 
 const SIDEBAR_KEY = "sidebarOpen";
+const SIDEBAR_TAB_KEY = "sidebarTab";
 const SIDEBAR_WIDTH_KEY = "sidebarWidth";
 const SIDEBAR_MIN = 160;
 const SIDEBAR_MAX = 520;
@@ -68,6 +69,8 @@ interface AppState {
   views: Record<string, TabView>;
   /** Whether the left sidebar is expanded. */
   sidebarOpen: boolean;
+  /** Which sidebar tab is showing: open/recent files, or the document outline. */
+  sidebarTab: "files" | "outline";
   /** Left sidebar width in px (draggable). */
   sidebarWidth: number;
   /** True while files are being dragged over the window. */
@@ -102,6 +105,7 @@ interface AppState {
   bumpPublished(): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
+  setSidebarTab(tab: "files" | "outline"): void;
   setSidebarWidth(width: number): void;
   selectTab(docId: string): void;
   /** Move a tab to a new index in the strip (drag-to-reorder). */
@@ -113,7 +117,7 @@ interface AppState {
   jumpToTab(index: number): void;
   setMode(docId: string, mode: ViewMode): void;
   togglePreview(): void;
-  toggleOutline(docId: string): void;
+  toggleOutline(): void;
   setRatio(docId: string, ratio: number): void;
   newDoc(): void;
 
@@ -154,6 +158,7 @@ export const useStore = create<AppState>()((set, get) => ({
   activeId: initialDoc.id,
   views: { [initialDoc.id]: makeView("editor") },
   sidebarOpen: localStorage.getItem(SIDEBAR_KEY) !== "false",
+  sidebarTab: localStorage.getItem(SIDEBAR_TAB_KEY) === "outline" ? "outline" : "files",
   sidebarWidth: clampSidebar(Number(localStorage.getItem(SIDEBAR_WIDTH_KEY)) || SIDEBAR_DEFAULT),
   dropping: false,
   zoom: initialZoom,
@@ -286,10 +291,17 @@ export const useStore = create<AppState>()((set, get) => ({
     set((s) => ({ views: { ...s.views, [id]: { ...view, mode } } }));
   },
 
-  toggleOutline(docId) {
-    const view = get().views[docId];
-    if (!view) return;
-    set((s) => ({ views: { ...s.views, [docId]: { ...view, outline: !view.outline } } }));
+  // The outline lives in the sidebar's Outline tab. Toggling flips between
+  // Outline and Files, opening the sidebar if it's hidden.
+  toggleOutline() {
+    const s = get();
+    s.setSidebarTab(s.sidebarOpen && s.sidebarTab === "outline" ? "files" : "outline");
+  },
+
+  setSidebarTab(tab) {
+    localStorage.setItem(SIDEBAR_TAB_KEY, tab);
+    if (!get().sidebarOpen) localStorage.setItem(SIDEBAR_KEY, "true");
+    set({ sidebarTab: tab, sidebarOpen: true });
   },
 
   setRatio(docId, ratio) {

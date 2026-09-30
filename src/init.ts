@@ -227,7 +227,7 @@ function handleMenu(id: string) {
       break;
     }
     case "toggle-outline":
-      s.toggleOutline(s.activeId);
+      s.toggleOutline();
       break;
     case "focus-next":
     case "tab-next":

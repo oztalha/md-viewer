@@ -3,16 +3,15 @@ import { extractHeadings } from "../outline";
 import type { Heading } from "../outline";
 import { getEditorView } from "../editor/registry";
 import { EditorView } from "@codemirror/view";
-import type { LeafNode } from "../types";
-import { CloseIcon } from "./icons";
+import type { ViewMode } from "../types";
 
 /**
  * Scroll a heading into view in whichever pane is showing. Prefers the preview
  * (matched positionally — the Nth rendered heading is headings[index]); falls
  * back to the editor's line when only the editor is visible.
  */
-function revealHeading(leaf: LeafNode, docId: string, heading: Heading) {
-  if (leaf.mode !== "editor") {
+function revealHeading(mode: ViewMode, docId: string, heading: Heading) {
+  if (mode !== "editor") {
     const article = document.querySelector<HTMLElement>(
       `.preview-content[data-doc-id="${docId}"]`,
     );
@@ -32,41 +31,31 @@ function revealHeading(leaf: LeafNode, docId: string, heading: Heading) {
   }
 }
 
-export function Outline({ leaf }: { leaf: LeafNode }) {
-  const content = useStore((s) => s.docs[leaf.docId]?.content ?? "");
-  const toggleOutline = useStore((s) => s.toggleOutline);
+/** The active document's headings, shown in the sidebar's Outline tab. */
+export function OutlineList() {
+  const docId = useStore((s) => s.activeId);
+  const mode = useStore((s) => s.views[s.activeId]?.mode ?? "split");
+  const content = useStore((s) => s.docs[s.activeId]?.content ?? "");
   const headings = extractHeadings(content);
   const minLevel = headings.reduce((m, h) => Math.min(m, h.level), 6);
 
   return (
-    <aside className="outline">
-      <header className="outline-header">
-        <span>Outline</span>
-        <button
-          className="outline-close"
-          data-tip="Hide outline · ⌃⌘O"
-          onClick={() => toggleOutline(leaf.id)}
-        >
-          <CloseIcon size={13} />
-        </button>
-      </header>
-      <nav className="outline-list">
-        {headings.length === 0 ? (
-          <p className="outline-empty">No headings</p>
-        ) : (
-          headings.map((h) => (
-            <button
-              key={h.index}
-              className="outline-item"
-              style={{ paddingLeft: `${10 + (h.level - minLevel) * 14}px` }}
-              title={h.text}
-              onClick={() => revealHeading(leaf, leaf.docId, h)}
-            >
-              {h.text}
-            </button>
-          ))
-        )}
-      </nav>
-    </aside>
+    <nav className="sidebar-list outline-list">
+      {headings.length === 0 ? (
+        <p className="outline-empty">No headings</p>
+      ) : (
+        headings.map((h) => (
+          <button
+            key={h.index}
+            className="outline-item"
+            style={{ paddingLeft: `${14 + (h.level - minLevel) * 14}px` }}
+            title={h.text}
+            onClick={() => revealHeading(mode, docId, h)}
+          >
+            {h.text}
+          </button>
+        ))
+      )}
+    </nav>
   );
 }
