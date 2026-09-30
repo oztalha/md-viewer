@@ -59,6 +59,8 @@ for what's new in each version.
   through a local MCP server or a command; republishing updates the same link.
   See [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
+![Publishing a document: pick a target, and the link is copied](docs/publish.png)
+
 ![Editor and preview side by side](docs/editor-split.png)
 
 ![LaTeX math rendered with KaTeX](docs/math.png)

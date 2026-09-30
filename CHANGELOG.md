@@ -3,6 +3,12 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [Unreleased]
+
+### Fixed
+- The Publish dialog kept showing the previous document's result after
+  switching documents while it was open.
+
 ## [0.4.1] — 2026-09-29
 
 ### Fixed

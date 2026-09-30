@@ -40,6 +40,14 @@ function Publish() {
   const [copied, setCopied] = useState(false);
   const records = publishedFor(doc);
 
+  // Switching documents while the dialog is open starts fresh; a previous
+  // document's result would otherwise show as if it were this one's.
+  const docId = doc?.id;
+  useEffect(() => {
+    setStatus((cur) => (cur.kind === "busy" ? cur : { kind: "idle" }));
+    setAsNew(false);
+  }, [docId]);
+
   const load = () =>
     publishTargets()
       .then((list) => {
