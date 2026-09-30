@@ -20,6 +20,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   target's saved link at any time.
 
 ### Changed
+- **One sidebar, two tabs: Files | Outline.** The outline moved from its own
+  panel next to the editor into the sidebar. ⇧⌘0 (or the title-bar outline
+  button) switches between Outline and Files, opening the sidebar if needed;
+  the sidebar remembers the last tab.
 - Shortcuts moved off ⌥⌘, which is awkward to press: Copy path is now ⇧⌘C,
   and the view modes are ⇧⌘7 (editor), ⇧⌘8 (editor & preview) and ⇧⌘9
   (preview), and Toggle outline is ⇧⌘0. Custom bindings you set in Settings
