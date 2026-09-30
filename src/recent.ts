@@ -8,7 +8,7 @@ export interface RecentEntry {
 }
 
 const STORAGE_KEY = "recentFiles";
-const MAX = 12;
+const MAX = 20;
 
 function load(): RecentEntry[] {
   try {
@@ -20,10 +20,28 @@ function load(): RecentEntry[] {
 }
 
 let entries = load();
+const listeners = new Set<() => void>();
 
 function persist(): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
   void setRecentFiles(entries).catch(() => {});
+  listeners.forEach((fn) => fn());
+}
+
+/** Current recents, most recent first. */
+export function getRecents(): RecentEntry[] {
+  return entries;
+}
+
+/** Re-render on changes (the sidebar's Recent section). */
+export function subscribeRecents(fn: () => void): () => void {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function removeRecent(spec: string): void {
+  entries = entries.filter((e) => e.spec !== spec);
+  persist();
 }
 
 /** Record a freshly opened/saved document; most recent first, de-duplicated. */

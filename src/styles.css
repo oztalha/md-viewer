@@ -2177,3 +2177,51 @@ html.no-caret-animation .editor .cm-cursor {
 .publish-open:hover {
   background: var(--code-bg);
 }
+
+/* Sidebar: Open (top) and Recent (below a divider) */
+.sidebar > .sidebar-list:first-of-type {
+  flex: 0 1 auto;
+  max-height: 50%;
+}
+.sidebar-recent {
+  flex: 1 1 auto;
+}
+.sidebar-divider {
+  flex: none;
+  height: 1px;
+  margin: 6px 12px;
+  background: var(--border);
+}
+.sidebar-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.sidebar-clear {
+  all: unset;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--fg-faint);
+  cursor: default;
+}
+.sidebar-clear:hover {
+  color: var(--fg);
+}
+.sidebar-hint {
+  flex: none;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--fg-faint);
+}
+.sidebar-item .sidebar-close {
+  visibility: hidden;
+}
+.sidebar-item:hover .sidebar-close,
+.sidebar-item.active .sidebar-close {
+  visibility: visible;
+}

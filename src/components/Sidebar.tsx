@@ -1,15 +1,40 @@
+import { useSyncExternalStore } from "react";
 import { useStore } from "../store";
-import { displayTitle, isDirty } from "../types";
+import { basename, displayTitle, isDirty } from "../types";
+import { clearRecents, getRecents, removeRecent, subscribeRecents } from "../recent";
+import type { RecentEntry } from "../recent";
+import { parseOpenSpec, remoteUrl } from "../remote";
 import { CloseIcon, SwapIcon } from "./icons";
 
+/** Name + a dim hint of where it lives: the host, or "local". */
+function describeRecent(entry: RecentEntry): { name: string; hint: string; remote: boolean; title: string } {
+  const spec = parseOpenSpec(entry.spec, "");
+  if (spec.kind === "remote") {
+    const { host, path } = spec.ref;
+    return { name: basename(path), hint: host, remote: true, title: `${host}:${path}` };
+  }
+  return { name: basename(spec.path), hint: "local", remote: false, title: spec.path };
+}
+
 /**
- * Collapsible left rail listing every open document vertically. Mirrors the tab
- * strip; clicking an entry activates it, the ✕ closes it.
+ * Collapsible left rail. **Open**: every open document (mirrors the tab strip;
+ * click to switch, ✕ to close). **Recent**: recently opened files that aren't
+ * open now (click to reopen, local or remote; ✕ drops one from the list).
  */
 export function Sidebar() {
   const tabs = useStore((s) => s.tabs);
   const docs = useStore((s) => s.docs);
   const activeId = useStore((s) => s.activeId);
+  const recents = useSyncExternalStore(subscribeRecents, getRecents);
+
+  // Hide recents that are already open (they're listed above).
+  const openSpecs = new Set(
+    tabs
+      .map((id) => docs[id])
+      .map((d) => (d?.remote ? remoteUrl(d.remote) : (d?.path ?? "")))
+      .filter(Boolean),
+  );
+  const recentList = recents.filter((e) => !openSpecs.has(e.spec));
   const selectTab = useStore((s) => s.selectTab);
   const closeTab = useStore((s) => s.closeTab);
   const width = useStore((s) => s.sidebarWidth);
@@ -69,6 +94,48 @@ export function Sidebar() {
           );
         })}
       </nav>
+      {recentList.length > 0 && (
+        <>
+          <div className="sidebar-divider" />
+          <div className="sidebar-header sidebar-header-row">
+            <span>Recent</span>
+            <button className="sidebar-clear" onClick={clearRecents} data-tip="Clear recent files">
+              Clear
+            </button>
+          </div>
+          <nav className="sidebar-list sidebar-recent">
+            {recentList.map((entry) => {
+              const r = describeRecent(entry);
+              return (
+                <div
+                  key={entry.spec}
+                  className="sidebar-item"
+                  title={r.title}
+                  onClick={() => void useStore.getState().openPaths([entry.spec])}
+                >
+                  {r.remote && (
+                    <span className="remote-badge">
+                      <SwapIcon size={11} />
+                    </span>
+                  )}
+                  <span className="sidebar-name">{r.name}</span>
+                  {r.hint && <span className="sidebar-hint">{r.hint}</span>}
+                  <button
+                    className="sidebar-close"
+                    data-tip="Remove from recents"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeRecent(entry.spec);
+                    }}
+                  >
+                    <CloseIcon size={11} />
+                  </button>
+                </div>
+              );
+            })}
+          </nav>
+        </>
+      )}
       <div className="sidebar-resizer" onPointerDown={startResize} />
     </aside>
   );

@@ -6,6 +6,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **Recent files in the sidebar**, below the open documents: click to reopen
+  (local or remote; each shows its host, or "local"), ✕ to drop one, *Clear*
+  to empty the list. The list keeps the last 20 files.
 - **Open published page** (⇧⌘L, and a ↗ button in the title bar once a
   document is published) opens its most recent link without the dialog. The
   Publish dialog also has an **Open ↗** button next to Update.
