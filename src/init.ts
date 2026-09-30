@@ -160,6 +160,9 @@ function handleMenu(id: string) {
       else s.setPublishOpen(true); // nothing published yet: offer to publish
       break;
     }
+    case "show-files":
+      s.showSidebarTab("files");
+      break;
     case "toggle-sidebar":
       s.toggleSidebar();
       break;

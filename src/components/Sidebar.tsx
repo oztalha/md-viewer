@@ -65,7 +65,9 @@ export function Sidebar() {
   const tab = useStore((s) => s.sidebarTab);
   const setTab = useStore((s) => s.setSidebarTab);
   const modHeld = useModHeld();
-  const toggleKey = formatKeybind(keybindFor(useSettings((s) => s.settings), "toggle-outline"));
+  const settings = useSettings((s) => s.settings);
+  const filesKey = formatKeybind(keybindFor(settings, "show-files"));
+  const outlineKey = formatKeybind(keybindFor(settings, "toggle-outline"));
 
   // Drag the right edge to resize; width is clamped + persisted in the store.
   const startResize = (event: React.PointerEvent) => {
@@ -92,22 +94,21 @@ export function Sidebar() {
           role="tab"
           aria-selected={tab === "files"}
           className={tab === "files" ? "active" : ""}
-          data-tip={`Files · ${toggleKey} toggles`}
+          data-tip={`Files · ${filesKey}`}
           onClick={() => setTab("files")}
         >
           Files
-          {/* While ⌘ is held, the tab the toggle key would switch to shows it. */}
-          {modHeld && tab !== "files" && <span className="sidebar-tab-keycap">{toggleKey}</span>}
+          {modHeld && <span className="sidebar-tab-keycap">{filesKey}</span>}
         </button>
         <button
           role="tab"
           aria-selected={tab === "outline"}
           className={tab === "outline" ? "active" : ""}
-          data-tip={`Outline · ${toggleKey} toggles`}
+          data-tip={`Outline · ${outlineKey}`}
           onClick={() => setTab("outline")}
         >
           Outline
-          {modHeld && tab !== "outline" && <span className="sidebar-tab-keycap">{toggleKey}</span>}
+          {modHeld && <span className="sidebar-tab-keycap">{outlineKey}</span>}
         </button>
       </div>
       {tab === "outline" ? (

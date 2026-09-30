@@ -106,6 +106,7 @@ interface AppState {
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
   setSidebarTab(tab: "files" | "outline"): void;
+  showSidebarTab(tab: "files" | "outline"): void;
   setSidebarWidth(width: number): void;
   selectTab(docId: string): void;
   /** Move a tab to a new index in the strip (drag-to-reorder). */
@@ -291,11 +292,16 @@ export const useStore = create<AppState>()((set, get) => ({
     set((s) => ({ views: { ...s.views, [id]: { ...view, mode } } }));
   },
 
-  // The outline lives in the sidebar's Outline tab. Toggling flips between
-  // Outline and Files, opening the sidebar if it's hidden.
-  toggleOutline() {
+  // Each sidebar tab has its own key: it shows that tab (opening the sidebar),
+  // or hides the sidebar if that tab is already showing.
+  showSidebarTab(tab) {
     const s = get();
-    s.setSidebarTab(s.sidebarOpen && s.sidebarTab === "outline" ? "files" : "outline");
+    if (s.sidebarOpen && s.sidebarTab === tab) s.toggleSidebar();
+    else s.setSidebarTab(tab);
+  },
+
+  toggleOutline() {
+    get().showSidebarTab("outline");
   },
 
   setSidebarTab(tab) {

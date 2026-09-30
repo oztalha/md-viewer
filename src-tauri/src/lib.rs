@@ -538,7 +538,12 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .build(app)?,
         )
         .item(
-            &MenuItemBuilder::with_id("toggle-outline", "Toggle Outline")
+            &MenuItemBuilder::with_id("show-files", "Files")
+                .accelerator("Shift+CmdOrCtrl+F")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("toggle-outline", "Outline")
                 .accelerator("Shift+CmdOrCtrl+0")
                 .build(app)?,
         )
