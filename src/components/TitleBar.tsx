@@ -6,8 +6,6 @@ import type { ViewMode } from "../types";
 import { getEditorView } from "../editor/registry";
 import { insertTable } from "../editor/commands";
 import { showTileContextMenu } from "../contextMenu";
-import { openUrl } from "@tauri-apps/plugin-opener";
-import { copyToClipboard, publishTargets } from "../ipc";
 import { publishedFor } from "../publish";
 
 const MODES: { mode: ViewMode; label: string; shortcut: string }[] = [
@@ -77,89 +75,20 @@ function PublishIcon() {
   );
 }
 
-/**
- * Where the active document is published: a dot on the icon when it is, and a
- * popover with each link (click to open, Copy) plus "Publish…".
- */
+/** Opens the Publish dialog; a dot shows the document is published somewhere. */
 function PublishButton({ docId }: { docId: string }) {
   const doc = useStore((s) => s.docs[docId]);
   useStore((s) => s.publishTick); // re-read saved links after a publish
-  const [open, setOpen] = useState(false);
-  const [labels, setLabels] = useState<Record<string, string>>({});
-  const [copied, setCopied] = useState<string | null>(null);
-  const records = publishedFor(doc);
-  const entries = Object.entries(records);
-
-  const attachMenu = useCallback((menu: HTMLDivElement | null) => {
-    if (!menu) return;
-    const onPointerDown = (event: PointerEvent) => {
-      const root = menu.parentElement;
-      if (root && !root.contains(event.target as Node)) setOpen(false);
-    };
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, []);
-
-  const toggle = () => {
-    if (!open) {
-      void publishTargets()
-        .then((ts) => setLabels(Object.fromEntries(ts.map((t) => [t.id, t.label]))))
-        .catch(() => {});
-    }
-    setOpen((v) => !v);
-  };
-
+  const published = Object.keys(publishedFor(doc)).length > 0;
   return (
-    <div className="table-button">
-      <button
-        className={`titlebar-btn publish-btn${open ? " active" : ""}`}
-        data-tip={entries.length ? "Published · ⇧⌘P" : "Publish · ⇧⌘P"}
-        onClick={toggle}
-      >
-        <PublishIcon />
-        {entries.length > 0 && <span className="publish-dot" />}
-      </button>
-      {open && (
-        <div className="table-picker publish-menu" ref={attachMenu}>
-          {entries.length === 0 && <div className="publish-menu-empty">Not published yet</div>}
-          {entries.map(([targetId, rec]) => (
-            <div key={targetId} className="publish-menu-row">
-              <span className="publish-menu-label">{labels[targetId] ?? targetId}</span>
-              <a
-                href={rec.url}
-                title={rec.url}
-                onClick={(event) => {
-                  event.preventDefault();
-                  void openUrl(rec.url);
-                  setOpen(false);
-                }}
-              >
-                {rec.url.replace(/^https?:\/\//, "")}
-              </a>
-              <button
-                className="publish-copy"
-                onClick={() => {
-                  void copyToClipboard(rec.url);
-                  setCopied(targetId);
-                  setTimeout(() => setCopied(null), 1500);
-                }}
-              >
-                {copied === targetId ? "Copied" : "Copy"}
-              </button>
-            </div>
-          ))}
-          <button
-            className="publish-menu-action"
-            onClick={() => {
-              setOpen(false);
-              useStore.getState().setPublishOpen(true);
-            }}
-          >
-            Publish…
-          </button>
-        </div>
-      )}
-    </div>
+    <button
+      className="titlebar-btn publish-btn"
+      data-tip={published ? "Published · ⇧⌘P" : "Publish · ⇧⌘P"}
+      onClick={() => useStore.getState().setPublishOpen(true)}
+    >
+      <PublishIcon />
+      {published && <span className="publish-dot" />}
+    </button>
   );
 }
 

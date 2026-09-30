@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- The title-bar publish icon opens the Publish dialog directly (it already
+  lists each target's link), instead of a menu you had to click through.
+- Filled buttons (Publish, Save, …) use a stronger blue in dark mode; the old
+  pale blue looked disabled.
+
 ### Fixed
 - The Publish dialog kept showing the previous document's result after
   switching documents while it was open.

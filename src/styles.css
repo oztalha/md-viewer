@@ -16,6 +16,8 @@
   --fg-muted: #73737a;
   --fg-faint: #b3b3ba;
   --accent: #3478f6;
+  /* Filled buttons: the dark theme's link blue is too pale behind white text. */
+  --button-primary: #3478f6;
   --accent-soft: rgba(52, 120, 246, 0.1);
   --border: rgba(0, 0, 0, 0.09);
   --code-bg: rgba(0, 0, 0, 0.045);
@@ -41,6 +43,7 @@
   --fg-muted: #98989f;
   --fg-faint: #5c5c64;
   --accent: #6f9eff;
+  --button-primary: #0a84ff;
   --accent-soft: rgba(111, 158, 255, 0.14);
   --border: rgba(255, 255, 255, 0.09);
   --code-bg: rgba(255, 255, 255, 0.06);
@@ -65,6 +68,7 @@
     --fg-muted: #98989f;
     --fg-faint: #5c5c64;
     --accent: #6f9eff;
+    --button-primary: #0a84ff;
     --accent-soft: rgba(111, 158, 255, 0.14);
     --border: rgba(255, 255, 255, 0.09);
     --code-bg: rgba(255, 255, 255, 0.06);
@@ -1674,9 +1678,13 @@ html.no-caret-animation .editor .cm-cursor {
 }
 
 .remote-prompt-open {
-  background: var(--accent);
+  background: var(--button-primary);
   color: #fff;
   font-weight: 500;
+}
+
+.remote-prompt-open:not(:disabled):hover {
+  filter: brightness(1.1);
 }
 
 .remote-prompt-open:disabled {
@@ -2112,7 +2120,7 @@ html.no-caret-animation .editor .cm-cursor {
   color: var(--fg-faint);
 }
 
-/* Title-bar publish button + popover */
+/* Title-bar publish button */
 .publish-btn {
   position: relative;
 }
@@ -2124,58 +2132,4 @@ html.no-caret-animation .editor .cm-cursor {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
-}
-.publish-menu {
-  width: 340px;
-  padding: 6px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-.publish-menu-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 5px 6px;
-  border-radius: 6px;
-  font-size: 12.5px;
-}
-.publish-menu-row:hover {
-  background: var(--code-bg);
-}
-.publish-menu-label {
-  flex: none;
-  width: 78px;
-  color: var(--fg-muted);
-}
-.publish-menu-row a {
-  flex: 1;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--accent);
-  text-decoration: none;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-}
-.publish-menu-row a:hover {
-  text-decoration: underline;
-}
-.publish-menu-empty {
-  padding: 6px;
-  font-size: 12.5px;
-  color: var(--fg-faint);
-}
-.publish-menu-action {
-  all: unset;
-  margin-top: 2px;
-  padding: 6px;
-  border-top: 1px solid var(--border);
-  font-size: 12.5px;
-  color: var(--fg);
-  cursor: default;
-}
-.publish-menu-action:hover {
-  color: var(--accent);
 }
