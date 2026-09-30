@@ -335,7 +335,8 @@ body.tab-dragging .tab {
   flex: none;
   min-width: 18px;
   padding: 1px 3px;
-  font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  /* System font, not mono: in the mono font O and 0 look alike. */
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 10px;
   line-height: 1.2;
   text-align: center;
@@ -2156,7 +2157,7 @@ html.no-caret-animation .editor .cm-cursor {
   border-radius: 4px;
   background: var(--bg-elevated, var(--bg-secondary));
   color: var(--fg-muted);
-  font-family: var(--font-mono);
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
   font-size: 10px;
   line-height: 1.5;
   white-space: nowrap;

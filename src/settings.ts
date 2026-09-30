@@ -57,7 +57,7 @@ export const KEYBINDS: KeybindDef[] = [
   { id: "mode-preview", label: "Preview only", kind: "menu", defaultKey: "Shift+CmdOrCtrl+9" },
   { id: "toggle-preview", label: "Toggle editor / preview", kind: "menu", defaultKey: "Shift+CmdOrCtrl+V" },
   { id: "toggle-sidebar", label: "Toggle sidebar", kind: "menu", defaultKey: "CmdOrCtrl+\\" },
-  { id: "toggle-outline", label: "Toggle outline", kind: "menu", defaultKey: "Ctrl+CmdOrCtrl+O" },
+  { id: "toggle-outline", label: "Toggle outline", kind: "menu", defaultKey: "Shift+CmdOrCtrl+0" },
   { id: "focus-next", label: "Next tab", kind: "menu", defaultKey: "Ctrl+Tab" },
   { id: "focus-prev", label: "Previous tab", kind: "menu", defaultKey: "Ctrl+Shift+Tab" },
   { id: "tab-next", label: "Next tab (⌘⇧])", kind: "menu", defaultKey: "Shift+CmdOrCtrl+]" },

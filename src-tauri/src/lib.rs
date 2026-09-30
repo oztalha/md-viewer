@@ -539,7 +539,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         )
         .item(
             &MenuItemBuilder::with_id("toggle-outline", "Toggle Outline")
-                .accelerator("Ctrl+CmdOrCtrl+O")
+                .accelerator("Shift+CmdOrCtrl+0")
                 .build(app)?,
         )
         .separator()

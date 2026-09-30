@@ -19,7 +19,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Changed
 - Shortcuts moved off ⌥⌘, which is awkward to press: Copy path is now ⇧⌘C,
   and the view modes are ⇧⌘7 (editor), ⇧⌘8 (editor & preview) and ⇧⌘9
-  (preview). Custom bindings you set in Settings are kept.
+  (preview), and Toggle outline is ⇧⌘0. Custom bindings you set in Settings
+  are kept.
+- Shortcut badges use the system font, so O and 0 no longer look alike.
 - The title-bar publish icon opens the Publish dialog directly (it already
   lists each target's link), instead of a menu you had to click through.
 - Filled buttons (Publish, Save, …) use a stronger blue in dark mode; the old
