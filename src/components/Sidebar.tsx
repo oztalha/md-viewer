@@ -5,6 +5,7 @@ import { clearRecents, getRecents, removeRecent, subscribeRecents } from "../rec
 import type { RecentEntry } from "../recent";
 import { parseOpenSpec, remoteUrl } from "../remote";
 import { CloseIcon, SwapIcon } from "./icons";
+import { showRecentContextMenu, showTileContextMenu } from "../contextMenu";
 
 /** Name + a dim hint of where it lives: the host, or "local". */
 function describeRecent(entry: RecentEntry): { name: string; hint: string; remote: boolean; title: string } {
@@ -70,6 +71,10 @@ export function Sidebar() {
               key={docId}
               className={`sidebar-item${active ? " active" : ""}`}
               onPointerDown={() => selectTab(docId)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                void showTileContextMenu(docId);
+              }}
               title={displayTitle(doc)}
             >
               {doc.remote && (
@@ -112,6 +117,10 @@ export function Sidebar() {
                   className="sidebar-item"
                   title={r.title}
                   onClick={() => void useStore.getState().openPaths([entry.spec])}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    void showRecentContextMenu(entry.spec);
+                  }}
                 >
                   {r.remote && (
                     <span className="remote-badge">

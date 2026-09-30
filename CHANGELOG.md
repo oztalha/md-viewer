@@ -31,6 +31,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   pale blue looked disabled.
 
 ### Fixed
+- Right-clicking the sidebar (and other places without their own menu) showed
+  the web view's **Reload** (reloads the whole app, closing your tabs) and
+  **Inspect Element**. Open files now get the document menu, recents get
+  Open / Copy Path / Remove from Recents, and the web-view menu only remains
+  in text fields and the editor (for Cut/Copy/Paste). Menu items show their
+  shortcuts.
 - Enter didn't publish when the Publish dialog opened: focus stayed in the
   document. The Publish/Update button now gets focus, and Enter publishes
   from anywhere in the dialog (e.g. after picking a target).

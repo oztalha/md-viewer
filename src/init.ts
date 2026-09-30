@@ -272,6 +272,15 @@ export function initApp(): void {
 
   void listen<string>("menu", (event) => handleMenu(event.payload));
 
+  // No web-view default right-click menu (Reload = reload the whole UI,
+  // Inspect Element = dev tools) outside text fields and the editor, where it
+  // still offers Cut/Copy/Paste. Our own menus call preventDefault first.
+  window.addEventListener("contextmenu", (event) => {
+    const el = event.target as HTMLElement | null;
+    if (el?.closest("input, textarea, [contenteditable='true'], .cm-editor")) return;
+    event.preventDefault();
+  });
+
   // ⌘+ (⇧⌘=) zooms in like in browsers. The menu accelerator is ⌘= because a
   // literal "+" can't be a menu key, and ⇧⌘= doesn't match it.
   window.addEventListener("keydown", (event) => {
