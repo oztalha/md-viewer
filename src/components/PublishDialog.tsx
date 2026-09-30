@@ -38,7 +38,8 @@ function Publish() {
   const [asNew, setAsNew] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
-  const records = publishedFor(doc);
+  const tick = useStore((s) => s.publishTick);
+  const records = publishedFor(doc, tick);
 
   // Switching documents while the dialog is open starts fresh; a previous
   // document's result would otherwise show as if it were this one's.

@@ -36,6 +36,55 @@ function scrollPreviewToLine(container: HTMLElement, line: number): void {
   container.scrollTop += anchor.getBoundingClientRect().top - container.getBoundingClientRect().top;
 }
 
+/**
+ * Rendered blocks' source lines and their offsets within the preview's scroll
+ * content, in document order — the anchors used to map between the panes.
+ */
+function previewAnchors(container: HTMLElement): { line: number; y: number }[] {
+  const base = container.getBoundingClientRect().top - container.scrollTop;
+  const out: { line: number; y: number }[] = [];
+  for (const el of container.querySelectorAll<HTMLElement>("[data-source-line]")) {
+    out.push({ line: Number(el.dataset.sourceLine), y: el.getBoundingClientRect().top - base });
+  }
+  return out;
+}
+
+/** Linear interpolation across sorted (x -> y) anchor pairs, clamped at the ends. */
+function interpolate(points: { x: number; y: number }[], x: number): number | null {
+  if (points.length === 0) return null;
+  if (x <= points[0].x) return points[0].y;
+  for (let i = 0; i < points.length - 1; i++) {
+    const a = points[i];
+    const b = points[i + 1];
+    if (x < b.x) return b.x === a.x ? a.y : a.y + ((x - a.x) / (b.x - a.x)) * (b.y - a.y);
+  }
+  return points[points.length - 1].y;
+}
+
+/**
+ * Keep split view aligned while scrolling: map the scrolled pane's top edge to
+ * the other pane through the source-line anchors (interpolating inside a
+ * block), so both show the same paragraph. Proportional scrolling drifts
+ * because raw markdown and rendered HTML have different heights.
+ */
+function syncPanes(view: EditorView, preview: HTMLElement, from: "editor" | "preview"): void {
+  const anchors = previewAnchors(preview);
+  if (anchors.length === 0) return;
+  // Each anchor's position in the editor (document y of its source line).
+  const doc = view.state.doc;
+  const pairs = anchors.map((a) => ({
+    editor: view.lineBlockAt(doc.line(Math.max(1, Math.min(a.line, doc.lines))).from).top,
+    preview: a.y,
+  }));
+  if (from === "editor") {
+    const y = interpolate(pairs.map((p) => ({ x: p.editor, y: p.preview })), view.scrollDOM.scrollTop);
+    if (y != null) preview.scrollTop = y;
+  } else {
+    const y = interpolate(pairs.map((p) => ({ x: p.preview, y: p.editor })), preview.scrollTop);
+    if (y != null) view.scrollDOM.scrollTop = y;
+  }
+}
+
 /** Scroll the editor so `line` sits at the top of its viewport. */
 function scrollEditorToLine(view: EditorView, line: number): void {
   const n = Math.max(1, Math.min(line, view.state.doc.lines));
@@ -86,14 +135,11 @@ export function Tile({ leaf }: { leaf: LeafNode }) {
           if (line != null) anchorLine.current = line;
         }
 
-        // Roughly co-scroll the counterpart while both panes are visible.
-        const counterpart = isEditor
-          ? body.querySelector<HTMLElement>(".preview")
-          : body.querySelector<HTMLElement>(".cm-scroller");
-        const max = target.scrollHeight - target.clientHeight;
-        if (counterpart && max > 0) {
-          counterpart.scrollTop =
-            (target.scrollTop / max) * (counterpart.scrollHeight - counterpart.clientHeight);
+        // Co-scroll the other pane to the same source position (split view).
+        const view = getEditorView(leaf.docId);
+        const preview = body.querySelector<HTMLElement>(".preview");
+        if (view && preview && useStore.getState().views[leaf.docId]?.mode === "split") {
+          syncPanes(view, preview, isEditor ? "editor" : "preview");
         }
       };
 

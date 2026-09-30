@@ -31,6 +31,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   pale blue looked disabled.
 
 ### Fixed
+- Split view kept drifting apart while scrolling (panes were synced by scroll
+  percentage, but raw markdown and rendered HTML have different heights). The
+  panes now stay on the same paragraph, anchored by source line.
+- The title bar didn't show the published dot / ↗ button until you switched
+  tabs after publishing.
+- Too much space between an alert's title (e.g. "Note") and its text.
 - Right-clicking the sidebar (and other places without their own menu) showed
   the web view's **Reload** (reloads the whole app, closing your tabs) and
   **Inspect Element**. Open files now get the document menu, recents get

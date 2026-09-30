@@ -103,9 +103,9 @@ function OpenLinkIcon() {
  */
 function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: boolean; keyFor: (id: string) => string }) {
   const doc = useStore((s) => s.docs[docId]);
-  useStore((s) => s.publishTick); // re-read saved links after a publish
-  const published = Object.keys(publishedFor(doc)).length > 0;
-  const latest = latestPublished(doc);
+  const tick = useStore((s) => s.publishTick); // re-read saved links after a publish
+  const published = Object.keys(publishedFor(doc, tick)).length > 0;
+  const latest = latestPublished(doc, tick);
   return (
     <>
       {latest && (

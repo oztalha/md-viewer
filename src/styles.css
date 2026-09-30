@@ -844,6 +844,11 @@ html.no-caret-animation .editor .cm-cursor {
   margin-bottom: 0;
 }
 
+/* The body sits right under the title, not a paragraph gap below it. */
+.preview-content .markdown-alert-title + * {
+  margin-top: 0;
+}
+
 .preview-content .markdown-alert-title {
   display: flex;
   align-items: center;

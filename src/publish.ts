@@ -39,15 +39,19 @@ function loadRecords(): Records {
   }
 }
 
-/** Where (and at which link) a document has been published, by target id. */
-export function publishedFor(doc: Doc | undefined): Record<string, PublishRecord> {
+/**
+ * Where (and at which link) a document has been published, by target id.
+ * Reads localStorage, which React can't see: components pass the store's
+ * `publishTick` as `version` so the React Compiler doesn't reuse a stale result.
+ */
+export function publishedFor(doc: Doc | undefined, _version = 0): Record<string, PublishRecord> {
   const key = keyForDoc(doc);
   return key ? (loadRecords()[key] ?? {}) : {};
 }
 
 /** The most recently published link for a document, if any. */
-export function latestPublished(doc: Doc | undefined): PublishRecord | undefined {
-  return Object.values(publishedFor(doc)).sort((x, y) => y.at - x.at)[0];
+export function latestPublished(doc: Doc | undefined, version = 0): PublishRecord | undefined {
+  return Object.values(publishedFor(doc, version)).sort((x, y) => y.at - x.at)[0];
 }
 
 function saveRecord(doc: Doc, targetId: string, record: PublishRecord): void {
