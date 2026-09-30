@@ -6,11 +6,20 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **Open published page** (⇧⌘L, and a ↗ button in the title bar once a
+  document is published) opens its most recent link without the dialog. The
+  Publish dialog also has an **Open ↗** button next to Update.
+- Holding ⌘ shows each title-bar button's shortcut under it, not just the
+  tabs'. Tooltips show your current bindings.
+- **Toggle sidebar** has a shortcut: ⌘\\.
 - Publish without the mouse: after publishing, the button becomes **Open ↗**
   and Enter opens the page in your browser. **⌘↩** opens the selected
   target's saved link at any time.
 
 ### Changed
+- Shortcuts moved off ⌥⌘, which is awkward to press: Copy path is now ⇧⌘C,
+  and the view modes are ⇧⌘7 (editor), ⇧⌘8 (editor & preview) and ⇧⌘9
+  (preview). Custom bindings you set in Settings are kept.
 - The title-bar publish icon opens the Publish dialog directly (it already
   lists each target's link), instead of a menu you had to click through.
 - Filled buttons (Publish, Save, …) use a stronger blue in dark mode; the old

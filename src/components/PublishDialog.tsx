@@ -233,6 +233,16 @@ function Publish() {
           <button className="remote-prompt-cancel" onClick={close} disabled={busy}>
             {status.kind === "done" ? "Close" : "Cancel"}
           </button>
+          {existing && status.kind !== "done" && (
+            <button
+              className="publish-open"
+              onClick={() => openAndClose(existing.url)}
+              disabled={busy}
+              data-tip="Open the published page without updating · ⌘↩"
+            >
+              Open ↗
+            </button>
+          )}
           <button
             ref={publishButton}
             className="remote-prompt-open"

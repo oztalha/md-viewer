@@ -2139,3 +2139,40 @@ html.no-caret-animation .editor .cm-cursor {
   border-radius: 50%;
   background: var(--accent);
 }
+
+/* ⌘-held shortcut badges under title-bar buttons */
+.titlebar-btn,
+.mode-switch button {
+  position: relative;
+}
+.btn-keycap {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 300;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-elevated, var(--bg-secondary));
+  color: var(--fg-muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.5;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* Secondary "Open ↗" in the Publish dialog */
+.publish-open {
+  all: unset;
+  padding: 5px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--fg);
+  cursor: default;
+}
+.publish-open:hover {
+  background: var(--code-bg);
+}

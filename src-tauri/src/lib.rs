@@ -455,6 +455,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .build(app)?,
         )
         .item(
+            &MenuItemBuilder::with_id("open-published", "Open Published Page")
+                .accelerator("Shift+CmdOrCtrl+L")
+                .build(app)?,
+        )
+        .item(
             &MenuItemBuilder::with_id("export-html", "Export as HTML…")
                 .accelerator("Shift+CmdOrCtrl+E")
                 .build(app)?,
@@ -495,7 +500,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         .separator()
         .item(
             &MenuItemBuilder::with_id("copy-path", "Copy Path")
-                .accelerator("CmdOrCtrl+Alt+C")
+                .accelerator("Shift+CmdOrCtrl+C")
                 .build(app)?,
         )
         .item(
@@ -508,17 +513,17 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
     let view_menu = SubmenuBuilder::new(app, "View")
         .item(
             &MenuItemBuilder::with_id("mode-editor", "Editor Only")
-                .accelerator("CmdOrCtrl+Alt+1")
+                .accelerator("Shift+CmdOrCtrl+7")
                 .build(app)?,
         )
         .item(
             &MenuItemBuilder::with_id("mode-split", "Editor & Preview")
-                .accelerator("CmdOrCtrl+Alt+2")
+                .accelerator("Shift+CmdOrCtrl+8")
                 .build(app)?,
         )
         .item(
             &MenuItemBuilder::with_id("mode-preview", "Preview Only")
-                .accelerator("CmdOrCtrl+Alt+3")
+                .accelerator("Shift+CmdOrCtrl+9")
                 .build(app)?,
         )
         .item(
@@ -527,6 +532,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .build(app)?,
         )
         .separator()
+        .item(
+            &MenuItemBuilder::with_id("toggle-sidebar", "Toggle Sidebar")
+                .accelerator("CmdOrCtrl+\\")
+                .build(app)?,
+        )
         .item(
             &MenuItemBuilder::with_id("toggle-outline", "Toggle Outline")
                 .accelerator("Ctrl+CmdOrCtrl+O")

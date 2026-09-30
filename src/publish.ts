@@ -45,6 +45,11 @@ export function publishedFor(doc: Doc | undefined): Record<string, PublishRecord
   return key ? (loadRecords()[key] ?? {}) : {};
 }
 
+/** The most recently published link for a document, if any. */
+export function latestPublished(doc: Doc | undefined): PublishRecord | undefined {
+  return Object.values(publishedFor(doc)).sort((x, y) => y.at - x.at)[0];
+}
+
 function saveRecord(doc: Doc, targetId: string, record: PublishRecord): void {
   const key = keyForDoc(doc);
   if (!key) return; // unsaved scratch docs have no stable identity

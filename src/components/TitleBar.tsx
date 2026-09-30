@@ -1,17 +1,19 @@
 import { useCallback, useState } from "react";
 import { useStore } from "../store";
-import { useSettings } from "../settings";
+import { formatKeybind, keybindFor, useSettings } from "../settings";
+import { useModHeld } from "../keybindings/useModHeld";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { displayTitle, isDirty } from "../types";
 import type { ViewMode } from "../types";
 import { getEditorView } from "../editor/registry";
 import { insertTable } from "../editor/commands";
 import { showTileContextMenu } from "../contextMenu";
-import { publishedFor } from "../publish";
+import { latestPublished, publishedFor } from "../publish";
 
-const MODES: { mode: ViewMode; label: string; shortcut: string }[] = [
-  { mode: "editor", label: "Editor only", shortcut: "⌘⌥1" },
-  { mode: "split", label: "Editor & preview", shortcut: "⌘⌥2" },
-  { mode: "preview", label: "Preview only", shortcut: "⌘⌥3" },
+const MODES: { mode: ViewMode; label: string }[] = [
+  { mode: "editor", label: "Editor only" },
+  { mode: "split", label: "Editor & preview" },
+  { mode: "preview", label: "Preview only" },
 ];
 
 function ModeIcon({ mode }: { mode: ViewMode }) {
@@ -75,20 +77,57 @@ function PublishIcon() {
   );
 }
 
-/** Opens the Publish dialog; a dot shows the document is published somewhere. */
-function PublishButton({ docId }: { docId: string }) {
+/** Shortcut badge shown under a title-bar button while ⌘ is held. */
+function Keycap({ show, label }: { show: boolean; label: string }) {
+  return show && label ? <span className="btn-keycap">{label}</span> : null;
+}
+
+function OpenLinkIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M9 2.5h4.5V7M13.5 2.5 7.5 8.5M12 9.5v3c0 .6-.4 1-1 1H3.5c-.6 0-1-.4-1-1V5c0-.6.4-1 1-1h3"
+      />
+    </svg>
+  );
+}
+
+/**
+ * Publish (opens the dialog; a dot shows it's published somewhere) and, once
+ * published, Open published page (most recent link, straight to the browser).
+ */
+function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: boolean; keyFor: (id: string) => string }) {
   const doc = useStore((s) => s.docs[docId]);
   useStore((s) => s.publishTick); // re-read saved links after a publish
   const published = Object.keys(publishedFor(doc)).length > 0;
+  const latest = latestPublished(doc);
   return (
-    <button
-      className="titlebar-btn publish-btn"
-      data-tip={published ? "Published · ⇧⌘P" : "Publish · ⇧⌘P"}
-      onClick={() => useStore.getState().setPublishOpen(true)}
-    >
-      <PublishIcon />
-      {published && <span className="publish-dot" />}
-    </button>
+    <>
+      {latest && (
+        <button
+          className="titlebar-btn"
+          data-tip={`Open published page · ${keyFor("open-published")}`}
+          onClick={() => void openUrl(latest.url)}
+        >
+          <OpenLinkIcon />
+          <Keycap show={modHeld} label={keyFor("open-published")} />
+        </button>
+      )}
+      <button
+        className="titlebar-btn publish-btn"
+        data-tip={`${published ? "Published" : "Publish"} · ${keyFor("publish")}`}
+        onClick={() => useStore.getState().setPublishOpen(true)}
+      >
+        <PublishIcon />
+        {published && <span className="publish-dot" />}
+        <Keycap show={modHeld} label={keyFor("publish")} />
+      </button>
+    </>
   );
 }
 
@@ -208,6 +247,9 @@ export function TitleBar() {
   const outline = useStore((s) => s.views[s.activeId]?.outline ?? false);
   const sidebarOpen = useStore((s) => s.sidebarOpen);
   const setMode = useStore((s) => s.setMode);
+  const settings = useSettings((s) => s.settings);
+  const modHeld = useModHeld();
+  const keyFor = (id: string) => formatKeybind(keybindFor(settings, id));
 
   const dirty = doc ? isDirty(doc) : false;
 
@@ -227,20 +269,22 @@ export function TitleBar() {
       </div>
       {doc && (
         <div className="titlebar-actions">
-          <PublishButton docId={doc.id} />
+          <PublishButtons docId={doc.id} modHeld={modHeld} keyFor={keyFor} />
           <button
             className={`titlebar-btn${sidebarOpen ? " active" : ""}`}
-            data-tip="Toggle sidebar"
+            data-tip={`Toggle sidebar · ${keyFor("toggle-sidebar")}`}
             onClick={() => useStore.getState().toggleSidebar()}
           >
             <SidebarIcon />
+            <Keycap show={modHeld} label={keyFor("toggle-sidebar")} />
           </button>
           <button
             className={`titlebar-btn${outline ? " active" : ""}`}
-            data-tip="Outline · ⌃⌘O"
+            data-tip={`Outline · ${keyFor("toggle-outline")}`}
             onClick={() => useStore.getState().toggleOutline(activeId)}
           >
             <OutlineIcon />
+            <Keycap show={modHeld} label={keyFor("toggle-outline")} />
           </button>
           <button
             className="titlebar-btn"
@@ -248,17 +292,19 @@ export function TitleBar() {
             onClick={() => useSettings.getState().setOpen(true)}
           >
             <GearIcon />
+            <Keycap show={modHeld} label="⌘," />
           </button>
           <TableButton docId={doc.id} leafId={activeId} mode={mode} />
           <div className="mode-switch">
-            {MODES.map(({ mode: m, label, shortcut }) => (
+            {MODES.map(({ mode: m, label }) => (
               <button
                 key={m}
                 className={mode === m ? "active" : ""}
-                data-tip={`${label} · ${shortcut}`}
+                data-tip={`${label} · ${keyFor(`mode-${m}`)}`}
                 onClick={() => setMode(activeId, m)}
               >
                 <ModeIcon mode={m} />
+                <Keycap show={modHeld} label={keyFor(`mode-${m}`)} />
               </button>
             ))}
           </div>

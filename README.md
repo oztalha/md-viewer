@@ -76,7 +76,7 @@ bar. **Save to Remote…** (⇧⌘S) uses the same browser with a filename field
 that the document is remote, so ⌘S writes back to that host. The browser
 remembers your last host and the last folder on each host.
 
-**⌥⌘C** copies the document's path — the bare path by default, or `host:/path`
+**⇧⌘C** copies the document's path — the bare path by default, or `host:/path`
 if you turn on *Copy path includes host* in Settings.
 
 Set a **default host** in Settings (⌘,) and you can leave the host out:
@@ -98,16 +98,17 @@ mdv <your-ssh-alias>:/abs/path/to/file.md
 | --- | --- |
 | Settings | ⌘, |
 | New / Open / Save | ⌘N / ⌘O / ⌘S |
-| Save As… (local) | ⌥⌘S |
+| Save As… (local) | ⌥⌘S (⌘S on a new doc asks where to save) |
 | Open Remote… / Save to Remote… | ⇧⌘O / ⇧⌘S |
 | Reload | ⌘R |
-| Copy path | ⌥⌘C |
+| Open published page | ⇧⌘L |
+| Copy path | ⇧⌘C |
 | Publish… | ⇧⌘P |
 | Export as HTML… | ⇧⌘E |
 | Go to tab 1–9 | ⌘1 … ⌘9 |
 | Next / previous tab | ⌃Tab / ⌃⇧Tab, or ⇧⌘] / ⇧⌘[ |
 | Close tab | ⌘W |
-| Editor · Split · Preview | ⌥⌘1 · ⌥⌘2 · ⌥⌘3 |
+| Editor · Split · Preview | ⇧⌘7 · ⇧⌘8 · ⇧⌘9 |
 | Toggle editor ⇄ preview | ⇧⌘V |
 | Toggle outline | ⌃⌘O |
 | Select all | ⌘A |

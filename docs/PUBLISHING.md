@@ -2,7 +2,8 @@
 
 **File → Publish…** (⇧⌘P) sends the current document somewhere you can share
 it, and copies the link. From the keyboard: ⇧⌘P, Enter to publish, Enter
-again to open the page (or ⌘↩ to open an existing link without publishing). Publishing the same document to the same place again
+again to open the page (or ⌘↩ to open an existing link without publishing).
+**⇧⌘L** opens a document's most recent published link straight away. Publishing the same document to the same place again
 **updates** it, so the link stays the same. The publish icon in the title bar
 shows where a document is published, with clickable links.
 

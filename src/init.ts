@@ -12,6 +12,7 @@ import { useStore } from "./store";
 import { displayTitle } from "./types";
 import { getEditorView } from "./editor/registry";
 import { REPO_URL } from "./links";
+import { latestPublished } from "./publish";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|heic|heif|bmp|tiff?)$/i;
 
@@ -152,6 +153,15 @@ function handleMenu(id: string) {
       break;
     case "publish":
       s.setPublishOpen(true);
+      break;
+    case "open-published": {
+      const rec = latestPublished(s.docs[s.activeId]);
+      if (rec) void openUrl(rec.url);
+      else s.setPublishOpen(true); // nothing published yet: offer to publish
+      break;
+    }
+    case "toggle-sidebar":
+      s.toggleSidebar();
       break;
     case "about":
       s.setAboutOpen(true);
