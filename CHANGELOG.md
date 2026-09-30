@@ -5,6 +5,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- Publish without the mouse: after publishing, the button becomes **Open ↗**
+  and Enter opens the page in your browser. **⌘↩** opens the selected
+  target's saved link at any time.
+
 ### Changed
 - The title-bar publish icon opens the Publish dialog directly (it already
   lists each target's link), instead of a menu you had to click through.

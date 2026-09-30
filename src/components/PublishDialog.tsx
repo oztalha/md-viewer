@@ -59,6 +59,7 @@ function Publish() {
 
   // Latest publish(), for the window-level Enter handler below.
   const publishRef = useRef<() => void>(() => {});
+  const openSavedRef = useRef<() => void>(() => {});
   const inFlight = useRef(false);
   const publishButton = useRef<HTMLButtonElement | null>(null);
 
@@ -70,10 +71,17 @@ function Publish() {
         useStore.getState().setPublishOpen(false);
         return;
       }
-      // Enter publishes from anywhere while the dialog is open (e.g. after
-      // clicking a target), and never reaches the editor underneath. On a
-      // focused button or link, let that element handle it natively.
       if (event.key !== "Enter") return;
+      // ⌘↩ opens the selected target's saved link, without publishing.
+      if (event.metaKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        openSavedRef.current();
+        return;
+      }
+      // Enter runs the primary button (Publish/Update, then Open) from anywhere
+      // in the dialog, and never reaches the editor underneath. On a focused
+      // button or link, let that element handle it natively.
       const el = event.target as HTMLElement | null;
       if (el?.closest("button, a")) return;
       event.preventDefault();
@@ -102,13 +110,24 @@ function Publish() {
       inFlight.current = false;
     }
   };
-  publishRef.current = () => void publish();
+  // Open a published page in the browser and close the dialog.
+  const openAndClose = (url: string) => {
+    void openUrl(url);
+    close();
+  };
 
-  // Focus Publish/Update once the targets are in, so Enter presses it.
+  const primary = () => (status.kind === "done" ? openAndClose(status.url) : void publish());
+  publishRef.current = primary;
+  openSavedRef.current = () => {
+    if (existing && !busy) openAndClose(existing.url);
+  };
+
+  // Keep the primary button focused so Enter presses it: once targets are in,
+  // and again after publishing (it was disabled meanwhile, which drops focus).
   const ready = !!targets && !!target;
   useEffect(() => {
     if (ready) publishButton.current?.focus();
-  }, [ready]);
+  }, [ready, status.kind]);
 
   const link = (href: string) => (event: React.MouseEvent) => {
     event.preventDefault();
@@ -217,10 +236,17 @@ function Publish() {
           <button
             ref={publishButton}
             className="remote-prompt-open"
-            onClick={() => void publish()}
+            onClick={primary}
             disabled={!target || busy}
+            data-tip={status.kind === "done" ? "Open in browser · ↩" : existing ? "⌘↩ opens the published page" : undefined}
           >
-            {busy ? "Publishing…" : existing && !asNew ? "Update" : "Publish"}
+            {busy
+              ? "Publishing…"
+              : status.kind === "done"
+                ? "Open ↗"
+                : existing && !asNew
+                  ? "Update"
+                  : "Publish"}
           </button>
         </div>
       </div>
