@@ -2264,3 +2264,12 @@ html.no-caret-animation .editor .cm-cursor {
   flex: 1;
   padding-top: 4px;
 }
+.sidebar-tab-keycap {
+  margin-left: 6px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 10px;
+  color: var(--fg-muted);
+}

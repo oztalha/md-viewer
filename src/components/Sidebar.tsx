@@ -12,6 +12,8 @@ import { parseOpenSpec, remoteUrl } from "../remote";
 import { CloseIcon, SwapIcon } from "./icons";
 import { showRecentContextMenu, showTileContextMenu } from "../contextMenu";
 import { OutlineList } from "./Outline";
+import { useModHeld } from "../keybindings/useModHeld";
+import { formatKeybind, keybindFor, useSettings } from "../settings";
 
 /** Name + a dim hint of where it lives: the host, or "local". */
 function describeRecent(entry: RecentEntry): {
@@ -62,6 +64,8 @@ export function Sidebar() {
   const width = useStore((s) => s.sidebarWidth);
   const tab = useStore((s) => s.sidebarTab);
   const setTab = useStore((s) => s.setSidebarTab);
+  const modHeld = useModHeld();
+  const toggleKey = formatKeybind(keybindFor(useSettings((s) => s.settings), "toggle-outline"));
 
   // Drag the right edge to resize; width is clamped + persisted in the store.
   const startResize = (event: React.PointerEvent) => {
@@ -88,18 +92,22 @@ export function Sidebar() {
           role="tab"
           aria-selected={tab === "files"}
           className={tab === "files" ? "active" : ""}
+          data-tip={`Files · ${toggleKey} toggles`}
           onClick={() => setTab("files")}
         >
           Files
+          {/* While ⌘ is held, the tab the toggle key would switch to shows it. */}
+          {modHeld && tab !== "files" && <span className="sidebar-tab-keycap">{toggleKey}</span>}
         </button>
         <button
           role="tab"
           aria-selected={tab === "outline"}
           className={tab === "outline" ? "active" : ""}
-          data-tip="Outline · ⇧⌘0 toggles"
+          data-tip={`Outline · ${toggleKey} toggles`}
           onClick={() => setTab("outline")}
         >
           Outline
+          {modHeld && tab !== "outline" && <span className="sidebar-tab-keycap">{toggleKey}</span>}
         </button>
       </div>
       {tab === "outline" ? (
