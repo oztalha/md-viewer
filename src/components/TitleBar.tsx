@@ -42,6 +42,20 @@ function ModeIcon({ mode }: { mode: ViewMode }) {
   );
 }
 
+/** "1 2 3" beside short lines: the line-numbers toggle. */
+function LineNumbersIcon() {
+  return (
+    <svg width="15" height="13" viewBox="0 0 15 13" aria-hidden="true">
+      <text x="0" y="4.3" fontSize="5" fill="currentColor" fontFamily="ui-monospace, monospace">1</text>
+      <text x="0" y="8.4" fontSize="5" fill="currentColor" fontFamily="ui-monospace, monospace">2</text>
+      <text x="0" y="12.8" fontSize="5" fill="currentColor" fontFamily="ui-monospace, monospace">3</text>
+      <line x1="5.5" y1="2.6" x2="14.5" y2="2.6" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="5.5" y1="7" x2="12" y2="7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+      <line x1="5.5" y1="11.4" x2="13.5" y2="11.4" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function TableIcon() {
   return (
     <svg width="15" height="13" viewBox="0 0 15 13" aria-hidden="true">
@@ -295,6 +309,14 @@ export function TitleBar() {
             <Keycap show={modHeld} label="⌘," />
           </button>
           <TableButton docId={doc.id} leafId={activeId} mode={mode} />
+          <button
+            className={`titlebar-btn${settings.lineNumbers ? " active" : ""}`}
+            data-tip={`Line numbers · ${keyFor("toggle-line-numbers")}`}
+            onClick={() => useSettings.getState().update({ lineNumbers: !settings.lineNumbers })}
+          >
+            <LineNumbersIcon />
+            <Keycap show={modHeld} label={keyFor("toggle-line-numbers")} />
+          </button>
           <div className="mode-switch">
             {MODES.map(({ mode: m, label }) => (
               <button

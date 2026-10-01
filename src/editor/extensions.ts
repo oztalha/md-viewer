@@ -185,6 +185,19 @@ const editorTheme = EditorView.theme({
   ".cm-line": {
     padding: "0",
   },
+  // Line-number gutter (⇧⌘N): quiet, on the editor background, not
+  // CodeMirror's default light-grey strip.
+  ".cm-gutters": {
+    backgroundColor: "transparent",
+    border: "none",
+    color: "var(--fg-faint)",
+    // Same size as body text so the numbers sit on the text's baseline.
+    fontVariantNumeric: "tabular-nums",
+  },
+  ".cm-lineNumbers .cm-gutterElement": {
+    padding: "0 4px 0 16px",
+    minWidth: "3ch",
+  },
   "&.cm-focused": {
     outline: "none",
   },

@@ -13,7 +13,7 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - **Code files** (`.py`, `.js`/`.ts`, `.sh`, `.rs`, `.go`, `.java`, `.yaml`,
   `.toml`, `.sql`, … and `Dockerfile`/`Makefile`) open in preview,
   syntax-highlighted like a fenced code block. `file.py:33` jumps to line 33.
-- **Line numbers** (⇧⌘N, View menu or Settings): in the editor gutter and in
+- **Line numbers** (⇧⌘N, title-bar button, View menu or Settings): in the editor gutter and in
   highlighted code in the preview (code files, JSON, fenced blocks).
 - **JSON files:** `.json` opens in preview, pretty-printed and highlighted
   (invalid JSON shows the parse error and the raw text). **Format Document**
