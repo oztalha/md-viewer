@@ -206,3 +206,8 @@ export function publishCommand(
 ): Promise<{ id: string; url: string }> {
   return invoke("publish_command", { targetId, file, title, existing });
 }
+
+/** Copy local files/folders into a remote directory over scp. */
+export function uploadRemote(host: string, localPaths: string[], dir: string): Promise<void> {
+  return invoke<void>("upload_remote", { host, localPaths, dir });
+}

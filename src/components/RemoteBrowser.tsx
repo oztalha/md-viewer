@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
 import { useSettings } from "../settings";
-import { confirmOverwrite, listRemoteDir } from "../ipc";
+import { confirmOverwrite, listRemoteDir, uploadRemote } from "../ipc";
+import { CopyButton } from "./CopyButton";
 import type { RemoteListing } from "../ipc";
 import { isValidHost } from "../remote";
 import { basename, displayTitle } from "../types";
@@ -175,6 +176,31 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     void load(h, p);
   };
 
+  // Files dropped onto the browser: copy them into the folder it's showing.
+  const remoteDrop = useStore((st) => st.remoteDrop);
+  const [upload, setUpload] = useState<string | null>(null);
+  useEffect(() => {
+    if (!remoteDrop) return;
+    useStore.getState().setRemoteDrop(null);
+    const dir = listing?.dir;
+    if (!dir || !isValidHost(host)) {
+      setError("Open a folder first, then drop files onto it.");
+      return;
+    }
+    const names = remoteDrop.map((p) => basename(p)).join(", ");
+    setUpload(`Copying ${names} to ${host}:${dir}…`);
+    uploadRemote(host, remoteDrop, dir)
+      .then(() => {
+        setUpload(`Copied ${names} to ${host}:${dir}`);
+        void load(host, dir);
+      })
+      .catch((err) => {
+        setUpload(null);
+        setError(String(err));
+      });
+  }, [remoteDrop, listing, host, load]);
+  const copyWithHost = useSettings((st) => st.settings.copyPathWithHost);
+
   const entries = (listing?.entries ?? []).filter((e) => showHidden || !e.name.startsWith("."));
   const dir = listing?.dir ?? null;
 
@@ -216,6 +242,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
           <input
             className="remote-prompt-input rb-path"
             placeholder="~/ or /abs/path (or paste host:/path)"
+            title={pathDraft}
             value={pathDraft}
             spellCheck={false}
             autoCapitalize="off"
@@ -242,6 +269,10 @@ function Browser({ mode }: { mode: "open" | "save" }) {
           >
             ~
           </button>
+          <CopyButton
+            text={dir ? (copyWithHost ? `${host}:${dir}` : dir) : ""}
+            tip="Copy this folder's path"
+          />
         </div>
 
         <div className="rb-list" aria-busy={loading}>
@@ -309,7 +340,9 @@ function Browser({ mode }: { mode: "open" | "save" }) {
         )}
 
         <div className="remote-prompt-actions">
-          <span className="rb-where">{dir ? `${host}:${dir}` : ""}</span>
+          <span className="rb-where" title={dir ? `${host}:${dir}` : ""}>
+            {upload ?? (dir ? `${host}:${dir} · drop files here to copy them in` : "")}
+          </span>
           <button className="remote-prompt-cancel" onClick={close}>
             Cancel
           </button>

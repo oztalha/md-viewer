@@ -157,6 +157,33 @@ async fn list_remote(host: String, path: String) -> Result<RemoteListing, String
     .map_err(|e| e.to_string())?
 }
 
+/// Copy local files or folders into a remote directory (drag-and-drop onto the
+/// remote browser). Uses the system `scp`, so `~/.ssh/config` (aliases, keys,
+/// ProxyCommand) applies, and binary files are fine.
+#[tauri::command]
+async fn upload_remote(host: String, local_paths: Vec<String>, dir: String) -> Result<(), String> {
+    validate_host(&host)?;
+    if local_paths.is_empty() {
+        return Ok(());
+    }
+    tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
+        let target = format!("{host}:{}/", dir.trim_end_matches('/'));
+        let output = std::process::Command::new("/usr/bin/scp")
+            .args(["-o", "ConnectTimeout=12", "-o", "BatchMode=yes", "-r", "-q", "--"])
+            .args(&local_paths)
+            .arg(&target)
+            .output()
+            .map_err(|e| format!("Could not run scp: {e}"))?;
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Could not copy to {target}\n{}", err.trim()));
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Write a file to a remote host over SSH, atomically (temp file + mv).
 #[tauri::command]
 async fn write_remote(host: String, path: String, contents: String) -> Result<(), String> {
@@ -693,6 +720,7 @@ pub fn run() {
             write_file,
             read_remote,
             list_remote,
+            upload_remote,
             publish::publish_targets,
             publish::publish_edit_config,
             publish::publish_write_temp,

@@ -315,6 +315,11 @@ export function initApp(): void {
     } else if (payload.type === "drop") {
       s.setDropping(false);
       if (!payload.paths.length) return;
+      // Dropped onto the open remote browser: upload to the folder it shows.
+      if (s.remoteBrowser) {
+        s.setRemoteDrop(payload.paths);
+        return;
+      }
       // Images get inserted into the editor; everything else opens as a document.
       const images = payload.paths.filter((p) => IMAGE_EXT.test(p));
       const documents = payload.paths.filter((p) => !IMAGE_EXT.test(p));

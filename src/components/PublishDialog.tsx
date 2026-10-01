@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
-import { copyToClipboard, editPublishConfig, publishTargets } from "../ipc";
+import { editPublishConfig, publishTargets } from "../ipc";
 import type { PublishTarget } from "../ipc";
 import { publishDoc, publishedFor } from "../publish";
 import { displayTitle } from "../types";
+import { CopyButton } from "./CopyButton";
 
 const LAST_TARGET_KEY = "publishLastTarget";
 
@@ -37,7 +38,6 @@ function Publish() {
   const [selected, setSelected] = useState<string>(localStorage.getItem(LAST_TARGET_KEY) ?? "");
   const [asNew, setAsNew] = useState(false);
   const [status, setStatus] = useState<Status>({ kind: "idle" });
-  const [copied, setCopied] = useState(false);
   const tick = useStore((s) => s.publishTick);
   const records = publishedFor(doc, tick);
 
@@ -186,16 +186,7 @@ function Publish() {
             <a href={existing.url} onClick={link(existing.url)} title={existing.url}>
               {existing.url.replace(/^https?:\/\//, "")}
             </a>
-            <button
-              className="publish-copy"
-              onClick={() => {
-                void copyToClipboard(existing.url);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1500);
-              }}
-            >
-              {copied ? "Copied" : "Copy"}
-            </button>
+            <CopyButton text={existing.url} tip="Copy link" />
             <span className="publish-when">{timeAgo(existing.at)}</span>
           </div>
         )}

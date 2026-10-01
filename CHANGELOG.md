@@ -5,7 +5,16 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Copy files to a remote machine:** drop files or folders onto the remote
+  browser (⇧⌘O) to copy them into the folder it shows, over `scp` (your
+  `~/.ssh/config` applies; binaries are fine).
+- The remote browser has a copy button for the current folder's path, and
+  shows the full path on hover. Copy buttons are now icons.
+
 ### Fixed
+- Dropping a non-text file (e.g. a `.tar.gz`) showed a raw UTF-8 error; it now
+  explains how to copy it to a remote machine instead.
 - Wide tables were squeezed into the text column (tall, narrow columns and a
   sideways scroll). A table wider than the text now uses the whole preview
   width, centred; tables that fit stay aligned with the text. Table cells are

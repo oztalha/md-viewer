@@ -11,6 +11,7 @@ import { AnnotationLayer } from "./components/AnnotationLayer";
 
 export default function App() {
   const dropping = useStore((s) => s.dropping);
+  const remoteBrowser = useStore((s) => s.remoteBrowser);
   const lightboxSrc = useStore((s) => s.lightboxSrc);
   const setLightbox = useStore((s) => s.setLightbox);
 
@@ -31,7 +32,7 @@ export default function App() {
       <Workspace />
       {dropping && (
         <div className="drop-overlay">
-          <span>Drop files to open</span>
+          <span>{remoteBrowser ? "Drop to copy into this remote folder" : "Drop files to open"}</span>
         </div>
       )}
       {lightboxSrc && (

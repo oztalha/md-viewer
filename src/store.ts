@@ -81,6 +81,8 @@ interface AppState {
   lightboxSrc: string | null;
   /** Remote file browser: which flow it's showing, or null when closed. */
   remoteBrowser: "open" | "save" | null;
+  /** Files dropped while the remote browser is open, waiting to be uploaded. */
+  remoteDrop: string[] | null;
   /** Whether the About window is showing. */
   aboutOpen: boolean;
   /** Whether the Publish dialog is showing. */
@@ -101,6 +103,7 @@ interface AppState {
   setLightbox(src: string | null): void;
   setRemoteBrowser(mode: "open" | "save" | null): void;
   setAboutOpen(open: boolean): void;
+  setRemoteDrop(paths: string[] | null): void;
   setPublishOpen(open: boolean): void;
   bumpPublished(): void;
   setContent(docId: string, content: string): void;
@@ -173,6 +176,7 @@ export const useStore = create<AppState>()((set, get) => ({
   lightboxSrc: null,
   remoteBrowser: null,
   aboutOpen: false,
+  remoteDrop: null,
   publishOpen: false,
   publishTick: 0,
 
@@ -217,6 +221,10 @@ export const useStore = create<AppState>()((set, get) => ({
 
   setPublishOpen(open) {
     if (get().publishOpen !== open) set({ publishOpen: open });
+  },
+
+  setRemoteDrop(paths) {
+    set({ remoteDrop: paths });
   },
 
   setAboutOpen(open) {
@@ -390,7 +398,12 @@ export const useStore = create<AppState>()((set, get) => ({
       try {
         content = await readTextFile(path);
       } catch (err) {
-        await showError(String(err));
+        const msg = String(err);
+        await showError(
+          /UTF-8/i.test(msg)
+            ? `“${basename(path)}” isn't a text file, so it can't be opened here.\n\nTo copy it to a remote machine, open the remote browser (⇧⌘O), go to a folder, and drop the file onto it.`
+            : msg,
+        );
         continue;
       } finally {
         opening.delete(path);
