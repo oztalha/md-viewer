@@ -12,6 +12,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - **Pin files** in the sidebar: right-click an open or recent file → **Pin**.
   Pinned files sit in their own section above Recent, are never evicted, and
   can be dragged to reorder.
+- Drag recent files to reorder them too. Opening a file still moves it to
+  the top of Recent; pin it to keep it in place.
 - Drag open files in the sidebar up or down to reorder them (same order as
   the tabs); a grip appears on hover.
 

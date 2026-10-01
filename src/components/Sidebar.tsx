@@ -8,6 +8,7 @@ import {
   getRecents,
   removeRecent,
   reorderPin,
+  reorderRecent,
   subscribeRecents,
   togglePin,
 } from "../recent";
@@ -93,6 +94,19 @@ export function Sidebar() {
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
+  };
+
+  // Drag a recent file up/down to reorder it. The list hides open files, so
+  // the drop is expressed as "before this neighbour" in the full list.
+  const startRecentDrag = (event: React.PointerEvent, spec: string) => {
+    startSortDrag(event, {
+      axis: "y",
+      items: ".sidebar-recent-row",
+      onDrop: (_from, to) => {
+        const rest = recentList.filter((e) => e.spec !== spec);
+        reorderRecent(spec, rest[to]?.spec ?? null);
+      },
+    });
   };
 
   // Drag a pinned file up/down to reorder it.
@@ -222,6 +236,7 @@ export function Sidebar() {
                       <span className="pin-badge" data-tip="Pinned">
                         <PinIcon size={10} />
                       </span>
+                      <span className="sidebar-grip" aria-hidden="true" />
                       {r.remote && (
                         <span className="remote-badge">
                           <SwapIcon size={11} />
@@ -267,7 +282,8 @@ export function Sidebar() {
                   return (
                     <div
                       key={entry.spec}
-                      className="sidebar-item sidebar-recent-item"
+                      className="sidebar-item sidebar-recent-item sidebar-recent-row"
+                      onPointerDown={(e) => startRecentDrag(e, entry.spec)}
                       onClick={() =>
                         void useStore.getState().openPaths([entry.spec])
                       }

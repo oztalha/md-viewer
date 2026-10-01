@@ -2404,6 +2404,7 @@ html.no-caret-animation .editor .cm-cursor {
   transition: opacity 120ms;
 }
 .sidebar-pin-item:hover .sidebar-grip,
+.sidebar-recent-row:hover .sidebar-grip,
 .sidebar-open-item:hover .sidebar-grip,
 .sort-held .sidebar-grip {
   opacity: 1;

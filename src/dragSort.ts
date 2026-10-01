@@ -72,6 +72,11 @@ export function startSortDrag(
     window.removeEventListener("pointercancel", up);
     if (!dragging) return;
     document.body.classList.remove("sort-dragging");
+    // The release also fires a click; for rows that open on click, eat it.
+    const swallow = (e: MouseEvent) => e.stopPropagation();
+    window.addEventListener("click", swallow, { capture: true, once: true });
+    // If no click follows (released outside the item), drop the listener.
+    setTimeout(() => window.removeEventListener("click", swallow, true), 0);
     // Clear the visual offsets and commit the order in the same frame, so the
     // re-rendered list appears exactly where the items were drawn.
     for (const el of els) {

@@ -81,6 +81,20 @@ export function togglePin(spec: string, label: string): void {
   persist();
 }
 
+/**
+ * Move a recent file next to another (drag-to-reorder). Indices are in the
+ * sidebar's filtered list (open files hidden), so we place by neighbour spec.
+ */
+export function reorderRecent(spec: string, beforeSpec: string | null): void {
+  const item = entries.find((e) => e.spec === spec);
+  if (!item || spec === beforeSpec) return;
+  const next = entries.filter((e) => e.spec !== spec);
+  const at = beforeSpec ? next.findIndex((e) => e.spec === beforeSpec) : -1;
+  next.splice(at === -1 ? next.length : at, 0, item);
+  entries = next;
+  persist();
+}
+
 /** Move a pinned file to a new index (drag-to-reorder). */
 export function reorderPin(spec: string, toIndex: number): void {
   const from = pins.findIndex((e) => e.spec === spec);
