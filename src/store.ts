@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Doc, LeafNode, TabView, ViewMode } from "./types";
-import { basename, displayTitle, isDataPath, isDirty, isPristine } from "./types";
+import { basename, displayTitle, isCodePath, isDataPath, isDirty, isPristine } from "./types";
 import {
   askToSave,
   confirmReloadDiscard,
@@ -16,8 +16,9 @@ import {
 } from "./ipc";
 import { allEditorViews, getEditorView } from "./editor/registry";
 import { useSettings } from "./settings";
-import { isValidHost, parseOpenSpec, remoteUrl } from "./remote";
+import { isValidHost, parseOpenSpec, remoteUrl, splitLineSuffix } from "./remote";
 import { addRecent } from "./recent";
+import { revealLine } from "./reveal";
 import { formatMarkdown } from "./format";
 import { buildExportHtml } from "./export";
 import type { RemoteRef } from "./types";
@@ -128,7 +129,7 @@ interface AppState {
   // --- file operations -----------------------------------------------------
   placeDoc(doc: Doc, mode: ViewMode): void;
   openPaths(specs: string[]): Promise<void>;
-  openRemote(host: string, path: string): Promise<void>;
+  openRemote(host: string, path: string, line?: number): Promise<void>;
   openViaDialog(): Promise<void>;
   followLink(docId: string, href: string): Promise<void>;
   exportHtml(docId: string): Promise<void>;
@@ -379,7 +380,7 @@ export const useStore = create<AppState>()((set, get) => ({
     for (const spec of specs) {
       const parsed = parseOpenSpec(spec, defaultHost);
       if (parsed.kind === "remote") {
-        await get().openRemote(parsed.ref.host, parsed.ref.path);
+        await get().openRemote(parsed.ref.host, parsed.ref.path, parsed.line);
         continue;
       }
       const path = parsed.path;
@@ -389,6 +390,7 @@ export const useStore = create<AppState>()((set, get) => ({
       const existingDoc = findOpen();
       if (existingDoc) {
         get().selectTab(existingDoc.id);
+        if (parsed.line) revealLine(existingDoc.id, parsed.line, isCodePath(path));
         continue;
       }
       if (opening.has(path)) continue;
@@ -418,11 +420,12 @@ export const useStore = create<AppState>()((set, get) => ({
       // Data files open straight into the table view; markdown follows the preference.
       const openMode = isDataPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
       get().placeDoc(doc, openMode);
+      if (parsed.line) revealLine(doc.id, parsed.line, isCodePath(path));
       addRecent(path, basename(path));
     }
   },
 
-  async openRemote(host, path) {
+  async openRemote(host, path, line) {
     if (!isValidHost(host)) {
       await showError(`Invalid SSH host: ${host}`);
       return;
@@ -433,6 +436,7 @@ export const useStore = create<AppState>()((set, get) => ({
     const existing = findOpen();
     if (existing) {
       get().selectTab(existing.id);
+      if (line) revealLine(existing.id, line, isCodePath(path));
       return;
     }
     const remote: RemoteRef = { host, path };
@@ -459,6 +463,7 @@ export const useStore = create<AppState>()((set, get) => ({
     const doc = makeDoc({ remote, title: basename(path), content, saved: content });
     const openMode = isDataPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
     get().placeDoc(doc, openMode);
+    if (line) revealLine(doc.id, line, isCodePath(path));
     addRecent(remoteUrl(remote), `${basename(path)} — ${host}`);
   },
 
@@ -487,23 +492,30 @@ export const useStore = create<AppState>()((set, get) => ({
   async followLink(docId, href) {
     const doc = get().docs[docId];
     if (!doc) return;
+    // A line to jump to: GitHub-style "#L33" or a "path:33" suffix.
+    const fragmentLine = Number(/#L?(\d+)$/.exec(href)?.[1]) || undefined;
 
     if (doc.remote) {
       const baseDir = doc.remote.path.slice(0, doc.remote.path.lastIndexOf("/"));
       const target = resolveLink(baseDir, href);
-      if (target) await get().openRemote(doc.remote.host, target);
+      if (!target) return;
+      const { path, line } = splitLineSuffix(target);
+      await get().openRemote(doc.remote.host, path, line ?? fragmentLine);
       return;
     }
 
     const baseDir = doc.path ? doc.path.slice(0, doc.path.lastIndexOf("/")) : null;
     const target = resolveLink(baseDir, href);
     if (!target) return;
-    if (await pathExists(target)) {
-      await get().openPaths([target]);
+    const { path, line } = splitLineSuffix(target);
+    const jump = line ?? fragmentLine;
+    if (await pathExists(path)) {
+      await get().openPaths([jump ? `${path}:${jump}` : path]);
     } else {
-      await showError(`File not found: ${target}`);
+      await showError(`File not found: ${path}`);
     }
   },
+
 
   async saveDoc(docId, saveAs = false) {
     const doc = get().docs[docId];

@@ -6,6 +6,13 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **`path:LINE`** (e.g. `notes.md:33`, as printed by tools and agents) opens
+  the file and jumps to that line, in the editor and the preview. Works in
+  `mdv`, links (also `line=` and `#L33`), Open Remote's path bar, and Open
+  Recent.
+- **Code files** (`.py`, `.js`/`.ts`, `.sh`, `.rs`, `.go`, `.java`, `.yaml`,
+  `.toml`, `.sql`, … and `Dockerfile`/`Makefile`) open in preview,
+  syntax-highlighted like a fenced code block. `file.py:33` jumps to line 33.
 - **JSON files:** `.json` opens in preview, pretty-printed and highlighted
   (invalid JSON shows the parse error and the raw text). **Format Document**
   (⇧⌥F) pretty-prints a JSON file.
@@ -29,6 +36,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   its place on hover instead of pushing it aside.
 
 ### Fixed
+- Clicking a link like `notes.md:33` in a document tried to open a file named
+  `notes.md:33`; it now opens `notes.md` at line 33 (local and remote).
+- Ticked task-list checkboxes were hard to see in dark mode (pale and dimmed);
+  they're now solid blue with a white tick.
 - A red "ResizeObserver loop completed with undelivered notifications" bar
   could appear while resizing; the wide-table check no longer triggers it.
 - Dropping a non-text file (e.g. a `.tar.gz`) showed a raw UTF-8 error; it now

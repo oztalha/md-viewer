@@ -12,6 +12,7 @@ src/                     frontend (React, zustand)
   settings.ts            preferences + KEYBINDS (default shortcuts, rebindable)
   init.ts                native menu events -> actions; window-level wiring
   markdown.ts            markdown-it pipeline, per-block render cache
+  json.ts, code.ts       JSON / code files, rendered as one fenced block
   publish.ts             publish flow (create/update steps, saved links)
   recent.ts, annotations.ts   small localStorage-backed stores
   components/            TitleBar, TabBar, Sidebar, Tile (editor+preview), dialogs

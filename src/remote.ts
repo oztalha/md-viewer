@@ -1,6 +1,22 @@
 import type { RemoteRef } from "./types";
 
-export type OpenSpec = { kind: "local"; path: string } | { kind: "remote"; ref: RemoteRef };
+export type OpenSpec = (
+  | { kind: "local"; path: string }
+  | { kind: "remote"; ref: RemoteRef }
+) & {
+  /** 1-based line to jump to, from a `path:LINE[:COL]` suffix or `line=`. */
+  line?: number;
+};
+
+/**
+ * Split a trailing `:LINE` or `:LINE:COL` (as printed by compilers, grep and
+ * agents) off a path. A real filename ending in ":<digits>" is rare enough.
+ */
+export function splitLineSuffix(path: string): { path: string; line?: number } {
+  const m = /^(.*?):(\d+)(?::\d+)?$/.exec(path);
+  if (!m || !m[1] || m[1].endsWith("/")) return { path };
+  return { path: m[1], line: Number(m[2]) };
+}
 
 /**
  * A safe `[user@]host` token. Must match the backend's `validate_host` — most
@@ -23,6 +39,17 @@ export function isValidHost(host: string): boolean {
  *   HOST:/abs/path        HOST:~/rel/path        :/abs/path (default host)
  */
 export function parseOpenSpec(spec: string, defaultHost: string): OpenSpec {
+  const parsed = parseOpenSpecRaw(spec, defaultHost);
+  if (parsed.line) return parsed;
+  if (parsed.kind === "local") {
+    const { path, line } = splitLineSuffix(parsed.path);
+    return line ? { kind: "local", path, line } : parsed;
+  }
+  const { path, line } = splitLineSuffix(parsed.ref.path);
+  return line ? { kind: "remote", ref: { ...parsed.ref, path }, line } : parsed;
+}
+
+function parseOpenSpecRaw(spec: string, defaultHost: string): OpenSpec {
   const trimmed = spec.trim();
 
   if (/^mdviewer:\/\//i.test(trimmed)) {
@@ -36,7 +63,8 @@ export function parseOpenSpec(spec: string, defaultHost: string): OpenSpec {
         path = decodeURIComponent(url.pathname);
       }
       host = host || defaultHost;
-      if (host && path && isValidHost(host)) return { kind: "remote", ref: { host, path } };
+      const lineParam = Number(url.searchParams.get("line")) || undefined;
+      if (host && path && isValidHost(host)) return { kind: "remote", ref: { host, path }, line: lineParam };
     } catch {
       // fall through to local
     }

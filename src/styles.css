@@ -1032,10 +1032,25 @@ html.no-caret-animation .editor .cm-cursor {
   list-style: none;
 }
 
+/* Drawn by hand: the native read-only (disabled) checkbox is dimmed by WebKit,
+   and the link-blue accent was too pale to see the tick in dark mode. */
 .preview-content .task-list-item input[type="checkbox"] {
-  margin-right: 0.5em;
-  accent-color: var(--accent);
-  vertical-align: -0.1em;
+  appearance: none;
+  -webkit-appearance: none;
+  width: 1em;
+  height: 1em;
+  margin: 0 0.5em 0 0;
+  vertical-align: -0.12em;
+  border: 1.5px solid var(--fg-faint);
+  border-radius: 4px;
+  background: transparent;
+  opacity: 1;
+}
+.preview-content .task-list-item input[type="checkbox"]:checked {
+  border-color: var(--button-primary);
+  background: var(--button-primary)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 85% no-repeat;
 }
 
 .preview-content table {
@@ -2356,4 +2371,11 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .rb-crumb-sep {
   color: var(--fg-faint);
+}
+
+/* Briefly highlight the block jumped to via path:LINE. */
+.preview-content .reveal-flash {
+  background: var(--accent-soft);
+  border-radius: 4px;
+  transition: background 0.8s ease-out;
 }

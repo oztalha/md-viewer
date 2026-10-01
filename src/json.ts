@@ -1,7 +1,7 @@
 import { renderBlocks } from "./markdown";
 
 /** A code fence longer than any backtick run in `text`, so it can't close early. */
-function fenceFor(text: string): string {
+export function fenceFor(text: string): string {
   const longest = Math.max(0, ...[...text.matchAll(/`+/g)].map((m) => m[0].length));
   return "`".repeat(Math.max(3, longest + 1));
 }

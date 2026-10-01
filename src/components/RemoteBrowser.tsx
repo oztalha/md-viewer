@@ -6,8 +6,8 @@ import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { CopyButton } from "./CopyButton";
 import type { RemoteListing } from "../ipc";
-import { isValidHost } from "../remote";
-import { basename, displayTitle } from "../types";
+import { isValidHost, splitLineSuffix } from "../remote";
+import { basename, displayTitle, isCodePath } from "../types";
 
 const HOST_KEY = "remoteBrowserHost";
 const dirKey = (host: string) => `remoteBrowserDir:${host}`;
@@ -201,8 +201,15 @@ function Browser({ mode }: { mode: "open" | "save" }) {
       setHost(h);
       setHostDraft(h);
     }
-    if (DOC_RE.test(p)) {
-      if (mode === "open") return openFile(h, p);
+    // "file.md:33" (line suffix) opens the file at that line.
+    const { path: bare, line } = splitLineSuffix(p);
+    if (DOC_RE.test(bare) || isCodePath(bare)) {
+      if (mode === "open") {
+        close();
+        void useStore.getState().openRemote(h, bare, line);
+        return;
+      }
+      p = bare;
       setFileName(basename(p));
       p = parentOf(p);
     }

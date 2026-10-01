@@ -4,6 +4,7 @@ import { renderBlocks, subscribeRerender } from "../markdown";
 import { renderCsvBlocks } from "../csv";
 import { classifyPath, isCsvPath, isJsonPath } from "../types";
 import { renderJsonBlocks } from "../json";
+import { codeLanguage, renderCodeBlocks } from "../code";
 import { useStore } from "../store";
 import { applyAnnotations, keyForDoc, subscribeAnnotations } from "../annotations";
 
@@ -137,7 +138,9 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
       ? renderCsvBlocks(source, path)
       : isJsonPath(path)
         ? renderJsonBlocks(source)
-        : renderBlocks(source, localDir());
+        : codeLanguage(path)
+          ? renderCodeBlocks(source, codeLanguage(path)!)
+          : renderBlocks(source, localDir());
     records = patchBlocks(container, records, blocks);
     markWideTables(container);
     applyAnnotations(container, annotationKey());
