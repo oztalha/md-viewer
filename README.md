@@ -48,7 +48,7 @@ for what's new in each version.
 
 **Tabs**
 - Every file opens as a tab; drag to reorder, **⌘1–9** to jump, **⌃Tab** to cycle
-- Sidebar with **Files** (open and recent files, local or remote; drag open files to reorder) and **Outline** tabs (⇧⌘F / ⇧⌘0); the title bar shows `host:` for remote files
+- Sidebar with **Files** (open and recent files, local or remote; drag open files to reorder, right-click to **Pin** the ones you keep coming back to) and **Outline** tabs (⇧⌘F / ⇧⌘0); the title bar shows `host:` for remote files
 
 **Editing and preview**
 - Editor, split, or preview per document; **⇧⌘V** flips between editor and
@@ -57,7 +57,8 @@ for what's new in each version.
 - GitHub-flavored preview: tables, task lists, alerts, footnotes, highlighted
   code, images; CSV/TSV files open as tables
 - **Code and JSON files** open highlighted, like a fenced block (Python,
-  JS/TS, shell, Rust, Go, Java, YAML, TOML, SQL, …); JSON is pretty-printed
+  JS/TS, shell, Rust, Go, Java, YAML, TOML, SQL, …); JSON is pretty-printed,
+  and JSONL/NDJSON shows one block per record
 - **Line numbers** in the editor and in code blocks (⇧⌘N)
 - **`file:LINE` jumps to the line** — paste or click `notes.md:33` or
   `host:/path/run.py:120` (as printed by tools and agents) and it opens there

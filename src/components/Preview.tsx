@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { renderBlocks, subscribeRerender } from "../markdown";
 import { renderCsvBlocks } from "../csv";
-import { classifyPath, isCsvPath, isJsonPath } from "../types";
-import { renderJsonBlocks } from "../json";
+import { classifyPath, isCsvPath, isJsonPath, isJsonlPath } from "../types";
+import { renderJsonBlocks, renderJsonlBlocks } from "../json";
 import { codeLanguage, renderCodeBlocks } from "../code";
 import { useStore } from "../store";
 import { applyAnnotations, keyForDoc, subscribeAnnotations } from "../annotations";
@@ -138,9 +138,11 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
       ? renderCsvBlocks(source, path)
       : isJsonPath(path)
         ? renderJsonBlocks(source)
-        : codeLanguage(path)
-          ? renderCodeBlocks(source, codeLanguage(path)!)
-          : renderBlocks(source, localDir());
+        : isJsonlPath(path)
+          ? renderJsonlBlocks(source)
+          : codeLanguage(path)
+            ? renderCodeBlocks(source, codeLanguage(path)!)
+            : renderBlocks(source, localDir());
     records = patchBlocks(container, records, blocks);
     markWideTables(container);
     applyAnnotations(container, annotationKey());
@@ -212,6 +214,11 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
 }
 
 export function Preview({ docId, empty }: { docId: string; empty: boolean }) {
+  // JSONL records are separate blocks, so the view hides per-block line numbers.
+  const jsonl = useStore((s) => {
+    const doc = s.docs[docId];
+    return !!doc && isJsonlPath(classifyPath(doc));
+  });
   const attach = useCallback(
     (container: HTMLElement | null) => {
       if (!container) return;
@@ -254,7 +261,13 @@ export function Preview({ docId, empty }: { docId: string; empty: boolean }) {
 
   return (
     <div className="preview">
-      <article ref={attach} className="preview-content" data-doc-id={docId} onClick={handleClick} />
+      <article
+        ref={attach}
+        className="preview-content"
+        data-doc-id={docId}
+        data-jsonl={jsonl || undefined}
+        onClick={handleClick}
+      />
       {empty && <div className="preview-empty">Nothing to preview</div>}
     </div>
   );

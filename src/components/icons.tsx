@@ -56,3 +56,12 @@ export const CopyIcon = svg(
 );
 
 export const CheckIcon = svg(<path d="M3.5 8.5l3 3 6-7" />);
+
+/** A pushpin, for pinned files in the sidebar. */
+export const PinIcon = svg(
+  <>
+    <path d="M6 2h4M8 2v5" />
+    <path d="M4.5 7.5h7L13 10H3z" />
+    <path d="M8 10v4" />
+  </>,
+);

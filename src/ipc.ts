@@ -11,7 +11,7 @@ import {
 const MARKDOWN_FILTER = [
   { name: "Markdown", extensions: ["md", "markdown", "mdown", "mkdn", "mkd", "txt"] },
   { name: "CSV", extensions: ["csv", "tsv"] },
-  { name: "JSON", extensions: ["json"] },
+  { name: "JSON", extensions: ["json", "jsonl", "ndjson"] },
   { name: "Code", extensions: ["py", "js", "ts", "tsx", "sh", "rs", "go", "java", "yaml", "yml", "toml", "sql"] },
   { name: "All Files", extensions: ["*"] },
 ];

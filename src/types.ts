@@ -72,14 +72,19 @@ export function isJsonPath(path: string | null): boolean {
   return !!path && /\.json$/i.test(path);
 }
 
+/** JSON Lines: one JSON record per line (`.jsonl`, `.ndjson`). */
+export function isJsonlPath(path: string | null): boolean {
+  return !!path && /\.(jsonl|ndjson)$/i.test(path);
+}
+
 /** Code files (by extension), previewed as one highlighted code block. */
 export function isCodePath(path: string | null): boolean {
-  return !!codeLanguage(path) && !isJsonPath(path);
+  return !!codeLanguage(path) && !isJsonPath(path) && !isJsonlPath(path);
 }
 
 /** Data and code files: open in preview, never markdown-formatted. */
 export function isDataPath(path: string | null): boolean {
-  return isCsvPath(path) || isJsonPath(path) || isCodePath(path);
+  return isCsvPath(path) || isJsonPath(path) || isJsonlPath(path) || isCodePath(path);
 }
 
 /** Where a dragged tile is about to land relative to the tile under the pointer. */

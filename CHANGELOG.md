@@ -6,6 +6,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **JSONL / NDJSON** (`.jsonl`, `.ndjson`) open in preview: one pretty-printed,
+  highlighted block per record, each labelled with its line number.
+  **Format Document** (⇧⌥F) re-serializes each record to one compact line.
+- **Pin files** in the sidebar: right-click an open or recent file → **Pin**.
+  Pinned files sit in their own section above Recent, are never evicted, and
+  can be dragged to reorder.
 - Drag open files in the sidebar up or down to reorder them (same order as
   the tabs); a grip appears on hover.
 

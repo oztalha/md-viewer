@@ -4,13 +4,16 @@ import { startSortDrag } from "../dragSort";
 import { basename, displayTitle, isDirty } from "../types";
 import {
   clearRecents,
+  getPins,
   getRecents,
   removeRecent,
+  reorderPin,
   subscribeRecents,
+  togglePin,
 } from "../recent";
 import type { RecentEntry } from "../recent";
 import { parseOpenSpec, remoteUrl } from "../remote";
-import { CloseIcon, SwapIcon } from "./icons";
+import { CloseIcon, PinIcon, SwapIcon } from "./icons";
 import { showRecentContextMenu, showTileContextMenu } from "../contextMenu";
 import { OutlineList } from "./Outline";
 import { useModHeld } from "../keybindings/useModHeld";
@@ -51,6 +54,7 @@ export function Sidebar() {
   const docs = useStore((s) => s.docs);
   const activeId = useStore((s) => s.activeId);
   const recents = useSyncExternalStore(subscribeRecents, getRecents);
+  const pins = useSyncExternalStore(subscribeRecents, getPins);
 
   // Hide recents that are already open (they're listed above).
   const openSpecs = new Set(
@@ -60,6 +64,9 @@ export function Sidebar() {
       .filter(Boolean),
   );
   const recentList = recents.filter((e) => !openSpecs.has(e.spec));
+  // A pinned file that's open is shown in Open (with a pin badge), not twice.
+  const pinList = pins.filter((e) => !openSpecs.has(e.spec));
+  const pinnedSpecs = new Set(pins.map((e) => e.spec));
   const selectTab = useStore((s) => s.selectTab);
   const closeTab = useStore((s) => s.closeTab);
   const width = useStore((s) => s.sidebarWidth);
@@ -86,6 +93,15 @@ export function Sidebar() {
     };
     window.addEventListener("pointermove", move);
     window.addEventListener("pointerup", up);
+  };
+
+  // Drag a pinned file up/down to reorder it.
+  const startPinDrag = (event: React.PointerEvent, spec: string) => {
+    startSortDrag(event, {
+      axis: "y",
+      items: ".sidebar-pin-item",
+      onDrop: (_from, to) => reorderPin(spec, to),
+    });
   };
 
   // Drag an open file up/down to reorder it (same order as the tab strip).
@@ -144,6 +160,11 @@ export function Sidebar() {
                   }}
                 >
                   <span className="sidebar-grip" aria-hidden="true" />
+                  {pinnedSpecs.has(doc.remote ? remoteUrl(doc.remote) : (doc.path ?? "")) && (
+                    <span className="pin-badge" data-tip="Pinned">
+                      <PinIcon size={10} />
+                    </span>
+                  )}
                   {doc.remote && (
                     <span
                       className="remote-badge"
@@ -179,6 +200,54 @@ export function Sidebar() {
               );
             })}
           </nav>
+          {pinList.length > 0 && (
+            <>
+              <div className="sidebar-divider" />
+              <div className="sidebar-header">Pinned</div>
+              <nav className="sidebar-list sidebar-pins">
+                {pinList.map((entry) => {
+                  const r = describeRecent(entry);
+                  return (
+                    <div
+                      key={entry.spec}
+                      className="sidebar-item sidebar-recent-item sidebar-pin-item"
+                      onPointerDown={(e) => startPinDrag(e, entry.spec)}
+                      onClick={() => void useStore.getState().openPaths([entry.spec])}
+                      onContextMenu={(e) => {
+                        e.preventDefault();
+                        void showRecentContextMenu(entry.spec);
+                      }}
+                    >
+                      <span className="sidebar-grip" aria-hidden="true" />
+                      <span className="pin-badge" data-tip="Pinned">
+                        <PinIcon size={10} />
+                      </span>
+                      {r.remote && (
+                        <span className="remote-badge">
+                          <SwapIcon size={11} />
+                        </span>
+                      )}
+                      <span className="sidebar-name" title={r.title}>
+                        {r.name}
+                      </span>
+                      {r.hint && <span className="sidebar-hint">{r.hint}</span>}
+                      <button
+                        className="sidebar-close"
+                        data-tip="Unpin"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          togglePin(entry.spec, entry.label);
+                        }}
+                      >
+                        <PinIcon size={11} />
+                      </button>
+                    </div>
+                  );
+                })}
+              </nav>
+            </>
+          )}
           {recentList.length > 0 && (
             <>
               <div className="sidebar-divider" />

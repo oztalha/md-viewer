@@ -1,5 +1,6 @@
 import { codeLanguage } from "./code";
-import { formatJson } from "./json";
+import { isJsonPath, isJsonlPath } from "./types";
+import { formatJson, formatJsonl } from "./json";
 import { EditorSelection } from "@codemirror/state";
 import { getEditorView } from "./editor/registry";
 import { showError } from "./ipc";
@@ -32,9 +33,13 @@ export async function formatDocument(docId: string): Promise<void> {
   const { useStore } = await import("./store");
   const stored = useStore.getState().docs[docId];
   const path = stored?.path ?? stored?.remote?.path ?? "";
-  // Code files aren't markdown: never run the markdown formatter on them.
-  if (codeLanguage(path) && !/\.json$/i.test(path)) return;
-  const formatted = /\.json$/i.test(path) ? formatJson(source) : await formatMarkdown(source);
+  // Code and data files aren't markdown: never run the markdown formatter on them.
+  if (codeLanguage(path) && !isJsonPath(path) && !isJsonlPath(path)) return;
+  const formatted = isJsonPath(path)
+    ? formatJson(source)
+    : isJsonlPath(path)
+      ? formatJsonl(source)
+      : await formatMarkdown(source);
   if (formatted === null || formatted === source) return;
 
   const head = view.state.selection.main.head;

@@ -3,8 +3,10 @@ import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useStore } from "./store";
 import { keybindFor, useSettings } from "./settings";
 import { copyToClipboard } from "./ipc";
-import { removeRecent } from "./recent";
+import { isPinned, removeRecent, togglePin } from "./recent";
+import { remoteUrl } from "./remote";
 import { parseOpenSpec } from "./remote";
+import { basename } from "./types";
 
 /**
  * Native right-click menu for a tab/document. Built fresh each time so it
@@ -19,6 +21,9 @@ export async function showTileContextMenu(docId: string): Promise<void> {
   // Reload/Copy Path need a backing file (local path or remote SSH ref).
   const hasFile = !!(doc.path || doc.remote);
   state.selectTab(docId);
+
+  // Open spec for pinning: the same string Recents uses.
+  const spec = doc.remote ? remoteUrl(doc.remote) : (doc.path ?? "");
 
   const separator = () => PredefinedMenuItem.new({ item: "Separator" });
   // Show each action's shortcut (the user's current binding) in the menu.
@@ -36,6 +41,10 @@ export async function showTileContextMenu(docId: string): Promise<void> {
           separator(),
           item("Reload", () => void useStore.getState().reloadDoc(docId), "reload"),
           item("Copy Path", () => void useStore.getState().copyDocPath(docId), "copy-path"),
+          MenuItem.new({
+            text: isPinned(spec) ? "Unpin" : "Pin",
+            action: () => togglePin(spec, basename(spec)),
+          }),
         ]
       : []),
     separator(),
@@ -59,11 +68,18 @@ export async function showRecentContextMenu(spec: string): Promise<void> {
         : parsed.ref.path
       : parsed.path;
 
+  const pinned = isPinned(spec);
+  const label = basename(parsed.kind === "remote" ? parsed.ref.path : parsed.path);
+
   const items = await Promise.all([
     MenuItem.new({ text: "Open", action: () => void useStore.getState().openPaths([spec]) }),
     MenuItem.new({ text: "Copy Path", action: () => void copyToClipboard(path) }),
     PredefinedMenuItem.new({ item: "Separator" }),
-    MenuItem.new({ text: "Remove from Recents", action: () => removeRecent(spec) }),
+    MenuItem.new({ text: pinned ? "Unpin" : "Pin", action: () => togglePin(spec, label) }),
+    MenuItem.new({
+      text: pinned ? "Remove" : "Remove from Recents",
+      action: () => removeRecent(spec),
+    }),
   ]);
   const menu = await Menu.new({ items });
   await menu.popup();

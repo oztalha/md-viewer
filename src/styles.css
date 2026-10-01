@@ -451,8 +451,9 @@ body.sort-dragging [data-tip]:hover::after {
   color: var(--fg-muted);
 }
 
+/* Open and Pinned are as tall as their contents; Recent takes the rest. */
 .sidebar-list {
-  flex: 1;
+  flex: 0 1 auto;
   overflow-y: auto;
   padding-bottom: 10px;
 }
@@ -1208,6 +1209,22 @@ html.no-caret-animation .editor .cm-cursor {
   :root:not([data-theme="light"]) .preview-content .shiki span {
     color: var(--shiki-dark);
   }
+}
+
+/* JSONL: each record is its own block, so per-block numbers would restart at 1.
+   The record heading carries the file line instead. */
+.show-line-numbers .preview-content[data-jsonl] pre.shiki .line::before {
+  content: none;
+}
+/* JSONL record headings: the file line, small and dim beside its block. */
+.preview-content[data-jsonl] h6 {
+  margin: 14px 0 4px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--fg-faint);
+  border: 0;
+  padding: 0;
 }
 
 /* Line numbers (⇧⌘N) for highlighted code: a counter per shiki `.line`. */
@@ -2361,6 +2378,17 @@ html.no-caret-animation .editor .cm-cursor {
 .sidebar-open-item {
   position: relative;
 }
+/* Pinned files: a small pin badge, and the ✕ slot holds an unpin button. */
+.pin-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  color: var(--fg-faint);
+}
+.sidebar-pin-item:hover .sidebar-close {
+  color: var(--accent);
+}
+
 /* Grip (⋮⋮) in the left margin on hover: open files can be dragged to reorder. */
 .sidebar-grip {
   position: absolute;
@@ -2375,6 +2403,7 @@ html.no-caret-animation .editor .cm-cursor {
   background-size: 3px 3.33px;
   transition: opacity 120ms;
 }
+.sidebar-pin-item:hover .sidebar-grip,
 .sidebar-open-item:hover .sidebar-grip,
 .sort-held .sidebar-grip {
   opacity: 1;
