@@ -251,7 +251,8 @@ body.resizing-y * {
 --------------------------------------------------------------------------- */
 
 body.tab-dragging,
-body.tab-dragging .tab {
+body.tab-dragging .tab,
+body.tab-dragging .sidebar-item {
   cursor: grabbing;
 }
 .tabbar {

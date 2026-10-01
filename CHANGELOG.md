@@ -5,6 +5,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- Drag open files in the sidebar up or down to reorder them (same order as
+  the tabs).
+
 ## [0.6.0] — 2026-10-01
 
 md-viewer becomes a viewer for more than markdown (code, JSON, line numbers,
