@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-10-01
+
+md-viewer becomes a viewer for more than markdown (code, JSON, line numbers,
+`file:LINE` jumps), and the remote browser becomes a small file manager
+(copy files over, download them back).
+
 ### Added
 - **`path:LINE`** (e.g. `notes.md:33`, as printed by tools and agents) opens
   the file and jumps to that line, in the editor and the preview. Works in
@@ -13,8 +19,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - **Code files** (`.py`, `.js`/`.ts`, `.sh`, `.rs`, `.go`, `.java`, `.yaml`,
   `.toml`, `.sql`, … and `Dockerfile`/`Makefile`) open in preview,
   syntax-highlighted like a fenced code block. `file.py:33` jumps to line 33.
-- **Line numbers** (⇧⌘N, title-bar button, View menu or Settings): in the editor gutter and in
-  highlighted code in the preview (code files, JSON, fenced blocks).
+- **Line numbers** (⇧⌘N, the title-bar button, the View menu or Settings):
+  in the editor gutter and in highlighted code in the preview (code files,
+  JSON, fenced blocks).
 - **JSON files:** `.json` opens in preview, pretty-printed and highlighted
   (invalid JSON shows the parse error and the raw text). **Format Document**
   (⇧⌥F) pretty-prints a JSON file.
@@ -37,8 +44,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - Open files in the sidebar show their host (or `local`) like Recent files.
 - Recent files: the host label lines up on the right, and the ✕ appears in
   its place on hover instead of pushing it aside.
+- Hovering an open or recent file shows its full path (`host:/path`).
 
 ### Fixed
+- Sidebar ✕ tooltips (Close tab, Remove from recents) were cut off, and a
+  tab's unsaved dot overlapped its ✕.
 - Opening a recent file that was moved or deleted showed a raw `os error 2`;
   it now says the file isn't there and offers to remove it from Recents
   (local and remote).
@@ -203,6 +213,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.6.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.6.0
 [0.5.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.5.0
 [0.4.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.1
 [0.4.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.0

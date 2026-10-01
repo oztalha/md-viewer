@@ -56,6 +56,11 @@ for what's new in each version.
 - Semi-WYSIWYG editing: `**bold**` renders bold with the markers still visible
 - GitHub-flavored preview: tables, task lists, alerts, footnotes, highlighted
   code, images; CSV/TSV files open as tables
+- **Code and JSON files** open highlighted, like a fenced block (Python,
+  JS/TS, shell, Rust, Go, Java, YAML, TOML, SQL, …); JSON is pretty-printed
+- **Line numbers** in the editor and in code blocks (⇧⌘N)
+- **`file:LINE` jumps to the line** — paste or click `notes.md:33` or
+  `host:/path/run.py:120` (as printed by tools and agents) and it opens there
 - LaTeX math with KaTeX: `$inline$`, `$$display$$`, and ```` ```math ```` blocks
 - Highlight passages and attach notes in the preview
 - Format with Prettier, export to HTML, light and dark themes
@@ -103,6 +108,8 @@ To have an agent on the remote box hand you a link it can open, print either:
 mdviewer://open?host=<your-ssh-alias>&path=/abs/path/to/file.md
 mdv <your-ssh-alias>:/abs/path/to/file.md
 ```
+
+Append `:LINE` (or `&line=33` to the link) to open at a line.
 
 ## Keyboard shortcuts
 
