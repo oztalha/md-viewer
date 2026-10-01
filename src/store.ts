@@ -137,6 +137,13 @@ interface AppState {
   closeTab(docId?: string): Promise<void>;
 }
 
+/**
+ * Files currently being read for opening, keyed like recents (path or
+ * mdviewer:// URL). A slow read (e.g. SSH lag) must not let repeated clicks
+ * open the same file in several tabs.
+ */
+const opening = new Set<string>();
+
 const initialDoc = makeDoc();
 
 const MIN_ZOOM = 0.7;
@@ -368,20 +375,29 @@ export const useStore = create<AppState>()((set, get) => ({
         continue;
       }
       const path = parsed.path;
-      const state = get();
+      const findOpen = () => Object.values(get().docs).find((d) => d.path === path);
 
-      // Already open? Activate its tab instead of opening a second copy.
-      const existingDoc = Object.values(state.docs).find((d) => d.path === path);
+      // Already open (or on its way)? Activate it instead of opening a second copy.
+      const existingDoc = findOpen();
       if (existingDoc) {
         get().selectTab(existingDoc.id);
         continue;
       }
+      if (opening.has(path)) continue;
+      opening.add(path);
 
       let content: string;
       try {
         content = await readTextFile(path);
       } catch (err) {
         await showError(String(err));
+        continue;
+      } finally {
+        opening.delete(path);
+      }
+      const opened = findOpen();
+      if (opened) {
+        get().selectTab(opened.id);
         continue;
       }
 
@@ -398,15 +414,18 @@ export const useStore = create<AppState>()((set, get) => ({
       await showError(`Invalid SSH host: ${host}`);
       return;
     }
-    const state = get();
+    const findOpen = () =>
+      Object.values(get().docs).find((d) => d.remote && d.remote.host === host && d.remote.path === path);
     // Already open? Activate the existing tab.
-    const existing = Object.values(state.docs).find(
-      (d) => d.remote && d.remote.host === host && d.remote.path === path,
-    );
+    const existing = findOpen();
     if (existing) {
       get().selectTab(existing.id);
       return;
     }
+    const remote: RemoteRef = { host, path };
+    const key = remoteUrl(remote);
+    if (opening.has(key)) return; // already on its way (e.g. a repeated click)
+    opening.add(key);
 
     let content: string;
     try {
@@ -414,9 +433,16 @@ export const useStore = create<AppState>()((set, get) => ({
     } catch (err) {
       await showError(String(err));
       return;
+    } finally {
+      opening.delete(key);
+    }
+    // It may have been opened another way while we were reading.
+    const opened = findOpen();
+    if (opened) {
+      get().selectTab(opened.id);
+      return;
     }
 
-    const remote: RemoteRef = { host, path };
     const doc = makeDoc({ remote, title: basename(path), content, saved: content });
     const openMode = isCsvPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
     get().placeDoc(doc, openMode);

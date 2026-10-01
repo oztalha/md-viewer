@@ -35,6 +35,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   pale blue looked disabled.
 
 ### Fixed
+- Clicking a file several times while it was still loading (e.g. over a slow
+  SSH connection) opened it in several tabs. It now opens once.
 - Split view kept drifting apart while scrolling (panes were synced by scroll
   percentage, but raw markdown and rendered HTML have different heights). The
   panes now stay on the same paragraph, anchored by source line.
