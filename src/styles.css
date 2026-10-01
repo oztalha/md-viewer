@@ -2346,20 +2346,28 @@ html.no-caret-animation .editor .cm-cursor {
 .sidebar-open-item {
   position: relative;
 }
+/* Swapped with opacity, not visibility: WebKit left half-painted hints
+   ("dd2" for "cdd2") when visibility flipped on an overlapping element. */
 .sidebar-recent-item .sidebar-close,
 .sidebar-open-item .sidebar-close {
   position: absolute;
   right: 8px;
-  top: 50%;
-  transform: translateY(-50%);
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  visibility: visible;
+  opacity: 0;
+  pointer-events: none;
+}
+.sidebar-recent-item:hover .sidebar-close,
+.sidebar-open-item:hover .sidebar-close,
+.sidebar-open-item.active:not(:has(.sidebar-hint)) .sidebar-close {
+  opacity: 1;
+  pointer-events: auto;
 }
 .sidebar-recent-item:hover .sidebar-hint,
 .sidebar-open-item:hover .sidebar-hint {
-  visibility: hidden;
-}
-/* Open rows with a hint show the ✕ on hover only, so the active row keeps its host. */
-.sidebar-open-item.active:not(:hover):has(.sidebar-hint) .sidebar-close {
-  visibility: hidden;
+  opacity: 0;
 }
 
 /* Breadcrumbs: the full current folder, each part clickable to jump up. */

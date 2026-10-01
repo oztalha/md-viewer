@@ -130,7 +130,7 @@ export function Sidebar() {
                     e.preventDefault();
                     void showTileContextMenu(docId);
                   }}
-                  title={displayTitle(doc)}
+                  title={doc.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc.path ?? displayTitle(doc))}
                 >
                   {doc.remote && (
                     <span
