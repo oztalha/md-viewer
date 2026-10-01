@@ -2,7 +2,8 @@ import { useCallback } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { renderBlocks, subscribeRerender } from "../markdown";
 import { renderCsvBlocks } from "../csv";
-import { classifyPath, isCsvPath } from "../types";
+import { classifyPath, isCsvPath, isJsonPath } from "../types";
+import { renderJsonBlocks } from "../json";
 import { useStore } from "../store";
 import { applyAnnotations, keyForDoc, subscribeAnnotations } from "../annotations";
 
@@ -134,7 +135,9 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
     const start = performance.now();
     const blocks = isCsvPath(path)
       ? renderCsvBlocks(source, path)
-      : renderBlocks(source, localDir());
+      : isJsonPath(path)
+        ? renderJsonBlocks(source)
+        : renderBlocks(source, localDir());
     records = patchBlocks(container, records, blocks);
     markWideTables(container);
     applyAnnotations(container, annotationKey());

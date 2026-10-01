@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { Doc, LeafNode, TabView, ViewMode } from "./types";
-import { basename, displayTitle, isCsvPath, isDirty, isPristine } from "./types";
+import { basename, displayTitle, isDataPath, isDirty, isPristine } from "./types";
 import {
   askToSave,
   confirmReloadDiscard,
@@ -416,7 +416,7 @@ export const useStore = create<AppState>()((set, get) => ({
 
       const doc = makeDoc({ path, title: basename(path), content, saved: content });
       // Data files open straight into the table view; markdown follows the preference.
-      const openMode = isCsvPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
+      const openMode = isDataPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
       get().placeDoc(doc, openMode);
       addRecent(path, basename(path));
     }
@@ -457,7 +457,7 @@ export const useStore = create<AppState>()((set, get) => ({
     }
 
     const doc = makeDoc({ remote, title: basename(path), content, saved: content });
-    const openMode = isCsvPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
+    const openMode = isDataPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
     get().placeDoc(doc, openMode);
     addRecent(remoteUrl(remote), `${basename(path)} — ${host}`);
   },
@@ -521,7 +521,7 @@ export const useStore = create<AppState>()((set, get) => ({
 
     // Optionally reformat markdown (never data files) before writing.
     const classify = doc.path ?? doc.remote?.path ?? null;
-    if (useSettings.getState().settings.formatOnSave && !isCsvPath(classify)) {
+    if (useSettings.getState().settings.formatOnSave && !isDataPath(classify)) {
       const formatted = await formatMarkdown(content);
       if (formatted !== null && formatted !== content) {
         content = formatted;

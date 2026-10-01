@@ -66,6 +66,16 @@ export function isCsvPath(path: string | null): boolean {
   return !!path && /\.(csv|tsv)$/i.test(path);
 }
 
+/** JSON documents: previewed pretty-printed and highlighted. */
+export function isJsonPath(path: string | null): boolean {
+  return !!path && /\.json$/i.test(path);
+}
+
+/** Data files (CSV/TSV/JSON): open in preview, never markdown-formatted. */
+export function isDataPath(path: string | null): boolean {
+  return isCsvPath(path) || isJsonPath(path);
+}
+
 /** Where a dragged tile is about to land relative to the tile under the pointer. */
 export type DropRegion = "center" | "left" | "right" | "top" | "bottom";
 

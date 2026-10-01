@@ -1,3 +1,4 @@
+import { formatJson } from "./json";
 import { EditorSelection } from "@codemirror/state";
 import { getEditorView } from "./editor/registry";
 import { showError } from "./ipc";
@@ -26,7 +27,11 @@ export async function formatDocument(docId: string): Promise<void> {
   const view = getEditorView(docId);
   if (!view) return;
   const source = view.state.doc.toString();
-  const formatted = await formatMarkdown(source);
+  // JSON documents are pretty-printed; everything else goes through Prettier.
+  const { useStore } = await import("./store");
+  const stored = useStore.getState().docs[docId];
+  const path = stored?.path ?? stored?.remote?.path ?? "";
+  const formatted = /\.json$/i.test(path) ? formatJson(source) : await formatMarkdown(source);
   if (formatted === null || formatted === source) return;
 
   const head = view.state.selection.main.head;

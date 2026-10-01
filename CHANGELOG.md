@@ -6,6 +6,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **JSON files:** `.json` opens in preview, pretty-printed and highlighted
+  (invalid JSON shows the parse error and the raw text). **Format Document**
+  (⇧⌥F) pretty-prints a JSON file.
 - **Copy files to a remote machine:** drop files or folders onto the remote
   browser (⇧⌘O) to copy them into the folder it shows, over `scp` (your
   `~/.ssh/config` applies; binaries are fine).
