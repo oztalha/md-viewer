@@ -8,7 +8,9 @@ export interface RecentEntry {
 }
 
 const STORAGE_KEY = "recentFiles";
-const MAX = 20;
+/** Sidebar keeps the last 100 (it scrolls); the native menu shows the newest 20. */
+const MAX = 100;
+const MENU_MAX = 20;
 
 function load(): RecentEntry[] {
   try {
@@ -24,7 +26,7 @@ const listeners = new Set<() => void>();
 
 function persist(): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(entries));
-  void setRecentFiles(entries).catch(() => {});
+  void setRecentFiles(entries.slice(0, MENU_MAX)).catch(() => {});
   listeners.forEach((fn) => fn());
 }
 
@@ -57,5 +59,5 @@ export function clearRecents(): void {
 
 /** Push the persisted list into the native menu (after the menu is built). */
 export function initRecents(): void {
-  if (entries.length) void setRecentFiles(entries).catch(() => {});
+  if (entries.length) void setRecentFiles(entries.slice(0, MENU_MAX)).catch(() => {});
 }

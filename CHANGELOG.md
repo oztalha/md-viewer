@@ -10,6 +10,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   the tabs); a grip appears on hover.
 
 ### Changed
+- The sidebar remembers the last 100 recent files (was 20); the list
+  scrolls. File → Open Recent still shows the newest 20.
 - Dragging a tab or an open file is smooth: the item lifts and follows the
   pointer while the others slide aside, instead of jumping between slots.
 
