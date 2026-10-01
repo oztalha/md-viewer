@@ -2361,9 +2361,24 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .sidebar-recent-item:hover .sidebar-close,
 .sidebar-open-item:hover .sidebar-close,
-.sidebar-open-item.active:not(:has(.sidebar-hint)) .sidebar-close {
+.sidebar-open-item.active:not(:has(.sidebar-hint, .dirty-dot)) .sidebar-close {
   opacity: 1;
   pointer-events: auto;
+}
+/* The unsaved dot sits where the ✕ appears (no host hint): swap them on hover. */
+.sidebar-open-item:not(:has(.sidebar-hint)) .dirty-dot {
+  margin-right: 5px;
+}
+.sidebar-open-item:hover:not(:has(.sidebar-hint)) .dirty-dot {
+  opacity: 0;
+}
+/* The list scrolls, so a tooltip below the row would be clipped: show the
+   ✕'s tooltip to its left, inside the sidebar. */
+.sidebar-item .sidebar-close[data-tip]:hover::after {
+  top: 50%;
+  left: auto;
+  right: calc(100% + 6px);
+  transform: translateY(-50%);
 }
 .sidebar-recent-item:hover .sidebar-hint,
 .sidebar-open-item:hover .sidebar-hint {

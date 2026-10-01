@@ -130,7 +130,6 @@ export function Sidebar() {
                     e.preventDefault();
                     void showTileContextMenu(docId);
                   }}
-                  title={doc.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc.path ?? displayTitle(doc))}
                 >
                   {doc.remote && (
                     <span
@@ -140,7 +139,12 @@ export function Sidebar() {
                       <SwapIcon size={11} />
                     </span>
                   )}
-                  <span className="sidebar-name">{displayTitle(doc)}</span>
+                  <span
+                    className="sidebar-name"
+                    title={doc.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc.path ?? displayTitle(doc))}
+                  >
+                    {displayTitle(doc)}
+                  </span>
                   {isDirty(doc) && (
                     <span className="dirty-dot" aria-label="Unsaved changes" />
                   )}
@@ -182,7 +186,6 @@ export function Sidebar() {
                     <div
                       key={entry.spec}
                       className="sidebar-item sidebar-recent-item"
-                      title={r.title}
                       onClick={() =>
                         void useStore.getState().openPaths([entry.spec])
                       }
@@ -196,7 +199,9 @@ export function Sidebar() {
                           <SwapIcon size={11} />
                         </span>
                       )}
-                      <span className="sidebar-name">{r.name}</span>
+                      <span className="sidebar-name" title={r.title}>
+                        {r.name}
+                      </span>
                       {r.hint && <span className="sidebar-hint">{r.hint}</span>}
                       <button
                         className="sidebar-close"
