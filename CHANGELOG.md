@@ -34,6 +34,7 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   host field is narrower so the path has room, and a breadcrumb row shows the
   full current folder (click a part to jump up).
 - The remote browser's `~` (home) button is gone; type `~` in the path field.
+- Open files in the sidebar show their host (or `local`) like Recent files.
 - Recent files: the host label lines up on the right, and the ✕ appears in
   its place on hover instead of pushing it aside.
 

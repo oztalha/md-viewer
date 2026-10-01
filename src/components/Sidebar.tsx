@@ -124,7 +124,7 @@ export function Sidebar() {
               return (
                 <div
                   key={docId}
-                  className={`sidebar-item${active ? " active" : ""}`}
+                  className={`sidebar-item sidebar-open-item${active ? " active" : ""}`}
                   onPointerDown={() => selectTab(docId)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -143,6 +143,9 @@ export function Sidebar() {
                   <span className="sidebar-name">{displayTitle(doc)}</span>
                   {isDirty(doc) && (
                     <span className="dirty-dot" aria-label="Unsaved changes" />
+                  )}
+                  {(doc.remote || doc.path) && (
+                    <span className="sidebar-hint">{doc.remote ? doc.remote.host : "local"}</span>
                   )}
                   <button
                     className="sidebar-close"
