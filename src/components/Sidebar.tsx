@@ -236,7 +236,6 @@ export function Sidebar() {
                       <span className="pin-badge" data-tip="Pinned">
                         <PinIcon size={10} />
                       </span>
-                      <span className="sidebar-grip" aria-hidden="true" />
                       {r.remote && (
                         <span className="remote-badge">
                           <SwapIcon size={11} />
@@ -292,6 +291,7 @@ export function Sidebar() {
                         void showRecentContextMenu(entry.spec);
                       }}
                     >
+                      <span className="sidebar-grip" aria-hidden="true" />
                       {r.remote && (
                         <span className="remote-badge">
                           <SwapIcon size={11} />
