@@ -597,6 +597,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .accelerator("Shift+CmdOrCtrl+0")
                 .build(app)?,
         )
+        .item(
+            &MenuItemBuilder::with_id("toggle-line-numbers", "Line Numbers")
+                .accelerator("Shift+CmdOrCtrl+N")
+                .build(app)?,
+        )
         .separator()
         .item(
             &MenuItemBuilder::with_id("zoom-in", "Zoom In")

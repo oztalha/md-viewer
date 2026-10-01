@@ -232,6 +232,11 @@ function handleMenu(id: string) {
     case "toggle-outline":
       s.toggleOutline();
       break;
+    case "toggle-line-numbers": {
+      const settings = useSettings.getState();
+      settings.update({ lineNumbers: !settings.settings.lineNumbers });
+      break;
+    }
     case "focus-next":
     case "tab-next":
       s.nextTab();

@@ -177,6 +177,17 @@ export function SettingsPanel() {
               />
             </div>
             <div className="settings-row">
+              <span>Line numbers</span>
+              <Segmented<"on" | "off">
+                value={settings.lineNumbers ? "on" : "off"}
+                options={[
+                  { value: "on", label: "On" },
+                  { value: "off", label: "Off" },
+                ]}
+                onChange={(value) => update({ lineNumbers: value === "on" })}
+              />
+            </div>
+            <div className="settings-row">
               <span>Open files in</span>
               <Segmented<ViewMode>
                 value={settings.defaultMode}

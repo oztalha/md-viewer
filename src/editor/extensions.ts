@@ -1,4 +1,4 @@
-import { Decoration, drawSelection, EditorView, keymap, placeholder } from "@codemirror/view";
+import { Decoration, drawSelection, EditorView, keymap, lineNumbers, placeholder } from "@codemirror/view";
 import type { DecorationSet, KeyBinding } from "@codemirror/view";
 import { Compartment, Prec, RangeSetBuilder, StateField } from "@codemirror/state";
 import type { EditorState, Extension } from "@codemirror/state";
@@ -24,6 +24,8 @@ import { selectionToolbar } from "./selectionToolbar";
  * panel can reconfigure them on every open editor without recreating views.
  */
 export const editorKeybindCompartment = new Compartment();
+/** Line-number gutter, toggled live from settings. */
+export const lineNumbersCompartment = new Compartment();
 
 export function editorKeybindings(binds: Record<string, string>): Extension {
   const key = (id: string, fallback: string) => binds[id] ?? fallback;
@@ -224,8 +226,9 @@ const editorTheme = EditorView.theme({
   },
 });
 
-export function editorExtensions(keybinds: Record<string, string> = {}): Extension[] {
+export function editorExtensions(keybinds: Record<string, string> = {}, showLineNumbers = false): Extension[] {
   return [
+    lineNumbersCompartment.of(showLineNumbers ? lineNumbers() : []),
     history(),
     EditorView.lineWrapping,
     // Custom-drawn caret/selection so the caret can glide (Word-style).

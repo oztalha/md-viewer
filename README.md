@@ -126,6 +126,7 @@ mdv <your-ssh-alias>:/abs/path/to/file.md
 | Editor · Split · Preview | ⇧⌘7 · ⇧⌘8 · ⇧⌘9 |
 | Toggle editor ⇄ preview | ⇧⌘V |
 | Sidebar: Files · Outline | ⇧⌘F · ⇧⌘0 |
+| Line numbers on / off | ⇧⌘N |
 | Select all | ⌘A |
 | Paste and match style | ⌥⇧⌘V |
 | Zoom in / out / reset | ⌘+ / ⌘− / ⌘0 |

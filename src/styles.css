@@ -1195,6 +1195,21 @@ html.no-caret-animation .editor .cm-cursor {
   }
 }
 
+/* Line numbers (⇧⌘N) for highlighted code: a counter per shiki `.line`. */
+.show-line-numbers .preview-content pre.shiki code {
+  counter-reset: code-line;
+}
+.show-line-numbers .preview-content pre.shiki .line::before {
+  counter-increment: code-line;
+  content: counter(code-line);
+  display: inline-block;
+  min-width: 3ch;
+  margin-right: 1.5ch;
+  text-align: right;
+  color: var(--fg-faint) !important;
+  user-select: none;
+}
+
 /* ---------------------------------------------------------------------------
    Drop overlay
 --------------------------------------------------------------------------- */

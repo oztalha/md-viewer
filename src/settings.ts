@@ -2,7 +2,8 @@ import { create } from "zustand";
 import type { ViewMode } from "./types";
 import { setMenuAccelerators } from "./ipc";
 import { allEditorViews } from "./editor/registry";
-import { editorKeybindCompartment, editorKeybindings } from "./editor/extensions";
+import { lineNumbers } from "@codemirror/view";
+import { editorKeybindCompartment, editorKeybindings, lineNumbersCompartment } from "./editor/extensions";
 
 /* ---------------------------------------------------------------------------
    Preferences: persisted to localStorage, applied imperatively (CSS variables,
@@ -16,6 +17,8 @@ export interface Settings {
   theme: ThemeSetting;
   editorWidth: WidthSetting;
   caretAnimation: boolean;
+  /** Line numbers in the editor gutter and in highlighted code (⇧⌘N). */
+  lineNumbers: boolean;
   defaultMode: ViewMode;
   /** Reformat markdown with Prettier on every save. */
   formatOnSave: boolean;
@@ -59,6 +62,7 @@ export const KEYBINDS: KeybindDef[] = [
   { id: "toggle-sidebar", label: "Toggle sidebar", kind: "menu", defaultKey: "CmdOrCtrl+\\" },
   { id: "show-files", label: "Files (sidebar)", kind: "menu", defaultKey: "Shift+CmdOrCtrl+F" },
   { id: "toggle-outline", label: "Outline (sidebar)", kind: "menu", defaultKey: "Shift+CmdOrCtrl+0" },
+  { id: "toggle-line-numbers", label: "Line numbers", kind: "menu", defaultKey: "Shift+CmdOrCtrl+N" },
   { id: "focus-next", label: "Next tab", kind: "menu", defaultKey: "Ctrl+Tab" },
   { id: "focus-prev", label: "Previous tab", kind: "menu", defaultKey: "Ctrl+Shift+Tab" },
   { id: "tab-next", label: "Next tab (⌘⇧])", kind: "menu", defaultKey: "Shift+CmdOrCtrl+]" },
@@ -74,6 +78,7 @@ const DEFAULTS: Settings = {
   theme: "system",
   editorWidth: "normal",
   caretAnimation: true,
+  lineNumbers: false,
   defaultMode: "split",
   formatOnSave: false,
   copyPathWithHost: false,
@@ -115,12 +120,16 @@ export function applySettings(settings: Settings): void {
 
   root.style.setProperty("--content-width", WIDTHS[settings.editorWidth]);
   root.classList.toggle("no-caret-animation", !settings.caretAnimation);
+  root.classList.toggle("show-line-numbers", settings.lineNumbers);
 
   // Live-reconfigure every open editor's bindable keymap.
   const binds = settings.keybinds;
   for (const view of allEditorViews()) {
     view.dispatch({
-      effects: editorKeybindCompartment.reconfigure(editorKeybindings(binds)),
+      effects: [
+        editorKeybindCompartment.reconfigure(editorKeybindings(binds)),
+        lineNumbersCompartment.reconfigure(settings.lineNumbers ? lineNumbers() : []),
+      ],
     });
   }
 

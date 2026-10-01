@@ -32,7 +32,7 @@ export function Editor({ doc }: { doc: Doc }) {
         state: EditorState.create({
           doc: useStore.getState().docs[doc.id]?.content ?? "",
           extensions: [
-            ...editorExtensions(useSettings.getState().settings.keybinds),
+            ...editorExtensions(useSettings.getState().settings.keybinds, useSettings.getState().settings.lineNumbers),
             EditorView.updateListener.of((update) => {
               if (!update.docChanged) return;
               if (timer !== undefined) window.clearTimeout(timer);
