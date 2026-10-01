@@ -250,10 +250,24 @@ body.resizing-y * {
    Tab bar (browser-style, one row of open documents)
 --------------------------------------------------------------------------- */
 
-body.tab-dragging,
-body.tab-dragging .tab,
-body.tab-dragging .sidebar-item {
-  cursor: grabbing;
+/* Drag-to-reorder (dragSort.ts): the held item lifts and follows the pointer,
+   the others glide aside. */
+body.sort-dragging,
+body.sort-dragging * {
+  cursor: grabbing !important;
+  user-select: none;
+}
+.sort-shifting {
+  transition: transform 160ms ease;
+}
+.sort-held {
+  z-index: 10;
+  background: var(--bg-elevated) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28);
+  opacity: 0.92;
+}
+body.sort-dragging [data-tip]:hover::after {
+  display: none;
 }
 .tabbar {
   flex: none;
@@ -2347,6 +2361,25 @@ html.no-caret-animation .editor .cm-cursor {
 .sidebar-open-item {
   position: relative;
 }
+/* Grip (⋮⋮) in the left margin on hover: open files can be dragged to reorder. */
+.sidebar-grip {
+  position: absolute;
+  left: 3px;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  width: 6px;
+  height: 10px;
+  opacity: 0;
+  background-image: radial-gradient(circle, var(--fg-faint) 1px, transparent 1.2px);
+  background-size: 3px 3.33px;
+  transition: opacity 120ms;
+}
+.sidebar-open-item:hover .sidebar-grip,
+.sort-held .sidebar-grip {
+  opacity: 1;
+}
+
 /* Swapped with opacity, not visibility: WebKit left half-painted hints
    ("dd2" for "cdd2") when visibility flipped on an overlapping element. */
 .sidebar-recent-item .sidebar-close,

@@ -7,7 +7,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Added
 - Drag open files in the sidebar up or down to reorder them (same order as
-  the tabs).
+  the tabs); a grip appears on hover.
+
+### Changed
+- Dragging a tab or an open file is smooth: the item lifts and follows the
+  pointer while the others slide aside, instead of jumping between slots.
 
 ## [0.6.0] — 2026-10-01
 

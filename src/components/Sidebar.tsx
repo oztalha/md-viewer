@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { useStore } from "../store";
+import { startSortDrag } from "../dragSort";
 import { basename, displayTitle, isDirty } from "../types";
 import {
   clearRecents,
@@ -88,39 +89,14 @@ export function Sidebar() {
   };
 
   // Drag an open file up/down to reorder it (same order as the tab strip).
-  // Selecting happens on pointerdown; reordering starts past a small threshold.
   const startRowDrag = (event: React.PointerEvent, docId: string) => {
     if (event.button !== 0) return;
     selectTab(docId);
-    const list = event.currentTarget.parentElement;
-    if (!list) return;
-    const startY = event.clientY;
-    let dragging = false;
-
-    const move = (ev: PointerEvent) => {
-      if (!dragging) {
-        if (Math.abs(ev.clientY - startY) < 5) return;
-        dragging = true;
-        document.body.classList.add("tab-dragging");
-      }
-      const els = Array.from(list.querySelectorAll<HTMLElement>(".sidebar-open-item"));
-      let target = els.length - 1;
-      for (let i = 0; i < els.length; i++) {
-        const r = els[i].getBoundingClientRect();
-        if (ev.clientY < r.top + r.height / 2) {
-          target = i;
-          break;
-        }
-      }
-      useStore.getState().reorderTab(docId, target);
-    };
-    const up = () => {
-      window.removeEventListener("pointermove", move);
-      window.removeEventListener("pointerup", up);
-      document.body.classList.remove("tab-dragging");
-    };
-    window.addEventListener("pointermove", move);
-    window.addEventListener("pointerup", up);
+    startSortDrag(event, {
+      axis: "y",
+      items: ".sidebar-open-item",
+      onDrop: (_from, to) => useStore.getState().reorderTab(docId, to),
+    });
   };
 
   return (
@@ -167,6 +143,7 @@ export function Sidebar() {
                     void showTileContextMenu(docId);
                   }}
                 >
+                  <span className="sidebar-grip" aria-hidden="true" />
                   {doc.remote && (
                     <span
                       className="remote-badge"
