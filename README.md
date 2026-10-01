@@ -4,7 +4,9 @@ A fast, native-feeling markdown editor and viewer for macOS — **for files on
 your Mac or on any machine you can `ssh` to.**
 
 Open, edit and save markdown on a dev box, a cloud desktop, or the machine your
-coding agent runs on, as if it were local. md-viewer uses your system `ssh`, so
+coding agent runs on, as if it were local. It doubles as a lightweight remote
+file browser: browse folders, copy paths, and drag files from Finder to copy
+them onto the remote machine. md-viewer uses your system `ssh`, so
 your `~/.ssh/config` aliases, keys, jump hosts and `ProxyCommand` just work —
 nothing to install on the remote side.
 
@@ -37,6 +39,9 @@ for what's new in each version.
 - Browse a remote machine and open files with **Open Remote…** (⇧⌘O); save new
   or local documents to any host with **Save to Remote…** (⇧⌘S)
 - Edits save straight back over SSH, atomically; **⌘R** reloads the latest version
+- **Copy files to a remote machine:** drag files or folders from Finder onto the
+  remote browser to copy them into the folder it shows (any file type, via
+  `scp`); it asks before replacing anything
 - Open from the terminal (`mdv host:/path/file.md`) or a clickable
   `mdviewer://` link — handy when an agent on the remote box writes a report
 
@@ -75,6 +80,12 @@ click a file to open it. You can also paste `host:/path/to/file.md` into the pat
 bar. **Save to Remote…** (⇧⌘S) uses the same browser with a filename field; after
 that the document is remote, so ⌘S writes back to that host. The browser
 remembers your last host and the last folder on each host.
+
+**Copying files over:** with the remote browser open on a folder, drag files or
+folders from Finder onto it. They're copied there with `scp` (so your SSH
+config applies, and any file type works); if a name already exists, it asks
+before replacing. The copy icon next to the path copies the folder's path.
+It copies *to* the remote machine only; there's no download, rename or delete.
 
 **⇧⌘C** copies the document's path — the bare path by default, or `host:/path`
 if you turn on *Copy path includes host* in Settings.

@@ -31,6 +31,8 @@ src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
 - **Remote files** are docs with `remote: { host, path }`. Reads/writes and
   directory listings shell out to the system `ssh`, so `~/.ssh/config`
   (aliases, keys, ProxyCommand) applies. Writes are atomic (temp file + `mv`).
+  Dropping files onto the open remote browser copies them into its folder with
+  `scp -r` (`upload_remote`), after confirming any replacements.
 - **Sidebar** has two tabs: Files (open + recent) and Outline. Each has its own
   shortcut; pressing the key of the showing tab hides the sidebar.
 

@@ -211,3 +211,15 @@ export function publishCommand(
 export function uploadRemote(host: string, localPaths: string[], dir: string): Promise<void> {
   return invoke<void>("upload_remote", { host, localPaths, dir });
 }
+
+/** Confirm replacing items that already exist in a remote folder (upload). */
+export function confirmReplaceRemote(names: string[], where: string): Promise<boolean> {
+  const what =
+    names.length === 1 ? `“${names[0]}” already exists` : `${names.length} items already exist (${names.join(", ")})`;
+  return confirm(`${what} in ${where}. Replace?`, {
+    title: "Replace on Remote",
+    kind: "warning",
+    okLabel: "Replace",
+    cancelLabel: "Cancel",
+  });
+}

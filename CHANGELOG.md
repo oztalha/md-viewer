@@ -11,6 +11,13 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   `~/.ssh/config` applies; binaries are fine).
 - The remote browser has a copy button for the current folder's path, and
   shows the full path on hover. Copy buttons are now icons.
+- Copying onto a remote folder asks before replacing items that already
+  exist there.
+
+### Changed
+- The remote browser's `~` (home) button is gone; type `~` in the path field.
+- Recent files: the host label lines up on the right, and the ✕ appears in
+  its place on hover instead of pushing it aside.
 
 ### Fixed
 - Dropping a non-text file (e.g. a `.tar.gz`) showed a raw UTF-8 error; it now

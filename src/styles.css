@@ -2306,3 +2306,18 @@ html.no-caret-animation .editor .cm-cursor {
 .copy-btn:disabled {
   opacity: 0.4;
 }
+
+/* Recent rows: the host hint sits flush right (aligned with "Clear"); on hover
+   the ✕ takes its place instead of pushing it left. */
+.sidebar-recent-item {
+  position: relative;
+}
+.sidebar-recent-item .sidebar-close {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.sidebar-recent-item:hover .sidebar-hint {
+  visibility: hidden;
+}

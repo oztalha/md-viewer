@@ -178,7 +178,7 @@ export function Sidebar() {
                   return (
                     <div
                       key={entry.spec}
-                      className="sidebar-item"
+                      className="sidebar-item sidebar-recent-item"
                       title={r.title}
                       onClick={() =>
                         void useStore.getState().openPaths([entry.spec])

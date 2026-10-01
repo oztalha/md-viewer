@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
 import { useSettings } from "../settings";
-import { confirmOverwrite, listRemoteDir, uploadRemote } from "../ipc";
+import { confirmOverwrite, confirmReplaceRemote, listRemoteDir, uploadRemote } from "../ipc";
 import { CopyButton } from "./CopyButton";
 import type { RemoteListing } from "../ipc";
 import { isValidHost } from "../remote";
@@ -187,17 +187,23 @@ function Browser({ mode }: { mode: "open" | "save" }) {
       setError("Open a folder first, then drop files onto it.");
       return;
     }
-    const names = remoteDrop.map((p) => basename(p)).join(", ");
-    setUpload(`Copying ${names} to ${host}:${dir}…`);
-    uploadRemote(host, remoteDrop, dir)
-      .then(() => {
+    const paths = remoteDrop;
+    const names = paths.map((p) => basename(p)).join(", ");
+    const existing = new Set((listing?.entries ?? []).map((e) => e.name));
+    const clashes = paths.map((p) => basename(p)).filter((n) => existing.has(n));
+    void (async () => {
+      // Confirm before replacing anything already in the folder.
+      if (clashes.length && !(await confirmReplaceRemote(clashes, `${host}:${dir}`))) return;
+      setUpload(`Copying ${names} to ${host}:${dir}…`);
+      try {
+        await uploadRemote(host, paths, dir);
         setUpload(`Copied ${names} to ${host}:${dir}`);
         void load(host, dir);
-      })
-      .catch((err) => {
+      } catch (err) {
         setUpload(null);
         setError(String(err));
-      });
+      }
+    })();
   }, [remoteDrop, listing, host, load]);
   const copyWithHost = useSettings((st) => st.settings.copyPathWithHost);
 
@@ -241,7 +247,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
           <span className="rb-colon">:</span>
           <input
             className="remote-prompt-input rb-path"
-            placeholder="~/ or /abs/path (or paste host:/path)"
+            placeholder="~ for home, /abs/path, or paste host:/path"
             title={pathDraft}
             value={pathDraft}
             spellCheck={false}
@@ -262,13 +268,6 @@ function Browser({ mode }: { mode: "open" | "save" }) {
               }
             }}
           />
-          <button
-            className="rb-icon-btn"
-            data-tip="Home"
-            onClick={() => void load(host, "~")}
-          >
-            ~
-          </button>
           <CopyButton
             text={dir ? (copyWithHost ? `${host}:${dir}` : dir) : ""}
             tip="Copy this folder's path"
