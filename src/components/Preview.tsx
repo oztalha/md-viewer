@@ -180,11 +180,24 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
     rendered = null;
     schedule();
   });
-  // Re-check wide tables when the pane resizes (window, sidebar, split ratio).
-  const resize = new ResizeObserver(() => markWideTables(container));
+  // Re-check wide tables when the pane's width changes (window, sidebar, split
+  // ratio). Deferred to the next frame and skipped when only the height moved:
+  // toggling the class inside the observer callback re-triggers layout, which
+  // the browser reports as "ResizeObserver loop completed with undelivered
+  // notifications".
+  let lastWidth = -1;
+  let resizeFrame = 0;
+  const resize = new ResizeObserver((entries) => {
+    const width = Math.round(entries[0]?.contentRect.width ?? 0);
+    if (width === lastWidth) return;
+    lastWidth = width;
+    cancelAnimationFrame(resizeFrame);
+    resizeFrame = requestAnimationFrame(() => markWideTables(container));
+  });
   resize.observe(container);
   return () => {
     resize.disconnect();
+    cancelAnimationFrame(resizeFrame);
     cancel();
     unsubscribe();
     unsubAnnotations();

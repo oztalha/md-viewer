@@ -45,6 +45,8 @@
           } catch (_) {}
         }
         window.addEventListener("error", function (e) {
+          // Benign browser warning (layout settled a frame later), not a crash.
+          if (/ResizeObserver loop/.test(e.message || "")) return;
           report((e.error && e.error.stack) || e.message || "unknown error");
         });
         window.addEventListener("unhandledrejection", function (e) {
