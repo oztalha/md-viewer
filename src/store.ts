@@ -11,13 +11,14 @@ import {
   readRemoteFile,
   readTextFile,
   showError,
+  reportMissingFile,
   writeRemoteFile,
   writeTextFile,
 } from "./ipc";
 import { allEditorViews, getEditorView } from "./editor/registry";
 import { useSettings } from "./settings";
 import { isValidHost, parseOpenSpec, remoteUrl, splitLineSuffix } from "./remote";
-import { addRecent } from "./recent";
+import { addRecent, getRecents, removeRecent } from "./recent";
 import { revealLine } from "./reveal";
 import { formatMarkdown } from "./format";
 import { buildExportHtml } from "./export";
@@ -163,6 +164,17 @@ function applyZoom(zoom: number): void {
 
 const initialZoom = clampZoom(Number(localStorage.getItem("zoom")) || 1);
 applyZoom(initialZoom);
+
+/** Read errors meaning "the file isn't there" (local `os error 2`, or ssh `cat`). */
+function isNotFound(msg: string): boolean {
+  return /No such file or directory|os error 2/i.test(msg);
+}
+
+/** Tell the user a file is gone; offer to drop it from Recents if it's there. */
+async function missingFile(spec: string, where: string): Promise<void> {
+  const inRecents = getRecents().some((r) => r.spec === spec);
+  if (await reportMissingFile(where, inRecents)) removeRecent(spec);
+}
 
 export const useStore = create<AppState>()((set, get) => ({
   docs: { [initialDoc.id]: initialDoc },
@@ -401,6 +413,10 @@ export const useStore = create<AppState>()((set, get) => ({
         content = await readTextFile(path);
       } catch (err) {
         const msg = String(err);
+        if (isNotFound(msg)) {
+          await missingFile(path, path);
+          continue;
+        }
         await showError(
           /UTF-8/i.test(msg)
             ? `“${basename(path)}” isn't a text file, so it can't be opened here.\n\nTo copy it to a remote machine, open the remote browser (⇧⌘O), go to a folder, and drop the file onto it.`
@@ -448,7 +464,8 @@ export const useStore = create<AppState>()((set, get) => ({
     try {
       content = await readRemoteFile(host, path);
     } catch (err) {
-      await showError(String(err));
+      if (isNotFound(String(err))) await missingFile(key, `${host}:${path}`);
+      else await showError(String(err));
       return;
     } finally {
       opening.delete(key);

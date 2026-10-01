@@ -105,6 +105,25 @@ export function confirmReloadDiscard(title: string): Promise<boolean> {
   });
 }
 
+/**
+ * A file that's gone (moved or deleted). With `inRecents`, offer to drop it
+ * from Recents; resolves true if the user chose to.
+ */
+export async function reportMissingFile(where: string, inRecents: boolean): Promise<boolean> {
+  const name = where.split("/").pop() || where;
+  const text = `“${name}” isn't there anymore; it may have been moved or deleted.\n\n${where}`;
+  if (!inRecents) {
+    await message(text, { title: "File Not Found", kind: "warning" });
+    return false;
+  }
+  return confirm(`${text}\n\nRemove it from Recents?`, {
+    title: "File Not Found",
+    kind: "warning",
+    okLabel: "Remove",
+    cancelLabel: "Keep",
+  });
+}
+
 /** Confirm replacing an existing file (remote save). */
 export function confirmOverwrite(name: string): Promise<boolean> {
   return confirm(`“${name}” already exists. Do you want to replace it?`, {

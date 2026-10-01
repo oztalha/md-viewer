@@ -38,6 +38,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   its place on hover instead of pushing it aside.
 
 ### Fixed
+- Opening a recent file that was moved or deleted showed a raw `os error 2`;
+  it now says the file isn't there and offers to remove it from Recents
+  (local and remote).
 - Clicking a link like `notes.md:33` in a document tried to open a file named
   `notes.md:33`; it now opens `notes.md` at line 33 (local and remote).
 - Ticked task-list checkboxes were hard to see in dark mode (pale and dimmed);
