@@ -76,6 +76,8 @@ for what's new in each version.
 
 ![LaTeX math rendered with KaTeX](docs/math.png)
 
+![A Python file on a remote machine, highlighted with line numbers](docs/code.png)
+
 ## Remote files
 
 ![Remote file browser](docs/remote-browser.png)
