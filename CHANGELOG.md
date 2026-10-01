@@ -21,6 +21,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   image or PDF). A save dialog picks the destination; Finder shows it when done.
 
 ### Changed
+- **Open Remote…** (⇧⌘O) starts in the active remote document's folder. The
+  host field is narrower so the path has room, and a breadcrumb row shows the
+  full current folder (click a part to jump up).
 - The remote browser's `~` (home) button is gone; type `~` in the path field.
 - Recent files: the host label lines up on the right, and the ✕ appears in
   its place on hover instead of pushing it aside.

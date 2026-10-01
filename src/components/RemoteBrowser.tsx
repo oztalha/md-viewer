@@ -71,7 +71,9 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     const s = useStore.getState();
     const doc = s.docs[s.activeId];
     const defaultHost = useSettings.getState().settings.defaultRemoteHost;
-    if (mode === "save" && doc?.remote) {
+    // Start next to the active remote document (open or save), like most
+    // apps' Open dialogs; otherwise the last host/folder used.
+    if (doc?.remote) {
       return { host: doc.remote.host, dir: parentOf(doc.remote.path), name: basename(doc.remote.path) };
     }
     const host = localStorage.getItem(HOST_KEY) || defaultHost || "";
@@ -304,6 +306,30 @@ function Browser({ mode }: { mode: "open" | "save" }) {
             tip="Copy this folder's path"
           />
         </div>
+
+        {dir && (
+          <nav className="rb-crumbs" aria-label="Current folder">
+            <span className="rb-crumb-host">{host}</span>
+            <span className="rb-crumb-sep">:</span>
+            <button className="rb-crumb" onClick={() => void load(host, "/")}>
+              /
+            </button>
+            {dir
+              .split("/")
+              .filter(Boolean)
+              .map((part, i, parts) => (
+                <span key={i} style={{ display: "contents" }}>
+                  {i > 0 && <span className="rb-crumb-sep">/</span>}
+                  <button
+                    className={`rb-crumb${i === parts.length - 1 ? " current" : ""}`}
+                    onClick={() => void load(host, "/" + parts.slice(0, i + 1).join("/"))}
+                  >
+                    {part}
+                  </button>
+                </span>
+              ))}
+          </nav>
+        )}
 
         <div className="rb-list" aria-busy={loading}>
           {error ? (

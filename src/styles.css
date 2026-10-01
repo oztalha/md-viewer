@@ -1500,10 +1500,13 @@ html.no-caret-animation .editor .cm-cursor {
   padding: 6px 9px;
   font-size: 12.5px;
 }
-.rb-host {
-  flex: 0 0 110px;
+.rb-location .rb-host {
+  /* Inputs have an intrinsic min width; pin it so the path gets the room. */
+  flex: 0 0 auto;
+  width: 9em;
+  min-width: 0;
 }
-.rb-path {
+.rb-location .rb-path {
   flex: 1;
   min-width: 0;
 }
@@ -2320,4 +2323,37 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .sidebar-recent-item:hover .sidebar-hint {
   visibility: hidden;
+}
+
+/* Breadcrumbs: the full current folder, each part clickable to jump up. */
+.rb-crumbs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  min-height: 20px;
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.rb-crumb {
+  all: unset;
+  padding: 1px 4px;
+  border-radius: 4px;
+  cursor: default;
+}
+.rb-crumb:hover {
+  background: var(--code-bg);
+  color: var(--fg);
+}
+.rb-crumb.current {
+  color: var(--fg);
+  font-weight: 600;
+}
+.rb-crumb-host {
+  padding: 1px 4px;
+  color: var(--accent);
+}
+.rb-crumb-sep {
+  color: var(--fg-faint);
 }
