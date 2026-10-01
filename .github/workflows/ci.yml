@@ -1,0 +1,26 @@
+# Typecheck, guardrail tests, and Rust tests on every push and pull request.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+      - run: bun install --frozen-lockfile
+      - name: Typecheck and build the frontend
+        run: bun run build
+      - name: Guardrail tests
+        run: bun test
+      - name: Rust tests
+        working-directory: src-tauri
+        run: cargo test

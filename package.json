@@ -15,7 +15,9 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "bun test",
+    "check": "bun run build && bun test && cd src-tauri && cargo test"
   },
   "dependencies": {
     "@codemirror/autocomplete": "^6.20.2",

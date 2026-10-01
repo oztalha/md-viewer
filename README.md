@@ -151,7 +151,7 @@ bun run tauri dev      # run in development
 bun run tauri build    # → src-tauri/target/release/bundle/macos/Markdown.app (+ .dmg)
 ```
 
-Releases are built automatically when a version tag is pushed; see
+Contributing: see [AGENTS.md](AGENTS.md) and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md). Releases are built automatically when a version tag is pushed; see
 [docs/RELEASING.md](docs/RELEASING.md).
 
 Built with Tauri 2 and CodeMirror 6.
