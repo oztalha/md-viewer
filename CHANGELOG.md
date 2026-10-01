@@ -3,6 +3,14 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
+## [Unreleased]
+
+### Fixed
+- Wide tables were squeezed into the text column (tall, narrow columns and a
+  sideways scroll). A table wider than the text now uses the whole preview
+  width, centred; tables that fit stay aligned with the text. Table cells are
+  top-aligned.
+
 ## [0.5.0] — 2026-09-30
 
 ### Added

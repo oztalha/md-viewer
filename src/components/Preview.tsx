@@ -72,6 +72,21 @@ function patchBlocks(
  * Imperative preview controller: subscribes to the store and patches the DOM
  * incrementally, outside of React's render cycle. Returns its cleanup.
  */
+/**
+ * Tables wider than the text column get `table-wide`, which lets them use the
+ * whole pane width (centred) instead of being squeezed into the column and
+ * scrolling. Tables that fit stay aligned with the text.
+ */
+function markWideTables(container: HTMLElement): void {
+  const style = getComputedStyle(container);
+  const column =
+    container.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+  for (const table of container.querySelectorAll<HTMLTableElement>("table")) {
+    table.classList.remove("table-wide"); // measure at its natural width
+    if (table.scrollWidth > column + 1) table.classList.add("table-wide");
+  }
+}
+
 function createPreviewController(container: HTMLElement, docId: string): () => void {
   // React reuses the same <article> node across StrictMode remounts and docId
   // swaps, calling this ref callback again. Reset to a known-empty state so the
@@ -121,6 +136,7 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
       ? renderCsvBlocks(source, path)
       : renderBlocks(source, localDir());
     records = patchBlocks(container, records, blocks);
+    markWideTables(container);
     applyAnnotations(container, annotationKey());
     rendered = source;
     renderedBase = path;
@@ -164,7 +180,11 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
     rendered = null;
     schedule();
   });
+  // Re-check wide tables when the pane resizes (window, sidebar, split ratio).
+  const resize = new ResizeObserver(() => markWideTables(container));
+  resize.observe(container);
   return () => {
+    resize.disconnect();
     cancel();
     unsubscribe();
     unsubAnnotations();

@@ -775,6 +775,8 @@ html.no-caret-animation .editor .cm-cursor {
   overflow-y: auto;
   overflow-x: hidden;
   position: relative;
+  /* Lets wide tables size against the pane (100cqw), not the text column. */
+  container-type: inline-size;
 }
 
 .preview-empty {
@@ -1053,6 +1055,17 @@ html.no-caret-animation .editor .cm-cursor {
   border: 1px solid var(--border);
   padding: 6px 12px;
   text-align: left;
+  /* Top-align so short cells line up with the start of long ones. */
+  vertical-align: top;
+}
+
+/* A table wider than the text column uses the whole pane width, centred, so
+   its columns aren't squeezed (it still scrolls inside itself if wider). */
+.preview-content table.table-wide {
+  max-width: calc(100cqw - 48px);
+  position: relative;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .preview-content th {
