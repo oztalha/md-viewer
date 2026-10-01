@@ -3,7 +3,7 @@
 All notable changes to md-viewer. Versions follow [semver](https://semver.org);
 the format is based on [Keep a Changelog](https://keepachangelog.com).
 
-## [Unreleased]
+## [0.5.0] — 2026-09-30
 
 ### Added
 - **Recent files in the sidebar**, below the open documents: click to reopen
@@ -151,6 +151,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.5.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.5.0
 [0.4.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.1
 [0.4.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.0
 [0.3.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.3.0

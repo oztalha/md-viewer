@@ -42,7 +42,7 @@ for what's new in each version.
 
 **Tabs**
 - Every file opens as a tab; drag to reorder, **⌘1–9** to jump, **⌃Tab** to cycle
-- Resizable sidebar listing open files; the title bar shows `host:` for remote files
+- Sidebar with **Files** (open and recent files, local or remote) and **Outline** tabs (⇧⌘F / ⇧⌘0); the title bar shows `host:` for remote files
 
 **Editing and preview**
 - Editor, split, or preview per document; **⇧⌘V** flips between editor and
