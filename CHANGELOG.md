@@ -13,6 +13,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   shows the full path on hover. Copy buttons are now icons.
 - Copying onto a remote folder asks before replacing items that already
   exist there.
+- **Download from a remote machine:** right-click a file or folder in the
+  remote browser → **Download…** (or just click a non-text file such as a zip,
+  image or PDF). A save dialog picks the destination; Finder shows it when done.
 
 ### Changed
 - The remote browser's `~` (home) button is gone; type `~` in the path field.

@@ -5,8 +5,8 @@ your Mac or on any machine you can `ssh` to.**
 
 Open, edit and save markdown on a dev box, a cloud desktop, or the machine your
 coding agent runs on, as if it were local. It doubles as a lightweight remote
-file browser: browse folders, copy paths, and drag files from Finder to copy
-them onto the remote machine. md-viewer uses your system `ssh`, so
+file browser: browse folders, copy paths, drag files from Finder to copy them
+onto the remote machine, and download files back. md-viewer uses your system `ssh`, so
 your `~/.ssh/config` aliases, keys, jump hosts and `ProxyCommand` just work —
 nothing to install on the remote side.
 
@@ -41,7 +41,8 @@ for what's new in each version.
 - Edits save straight back over SSH, atomically; **⌘R** reloads the latest version
 - **Copy files to a remote machine:** drag files or folders from Finder onto the
   remote browser to copy them into the folder it shows (any file type, via
-  `scp`); it asks before replacing anything
+  `scp`); it asks before replacing anything. Download goes the other way: click
+  a non-text file (zip, image, PDF, …) or right-click → **Download…**
 - Open from the terminal (`mdv host:/path/file.md`) or a clickable
   `mdviewer://` link — handy when an agent on the remote box writes a report
 
@@ -85,7 +86,10 @@ remembers your last host and the last folder on each host.
 folders from Finder onto it. They're copied there with `scp` (so your SSH
 config applies, and any file type works); if a name already exists, it asks
 before replacing. The copy icon next to the path copies the folder's path.
-It copies *to* the remote machine only; there's no download, rename or delete.
+To download, click a file that isn't text (archives, images, PDFs, …) or
+right-click any file or folder → **Download…**: a save dialog picks where it
+goes, and Finder shows it when done. Rename and delete are left to the
+terminal on purpose.
 
 **⇧⌘C** copies the document's path — the bare path by default, or `host:/path`
 if you turn on *Copy path includes host* in Settings.

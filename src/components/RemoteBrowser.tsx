@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
 import { useSettings } from "../settings";
-import { confirmOverwrite, confirmReplaceRemote, listRemoteDir, uploadRemote } from "../ipc";
+import { confirmOverwrite, confirmReplaceRemote, copyToClipboard, downloadRemote, listRemoteDir, pickDownloadPath, uploadRemote } from "../ipc";
+import { Menu, MenuItem } from "@tauri-apps/api/menu";
+import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { CopyButton } from "./CopyButton";
 import type { RemoteListing } from "../ipc";
 import { isValidHost } from "../remote";
@@ -10,6 +12,9 @@ import { basename, displayTitle } from "../types";
 const HOST_KEY = "remoteBrowserHost";
 const dirKey = (host: string) => `remoteBrowserDir:${host}`;
 const DOC_RE = /\.(md|markdown|mdown|mkdn|mkd|txt|csv|tsv)$/i;
+/** Files that can't be opened as text: clicking one downloads it instead. */
+const BINARY_RE =
+  /\.(zip|gz|tgz|bz2|xz|zst|7z|rar|tar|jar|war|whl|dmg|pkg|iso|bin|exe|so|dylib|o|a|class|pyc|png|jpe?g|gif|webp|heic|ico|bmp|tiff?|pdf|docx?|xlsx?|pptx?|mp3|mp4|mov|wav|avi|mkv|parquet|db|sqlite)$/i;
 /** `host:/path` or `host:~/path` pasted into the path bar switches host too. */
 const SPEC_RE = /^([A-Za-z0-9._@[\]-]+):((?:~|\/).*)$/;
 
@@ -140,6 +145,32 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     setHost(h);
     setHostDraft(h);
     void load(h, localStorage.getItem(dirKey(h)) || "~");
+  };
+
+  // Download a remote file/folder to a place picked in a save dialog.
+  const download = async (path: string) => {
+    const local = await pickDownloadPath(basename(path));
+    if (!local) return;
+    setUpload(`Downloading ${basename(path)} from ${host}…`);
+    try {
+      await downloadRemote(host, path, local);
+      setUpload(`Downloaded to ${local}`);
+      void revealItemInDir(local);
+    } catch (err) {
+      setUpload(null);
+      setError(String(err));
+    }
+  };
+
+  const showEntryMenu = async (path: string, isDir: boolean) => {
+    const items = await Promise.all([
+      ...(isDir
+        ? [MenuItem.new({ text: "Open Folder", action: () => void load(host, path) })]
+        : [MenuItem.new({ text: "Open", action: () => openFile(host, path) })]),
+      MenuItem.new({ text: "Download…", action: () => void download(path) }),
+      MenuItem.new({ text: "Copy Path", action: () => void copyToClipboard(copyWithHost ? `${host}:${path}` : path) }),
+    ]);
+    await (await Menu.new({ items })).popup();
   };
 
   const openFile = (h: string, path: string) => {
@@ -297,8 +328,13 @@ function Browser({ mode }: { mode: "open" | "save" }) {
                       selected ? " selected" : ""
                     }`}
                     title={entry.name}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      void showEntryMenu(joinPath(listing.dir, entry.name), entry.isDir);
+                    }}
                     onClick={() => {
                       if (entry.isDir) void load(host, joinPath(listing.dir, entry.name));
+                      else if (BINARY_RE.test(entry.name)) void download(joinPath(listing.dir, entry.name));
                       else if (mode === "open") openFile(host, joinPath(listing.dir, entry.name));
                       else setFileName(entry.name);
                     }}

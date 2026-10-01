@@ -184,6 +184,29 @@ async fn upload_remote(host: String, local_paths: Vec<String>, dir: String) -> R
     .map_err(|e| e.to_string())?
 }
 
+/// Copy a remote file or folder to a local path the user picked in a save
+/// dialog (so macOS grants access without a privacy prompt). `scp -r`.
+#[tauri::command]
+async fn download_remote(host: String, remote_path: String, local_path: String) -> Result<(), String> {
+    validate_host(&host)?;
+    tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
+        let source = format!("{host}:{remote_path}");
+        let output = std::process::Command::new("/usr/bin/scp")
+            .args(["-o", "ConnectTimeout=12", "-o", "BatchMode=yes", "-r", "-q", "--"])
+            .arg(&source)
+            .arg(&local_path)
+            .output()
+            .map_err(|e| format!("Could not run scp: {e}"))?;
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Could not download {source}\n{}", err.trim()));
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Write a file to a remote host over SSH, atomically (temp file + mv).
 #[tauri::command]
 async fn write_remote(host: String, path: String, contents: String) -> Result<(), String> {
@@ -721,6 +744,7 @@ pub fn run() {
             read_remote,
             list_remote,
             upload_remote,
+            download_remote,
             publish::publish_targets,
             publish::publish_edit_config,
             publish::publish_write_temp,

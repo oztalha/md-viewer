@@ -33,6 +33,8 @@ src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
   (aliases, keys, ProxyCommand) applies. Writes are atomic (temp file + `mv`).
   Dropping files onto the open remote browser copies them into its folder with
   `scp -r` (`upload_remote`), after confirming any replacements.
+  Download is `download_remote` (`scp -r` to a path from a save dialog, which
+  avoids a macOS privacy prompt for Downloads).
 - **Sidebar** has two tabs: Files (open + recent) and Outline. Each has its own
   shortcut; pressing the key of the showing tab hides the sidebar.
 

@@ -223,3 +223,15 @@ export function confirmReplaceRemote(names: string[], where: string): Promise<bo
     cancelLabel: "Cancel",
   });
 }
+
+/** Copy a remote file/folder to a local path (picked in a save dialog). */
+export function downloadRemote(host: string, remotePath: string, localPath: string): Promise<void> {
+  return invoke<void>("download_remote", { host, remotePath, localPath });
+}
+
+/** Save dialog for a download, starting in Downloads. Null if cancelled. */
+export async function pickDownloadPath(name: string): Promise<string | null> {
+  const { downloadDir, join } = await import("@tauri-apps/api/path");
+  const result = await saveDialog({ defaultPath: await join(await downloadDir(), name) });
+  return result ?? null;
+}
