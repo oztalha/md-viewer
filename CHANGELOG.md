@@ -17,6 +17,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - Drag open files in the sidebar up or down to reorder them (same order as
   the tabs); a grip appears on hover.
 
+### Fixed
+- Typing or pasting the path of an image or other non-text file into Open
+  Remote's path bar showed "not a directory"; it now downloads the file (a
+  save dialog asks where), like clicking it.
+
 ### Changed
 - The sidebar remembers the last 100 recent files (was 20); the list
   scrolls. File → Open Recent still shows the newest 20.

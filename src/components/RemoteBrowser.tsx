@@ -121,10 +121,14 @@ function Browser({ mode }: { mode: "open" | "save" }) {
       localStorage.setItem(HOST_KEY, h);
       localStorage.setItem(dirKey(h), result.dir);
     } catch (err) {
-      if (id === request.current) setError(String(err));
+      if (id !== request.current) return false;
+      // `cd` into a file: the caller decides what to do with it (download).
+      if (/not a directory/i.test(String(err))) return true;
+      setError(String(err));
     } finally {
       if (id === request.current) setLoading(false);
     }
+    return false;
   }, []);
 
   useEffect(() => {
@@ -150,12 +154,12 @@ function Browser({ mode }: { mode: "open" | "save" }) {
   };
 
   // Download a remote file/folder to a place picked in a save dialog.
-  const download = async (path: string) => {
+  const download = async (path: string, fromHost = host) => {
     const local = await pickDownloadPath(basename(path));
     if (!local) return;
-    setUpload(`Downloading ${basename(path)} from ${host}…`);
+    setUpload(`Downloading ${basename(path)} from ${fromHost}…`);
     try {
-      await downloadRemote(host, path, local);
+      await downloadRemote(fromHost, path, local);
       setUpload(`Downloaded to ${local}`);
       void revealItemInDir(local);
     } catch (err) {
@@ -213,7 +217,19 @@ function Browser({ mode }: { mode: "open" | "save" }) {
       setFileName(basename(p));
       p = parentOf(p);
     }
-    void load(h, p);
+    // A non-text file (image, archive, PDF, …): download it, like clicking it.
+    if (mode === "open" && BINARY_RE.test(bare)) {
+      void load(h, parentOf(bare));
+      void download(bare, h);
+      return;
+    }
+    void load(h, p).then((notDir) => {
+      // Any other file typed in (no known extension): download it too.
+      if (notDir && mode === "open") {
+        void load(h, parentOf(bare));
+        void download(bare, h);
+      }
+    });
   };
 
   // Files dropped onto the browser: copy them into the folder it's showing.
