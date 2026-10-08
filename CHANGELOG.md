@@ -17,6 +17,15 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - Drag open files in the sidebar up or down to reorder them (same order as
   the tabs); a grip appears on hover.
 
+### Changed
+- Hovering a tab or the title in the title bar shows the full path
+  (`host:/path`), like the sidebar, so you no longer need Copy Path just to
+  see where a file is.
+- The sidebar remembers the last 100 recent files (was 20); the list
+  scrolls. File → Open Recent still shows the newest 20.
+- Dragging a tab or an open file is smooth: the item lifts and follows the
+  pointer while the others slide aside, instead of jumping between slots.
+
 ### Fixed
 - Right-clicking a tab did nothing; it now shows the tab menu (Reload, Copy
   Path, Pin, Reveal in Finder, Close Tab). New File and Open… are gone from
@@ -24,12 +33,6 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - Typing or pasting the path of an image or other non-text file into Open
   Remote's path bar showed "not a directory"; it now downloads the file (a
   save dialog asks where), like clicking it.
-
-### Changed
-- The sidebar remembers the last 100 recent files (was 20); the list
-  scrolls. File → Open Recent still shows the newest 20.
-- Dragging a tab or an open file is smooth: the item lifts and follows the
-  pointer while the others slide aside, instead of jumping between slots.
 
 ## [0.6.0] — 2026-10-01
 
@@ -70,9 +73,7 @@ md-viewer becomes a viewer for more than markdown (code, JSON, line numbers,
 - Open files in the sidebar show their host (or `local`) like Recent files.
 - Recent files: the host label lines up on the right, and the ✕ appears in
   its place on hover instead of pushing it aside.
-- Hovering a tab, an open or recent file, or the title in the title bar
-  shows the full path (`host:/path`), so you no longer need Copy Path just to
-  see where a file is.
+- Hovering an open or recent file shows its full path (`host:/path`).
 
 ### Fixed
 - Sidebar ✕ tooltips (Close tab, Remove from recents) were cut off, and a
