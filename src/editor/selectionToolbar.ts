@@ -58,6 +58,8 @@ export const selectionToolbar = StateField.define<Tooltip | null>({
   create: selectionTooltip,
   update(value, tr) {
     if (!tr.docChanged && !tr.selection) return value;
+    // A match selected by find / replace isn't a selection to format.
+    if (tr.isUserEvent("select.search") || tr.isUserEvent("input.replace")) return null;
     return selectionTooltip(tr.state);
   },
   provide: (field) => showTooltip.from(field),

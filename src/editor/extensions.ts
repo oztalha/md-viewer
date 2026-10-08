@@ -5,7 +5,7 @@ import type { EditorState, Extension } from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap, indentWithTab } from "@codemirror/commands";
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
-import { searchKeymap } from "@codemirror/search";
+import { search } from "@codemirror/search";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { languages } from "@codemirror/language-data";
 import { tags as t } from "@lezer/highlight";
@@ -201,6 +201,12 @@ const editorTheme = EditorView.theme({
   "&.cm-focused": {
     outline: "none",
   },
+  // CodeMirror's search panel is replaced by the find bar; hide its slot.
+  ".cm-panels": {
+    display: "none",
+  },
+
+
   ".cm-cursor, .cm-dropCursor": {
     borderLeftColor: "var(--accent)",
     borderLeftWidth: "2px",
@@ -215,21 +221,6 @@ const editorTheme = EditorView.theme({
   ".cm-placeholder": {
     color: "var(--fg-faint)",
   },
-  ".cm-panels": {
-    backgroundColor: "var(--bg-secondary)",
-    color: "var(--fg)",
-    borderTop: "1px solid var(--border)",
-    padding: "2px 6px",
-  },
-  ".cm-panels button": {
-    color: "var(--fg)",
-  },
-  ".cm-panels input": {
-    backgroundColor: "var(--bg)",
-    color: "var(--fg)",
-    border: "1px solid var(--border)",
-    borderRadius: "4px",
-  },
   ".cm-searchMatch": {
     backgroundColor: "var(--search-match)",
     borderRadius: "2px",
@@ -241,6 +232,15 @@ const editorTheme = EditorView.theme({
 
 export function editorExtensions(keybinds: Record<string, string> = {}, showLineNumbers = false): Extension[] {
   return [
+    // Search state and match highlighting only; the find bar (FindBar.tsx) is
+    // the UI, so CodeMirror's own panel is an empty, hidden element.
+    search({
+      createPanel: () => {
+        const dom = document.createElement("div");
+        dom.className = "cm-hidden-search-panel";
+        return { dom, top: true };
+      },
+    }),
     lineNumbersCompartment.of(showLineNumbers ? lineNumbers() : []),
     history(),
     EditorView.lineWrapping,
@@ -261,7 +261,6 @@ export function editorExtensions(keybinds: Record<string, string> = {}, showLine
       ...closeBracketsKeymap,
       ...defaultKeymap,
       ...historyKeymap,
-      ...searchKeymap,
       indentWithTab,
     ]),
     editorTheme,

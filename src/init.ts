@@ -12,7 +12,6 @@ import { formatDocument } from "./format";
 import { useStore } from "./store";
 import { displayTitle } from "./types";
 import { getEditorView } from "./editor/registry";
-import { findNext, findPrevious, openSearchPanel } from "@codemirror/search";
 import { REPO_URL } from "./links";
 import { latestPublished } from "./publish";
 
@@ -128,17 +127,14 @@ function find(id: "find" | "find-next" | "find-prev") {
   const s = useStore.getState();
   const mode = s.views[s.activeId]?.mode;
   const view = getEditorView(s.activeId);
-  const inEditor =
-    !!view && (mode === "editor" || view.hasFocus || !!view.dom.querySelector(".cm-search")?.contains(document.activeElement));
-  if (inEditor && view) {
-    if (id === "find") openSearchPanel(view);
-    else if (id === "find-next") findNext(view);
-    else findPrevious(view);
+  // Search where the user is looking: the editor when it's the only pane or has
+  // focus, otherwise the rendered preview.
+  const target = mode === "editor" || (mode === "split" && view?.hasFocus) ? "editor" : "preview";
+  if (id === "find" || !s.findOpen) {
+    s.setFindOpen(true, s.findOpen && id !== "find" ? undefined : target);
     return;
   }
-  if (id === "find") s.setFindOpen(true);
-  else if (s.findOpen) window.dispatchEvent(new CustomEvent("mdv-find-step", { detail: id === "find-next" ? 1 : -1 }));
-  else s.setFindOpen(true);
+  window.dispatchEvent(new CustomEvent("mdv-find-step", { detail: id === "find-next" ? 1 : -1 }));
 }
 
 declare global {

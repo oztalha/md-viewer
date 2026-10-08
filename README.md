@@ -70,6 +70,8 @@ for what's new in each version.
   `host:/path/run.py:120` (as printed by tools and agents) and it opens there
 - LaTeX math with KaTeX: `$inline$`, `$$display$$`, and ```` ```math ```` blocks
 - Highlight passages and attach notes in the preview
+- **Find and replace** (⌘F) in the editor or the rendered preview, with
+  match case, whole word and regex
 - Format with Prettier, export to HTML, light and dark themes
 
 **Publishing**
@@ -144,7 +146,7 @@ Append `:LINE` (or `&line=33` to the link) to open at a line.
 | Sidebar: Files · Outline | ⇧⌘F · ⇧⌘0 |
 | Line numbers on / off | ⇧⌘N |
 | Select all | ⌘A |
-| Find / next / previous | ⌘F / ⌘G / ⇧⌘G |
+| Find and replace / next / previous | ⌘F / ⌘G / ⇧⌘G |
 | Paste and match style | ⌥⇧⌘V |
 | Zoom in / out / reset | ⌘+ / ⌘− / ⌘0 |
 | Bold / Italic / Code / Strike / Link | ⌘B / ⌘I / ⌘E / ⇧⌘X / ⌘K |

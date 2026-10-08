@@ -512,7 +512,8 @@ body.sort-dragging [data-tip]:hover::after {
    Tile (one document)
 --------------------------------------------------------------------------- */
 
-/* Find in preview (⌘F): a small bar over the top-right of the document. */
+/* Find and replace (⌘F): a compact bar over the top-right of the document,
+   VS Code style. The chevron reveals the replace row. */
 .tile {
   position: relative;
 }
@@ -522,37 +523,54 @@ body.sort-dragging [data-tip]:hover::after {
   right: 18px;
   z-index: 50;
   display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 5px 6px 5px 8px;
-  border-radius: 9px;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 4px 6px 4px 2px;
+  border-radius: 8px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
   font-size: 12.5px;
 }
-.find-bar input {
-  all: unset;
-  width: 200px;
-  padding: 3px 6px;
+.find-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.find-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.find-field {
+  display: flex;
+  align-items: center;
+  width: 250px;
+  padding: 0 2px 0 7px;
   border-radius: 5px;
   background: var(--bg);
-  color: var(--fg);
+  border: 1px solid var(--border);
 }
-.find-count {
-  min-width: 64px;
-  text-align: right;
-  color: var(--fg-faint);
-  font-variant-numeric: tabular-nums;
+.find-field:focus-within {
+  border-color: var(--accent);
+}
+.find-field.invalid {
+  border-color: #e5484d;
+}
+.find-field input {
+  all: unset;
+  flex: 1;
+  min-width: 0;
+  padding: 4px 0;
+  color: var(--fg);
 }
 .find-bar button {
   all: unset;
-  width: 22px;
-  height: 22px;
   display: grid;
   place-items: center;
-  border-radius: 5px;
+  border-radius: 4px;
   color: var(--fg-muted);
+  cursor: default;
 }
 .find-bar button:hover:not(:disabled) {
   background: var(--code-bg);
@@ -560,6 +578,44 @@ body.sort-dragging [data-tip]:hover::after {
 }
 .find-bar button:disabled {
   opacity: 0.35;
+}
+.find-bar .find-icon,
+.find-bar .find-chevron {
+  width: 24px;
+  height: 24px;
+}
+.find-chevron svg {
+  transition: transform 120ms;
+}
+.find-bar .find-opt {
+  height: 20px;
+  min-width: 22px;
+  padding: 0 3px;
+  font-size: 11.5px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.find-bar .find-opt.on {
+  color: var(--button-primary);
+  background: color-mix(in srgb, var(--button-primary) 18%, transparent);
+}
+.find-word {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.find-bar .find-text {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 11.5px;
+  font-weight: 600;
+}
+.find-count {
+  min-width: 70px;
+  padding: 0 6px;
+  text-align: right;
+  color: var(--fg-faint);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 ::highlight(find-all) {
   background-color: rgba(255, 213, 0, 0.35);

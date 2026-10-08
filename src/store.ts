@@ -96,7 +96,9 @@ interface AppState {
   findOpen: boolean;
   /** Bumped by ⌘F while the bar is open, to refocus its field. */
   findFocusTick: number;
-  setFindOpen(open: boolean): void;
+  /** Where ⌘F searches: the editor, or the rendered preview. */
+  findTarget: "editor" | "preview";
+  setFindOpen(open: boolean, target?: "editor" | "preview"): void;
   /** Docs whose file changed on disk while they had unsaved edits. */
   changedOnDisk: Record<string, true>;
   /** Mark (or clear) a doc as changed on disk. */
@@ -207,8 +209,10 @@ export const useStore = create<AppState>()((set, get) => ({
   changedOnDisk: {},
   findOpen: false,
   findFocusTick: 0,
+  findTarget: "preview",
 
-  setFindOpen(open) {
+  setFindOpen(open, target) {
+    if (target && target !== get().findTarget) set({ findTarget: target });
     if (open && get().findOpen) set({ findFocusTick: get().findFocusTick + 1 });
     else if (get().findOpen !== open) set({ findOpen: open });
   },
