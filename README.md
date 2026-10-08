@@ -6,7 +6,8 @@ your Mac or on any machine you can `ssh` to.**
 Open, edit and save markdown on a dev box, a cloud desktop, or the machine your
 coding agent runs on, as if it were local. It doubles as a lightweight remote
 file browser: browse folders, copy paths, drag files from Finder to copy them
-onto the remote machine, and download files back. md-viewer uses your system `ssh`, so
+onto the remote machine, and download files back. When an agent rewrites a
+file you have open, it **reloads on its own**. md-viewer uses your system `ssh`, so
 your `~/.ssh/config` aliases, keys, jump hosts and `ProxyCommand` just work —
 nothing to install on the remote side.
 
@@ -38,8 +39,7 @@ for what's new in each version.
 **Remote files over SSH**
 - Browse a remote machine and open files with **Open Remote…** (⇧⌘O); save new
   or local documents to any host with **Save to Remote…** (⇧⌘S)
-- Edits save straight back over SSH, atomically; files that change on the
-  remote machine (or locally) reload on their own, and **⌘R** reloads by hand
+- Edits save straight back over SSH, atomically; **⌘R** reloads by hand
 - **Copy files to a remote machine:** drag files or folders from Finder onto the
   remote browser to copy them into the folder it shows (any file type, via
   `scp`); it asks before replacing anything. Download goes the other way: click
@@ -52,6 +52,11 @@ for what's new in each version.
 - Sidebar with **Files** (open and recent files, local or remote; drag open files to reorder, right-click to **Pin** the ones you keep coming back to) and **Outline** tabs (⇧⌘F / ⇧⌘0); the title bar shows `host:` for remote files
 
 **Editing and preview**
+- **Auto-reload:** when an open file changes outside the app (an agent
+  rewriting a report, another editor, `git pull`), it reloads in place and
+  keeps your scroll position, for local and remote files. Unsaved edits are
+  never overwritten: a bar offers **Reload** or **Keep mine**. Turn it off in
+  Settings.
 - Editor, split, or preview per document; **⇧⌘V** flips between editor and
   preview and keeps your place
 - Semi-WYSIWYG editing: `**bold**` renders bold with the markers still visible
