@@ -278,7 +278,9 @@ export function TitleBar() {
     >
       <div
         className="titlebar-title"
-        data-tip={doc?.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc?.path ?? undefined)}
+        // Native tooltip, not data-tip: [data-tip] sets position: relative,
+        // which breaks this absolutely-centred title.
+        title={doc?.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc?.path ?? undefined)}
       >
         {doc?.remote && <span className="titlebar-host">{doc.remote.host}:</span>}
         <span className="titlebar-name">{doc ? displayTitle(doc) : ""}</span>
