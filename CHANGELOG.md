@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.8.0] — 2026-10-08
+
 ### Added
 - **Find and replace** (⌘F, Edit menu): one compact bar, top right, for both
   the editor and the preview. It highlights every match, shows "3 of 12", and
@@ -12,6 +14,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   and regular expressions sit in the field. The chevron opens a replace row
   (Enter replaces one, ⇧Enter replaces all). Replace edits the source, so it
   works from the preview too.
+
+### Fixed
+- The formatting toolbar no longer pops up over a match selected by find.
 
 ## [0.7.0] — 2026-10-07
 
@@ -262,6 +267,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.8.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.8.0
 [0.7.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.7.0
 [0.6.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.6.0
 [0.5.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.5.0
