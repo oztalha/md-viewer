@@ -168,7 +168,6 @@ body.resizing-y * {
   font-size: 13px;
   font-weight: 500;
   color: var(--fg-muted);
-  pointer-events: none;
 }
 
 .titlebar-name {

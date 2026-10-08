@@ -281,10 +281,19 @@ export function TitleBar() {
         // Native tooltip, not data-tip: [data-tip] sets position: relative,
         // which breaks this absolutely-centred title.
         title={doc?.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc?.path ?? undefined)}
+        // It takes hover (for the tooltip), so it and its parts must be drag
+        // regions too: Tauri only drags when the pressed element has the attribute.
+        data-tauri-drag-region
       >
-        {doc?.remote && <span className="titlebar-host">{doc.remote.host}:</span>}
-        <span className="titlebar-name">{doc ? displayTitle(doc) : ""}</span>
-        {dirty && <span className="dirty-dot" />}
+        {doc?.remote && (
+          <span className="titlebar-host" data-tauri-drag-region>
+            {doc.remote.host}:
+          </span>
+        )}
+        <span className="titlebar-name" data-tauri-drag-region>
+          {doc ? displayTitle(doc) : ""}
+        </span>
+        {dirty && <span className="dirty-dot" data-tauri-drag-region />}
       </div>
       {doc && (
         <div className="titlebar-actions">
