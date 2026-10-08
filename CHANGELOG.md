@@ -18,6 +18,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   the tabs); a grip appears on hover.
 
 ### Fixed
+- Right-clicking a tab did nothing; it now shows the tab menu (Reload, Copy
+  Path, Pin, Reveal in Finder, Close Tab). New File and Open… are gone from
+  that menu (they're in the File menu and the + button).
 - Typing or pasting the path of an image or other non-text file into Open
   Remote's path bar showed "not a directory"; it now downloads the file (a
   save dialog asks where), like clicking it.

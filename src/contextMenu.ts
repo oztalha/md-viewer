@@ -34,11 +34,8 @@ export async function showTileContextMenu(docId: string): Promise<void> {
   };
 
   const items = await Promise.all([
-    item("New File", () => useStore.getState().newDoc(), "new"),
-    item("Open…", () => void useStore.getState().openViaDialog(), "open"),
     ...(hasFile
       ? [
-          separator(),
           item("Reload", () => void useStore.getState().reloadDoc(docId), "reload"),
           item("Copy Path", () => void useStore.getState().copyDocPath(docId), "copy-path"),
           MenuItem.new({
@@ -47,7 +44,8 @@ export async function showTileContextMenu(docId: string): Promise<void> {
           }),
         ]
       : []),
-    separator(),
+    // No leading separator on an untitled doc (the menu is then just Close Tab).
+    ...(hasFile ? [separator()] : []),
     ...(path ? [item("Reveal in Finder", () => void revealItemInDir(path))] : []),
     item("Close Tab", () => void useStore.getState().closeTab(docId), "close-pane"),
   ]);

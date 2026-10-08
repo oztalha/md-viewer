@@ -1,5 +1,6 @@
 import { useStore } from "../store";
 import { startSortDrag } from "../dragSort";
+import { showTileContextMenu } from "../contextMenu";
 import { displayTitle, isDirty } from "../types";
 import { useModHeld } from "../keybindings/useModHeld";
 import { CloseIcon, SwapIcon } from "./icons";
@@ -41,6 +42,10 @@ export function TabBar() {
               key={docId}
               className={`tab${active ? " active" : ""}`}
               onPointerDown={(e) => startTabDrag(e, docId)}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                void showTileContextMenu(docId);
+              }}
               title={displayTitle(doc)}
             >
               {modHeld && i < 9 && <span className="tab-keycap">⌘{i + 1}</span>}
