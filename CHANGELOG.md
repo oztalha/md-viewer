@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.7.0] — 2026-10-07
+
+Open files keep themselves current: when an agent (or anything else) rewrites
+a file you're reading, locally or on a remote machine, it reloads in place.
+Plus JSONL, pinned files, and drag-to-reorder everywhere in the sidebar.
+
 ### Added
 - **Auto-reload:** when an open file changes outside the app (an agent
   rewriting a report, another editor, `git pull`), it reloads in place and
@@ -248,6 +254,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.7.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.7.0
 [0.6.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.6.0
 [0.5.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.5.0
 [0.4.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.4.1
