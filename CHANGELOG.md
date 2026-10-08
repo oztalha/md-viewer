@@ -6,6 +6,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **Auto-reload:** when an open file changes outside the app (an agent
+  rewriting a report, another editor, `git pull`), it reloads in place and
+  keeps your place. Local files are watched by macOS (no polling); the remote
+  tab you're looking at is checked every few seconds and when the window comes
+  back to the front. With unsaved edits it never overwrites them: a bar offers
+  **Reload** or **Keep mine**. Turn it off in Settings.
 - **JSONL / NDJSON** (`.jsonl`, `.ndjson`) open in preview: one pretty-printed,
   highlighted block per record, each labelled with its line number.
   **Format Document** (⇧⌥F) re-serializes each record to one compact line.

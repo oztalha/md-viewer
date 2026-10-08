@@ -19,6 +19,8 @@ export interface Settings {
   caretAnimation: boolean;
   /** Line numbers in the editor gutter and in highlighted code (⇧⌘N). */
   lineNumbers: boolean;
+  /** Reload a file when it changes on disk (or on the remote machine). */
+  autoReload: boolean;
   defaultMode: ViewMode;
   /** Reformat markdown with Prettier on every save. */
   formatOnSave: boolean;
@@ -79,6 +81,7 @@ const DEFAULTS: Settings = {
   editorWidth: "normal",
   caretAnimation: true,
   lineNumbers: false,
+  autoReload: true,
   defaultMode: "split",
   formatOnSave: false,
   copyPathWithHost: false,

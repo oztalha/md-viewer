@@ -7,6 +7,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { allowAsset, confirmDiscardAll, frontendReady, quitApp } from "./ipc";
 import { applySettings, useSettings } from "./settings";
 import { clearRecents, initRecents } from "./recent";
+import { initAutoReload } from "./autoReload";
 import { formatDocument } from "./format";
 import { useStore } from "./store";
 import { displayTitle } from "./types";
@@ -354,6 +355,7 @@ export function initApp(): void {
     // native menu — is definitely up.
     applySettings(useSettings.getState().settings);
     initRecents();
+    initAutoReload();
   });
 
   // Native window title follows the active document.

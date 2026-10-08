@@ -6,6 +6,7 @@ import { getEditorView } from "../editor/registry";
 import { EditorView } from "@codemirror/view";
 import { Editor } from "./Editor";
 import { Preview } from "./Preview";
+import { readRemoteFile, readTextFile } from "../ipc";
 
 /** 1-based markdown line at the top of the editor viewport. */
 function editorTopLine(view: EditorView): number {
@@ -94,6 +95,7 @@ function scrollEditorToLine(view: EditorView, line: number): void {
 export function Tile({ leaf }: { leaf: LeafNode }) {
   const doc = useStore((s) => s.docs[leaf.docId]);
   const setRatio = useStore((s) => s.setRatio);
+  const changedOnDisk = useStore((s) => !!s.changedOnDisk[leaf.docId]);
 
   // The markdown line the user is reading, tracked from whichever pane is
   // scrolled, so a view-mode toggle can land on the same line in the other pane.
@@ -228,6 +230,22 @@ export function Tile({ leaf }: { leaf: LeafNode }) {
 
   return (
     <section className="tile" onContextMenu={onContextMenu}>
+      {changedOnDisk && (
+        <div className="disk-banner" role="status">
+          <span>This file changed on disk, and you have unsaved edits.</span>
+          <button
+            onClick={() => {
+              const d = useStore.getState().docs[leaf.docId];
+              if (!d) return;
+              const read = d.remote ? readRemoteFile(d.remote.host, d.remote.path) : readTextFile(d.path!);
+              void read.then((text) => useStore.getState().applyExternal(leaf.docId, text));
+            }}
+          >
+            Reload
+          </button>
+          <button onClick={() => useStore.getState().setChangedOnDisk(leaf.docId, false)}>Keep mine</button>
+        </div>
+      )}
       <div className="tile-body" ref={attachBody}>
         <div className={`pane${showEditor ? "" : " pane-hidden"}`} style={{ flex: editorFlex }}>
           <Editor doc={doc} />

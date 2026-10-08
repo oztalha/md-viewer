@@ -39,6 +39,16 @@ export function setRecentFiles(items: { spec: string; label: string }[]): Promis
   return invoke<void>("set_recent_files", { items });
 }
 
+/** Watch these local files; changes arrive as `file-changed` events. */
+export function watchFiles(paths: string[]): Promise<void> {
+  return invoke<void>("watch_files", { paths });
+}
+
+/** Change signature (mtime + size) of a remote file, for polling. */
+export function remoteStat(host: string, path: string): Promise<string> {
+  return invoke<string>("remote_stat", { host, path });
+}
+
 /** Read a remote file over SSH. */
 export function readRemoteFile(host: string, path: string): Promise<string> {
   return invoke<string>("read_remote", { host, path });

@@ -38,7 +38,8 @@ for what's new in each version.
 **Remote files over SSH**
 - Browse a remote machine and open files with **Open Remote…** (⇧⌘O); save new
   or local documents to any host with **Save to Remote…** (⇧⌘S)
-- Edits save straight back over SSH, atomically; **⌘R** reloads the latest version
+- Edits save straight back over SSH, atomically; files that change on the
+  remote machine (or locally) reload on their own, and **⌘R** reloads by hand
 - **Copy files to a remote machine:** drag files or folders from Finder onto the
   remote browser to copy them into the folder it shows (any file type, via
   `scp`); it asks before replacing anything. Download goes the other way: click

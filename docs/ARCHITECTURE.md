@@ -39,6 +39,13 @@ src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
 - **Sidebar** has two tabs: Files (open + recent) and Outline. Each has its own
   shortcut; pressing the key of the showing tab hides the sidebar.
 
+- **Auto-reload** (`autoReload.ts`, `watch.rs`): local files are watched by
+  folder with FSEvents (saves by rename replace the file a direct watch would
+  hold); remote files have no events over ssh, so the visible remote tab's
+  mtime+size is polled. A change is judged by comparing the file's text with
+  the editor's, which is how our own saves are told apart: equal = ours,
+  no unsaved edits = reload in place, unsaved edits = the "changed on disk" bar.
+
 ## Rendering
 
 - `renderBlocks` renders each top-level markdown block separately and caches

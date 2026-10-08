@@ -177,6 +177,17 @@ export function SettingsPanel() {
               />
             </div>
             <div className="settings-row">
+              <span>Reload when a file changes</span>
+              <Segmented<"on" | "off">
+                value={settings.autoReload ? "on" : "off"}
+                options={[
+                  { value: "on", label: "On" },
+                  { value: "off", label: "Off" },
+                ]}
+                onChange={(value) => update({ autoReload: value === "on" })}
+              />
+            </div>
+            <div className="settings-row">
               <span>Line numbers</span>
               <Segmented<"on" | "off">
                 value={settings.lineNumbers ? "on" : "off"}

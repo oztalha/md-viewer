@@ -1,3 +1,4 @@
+import { Transaction } from "@codemirror/state";
 import { create } from "zustand";
 import type { Doc, LeafNode, TabView, ViewMode } from "./types";
 import { basename, displayTitle, isCodePath, isDataPath, isDirty, isPristine } from "./types";
@@ -91,6 +92,12 @@ interface AppState {
   publishOpen: boolean;
   /** Bumped after each publish so views re-read saved links. */
   publishTick: number;
+  /** Docs whose file changed on disk while they had unsaved edits. */
+  changedOnDisk: Record<string, true>;
+  /** Mark (or clear) a doc as changed on disk. */
+  setChangedOnDisk(docId: string, changed: boolean): void;
+  /** Replace a doc's text with the file's new contents (keeps caret + scroll). */
+  applyExternal(docId: string, content: string): void;
 
   // --- selectors -----------------------------------------------------------
   /** The single visible leaf, synthesized from activeId + its view state. */
@@ -192,6 +199,43 @@ export const useStore = create<AppState>()((set, get) => ({
   remoteDrop: null,
   publishOpen: false,
   publishTick: 0,
+  changedOnDisk: {},
+
+  setChangedOnDisk(docId, changed) {
+    const cur = get().changedOnDisk;
+    if (!!cur[docId] === changed) return;
+    const next = { ...cur };
+    if (changed) next[docId] = true;
+    else delete next[docId];
+    set({ changedOnDisk: next });
+  },
+
+  applyExternal(docId, content) {
+    set((s) => {
+      const current = s.docs[docId];
+      return current ? { docs: { ...s.docs, [docId]: { ...current, content, saved: content } } } : s;
+    });
+    get().setChangedOnDisk(docId, false);
+    const view = getEditorView(docId);
+    if (!view) return;
+    // Replace only the span that differs, so the caret, selection and scroll
+    // position survive (a whole-document replace would reset them).
+    const old = view.state.doc.toString();
+    if (old === content) return;
+    let start = 0;
+    const max = Math.min(old.length, content.length);
+    while (start < max && old.charCodeAt(start) === content.charCodeAt(start)) start++;
+    let endOld = old.length;
+    let endNew = content.length;
+    while (endOld > start && endNew > start && old.charCodeAt(endOld - 1) === content.charCodeAt(endNew - 1)) {
+      endOld--;
+      endNew--;
+    }
+    view.dispatch({
+      changes: { from: start, to: endOld, insert: content.slice(start, endNew) },
+      annotations: Transaction.addToHistory.of(false),
+    });
+  },
 
   activeLeaf() {
     const { activeId, views } = get();
@@ -573,6 +617,8 @@ export const useStore = create<AppState>()((set, get) => ({
         const current = s.docs[docId];
         return current ? { docs: { ...s.docs, [docId]: { ...current, saved: content } } } : s;
       });
+      // Saving over a changed file is the user's answer to the banner.
+      get().setChangedOnDisk(docId, false);
       addRecent(remoteUrl(doc.remote), `${basename(doc.remote.path)} — ${doc.remote.host}`);
       return true;
     }
@@ -606,6 +652,7 @@ export const useStore = create<AppState>()((set, get) => ({
         },
       };
     });
+    get().setChangedOnDisk(docId, false);
     addRecent(path, basename(path));
     return true;
   },
@@ -631,14 +678,7 @@ export const useStore = create<AppState>()((set, get) => ({
       return;
     }
 
-    set((s) => {
-      const current = s.docs[docId];
-      return current ? { docs: { ...s.docs, [docId]: { ...current, content, saved: content } } } : s;
-    });
-    const view = getEditorView(docId);
-    if (view) {
-      view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: content } });
-    }
+    get().applyExternal(docId, content);
   },
 
   async copyDocPath(docId) {

@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 mod publish;
+mod watch;
 
 use tauri::menu::{
     Menu, MenuBuilder, MenuItemBuilder, PredefinedMenuItem, Submenu, SubmenuBuilder,
@@ -81,6 +82,28 @@ fn ssh_base() -> std::process::Command {
     let mut cmd = std::process::Command::new("ssh");
     cmd.arg("-o").arg("ConnectTimeout=12").arg("-o").arg("BatchMode=yes");
     cmd
+}
+
+/// A cheap change signature for a remote file: modification time and size.
+/// GNU `stat -c` first, BSD `stat -f` as the fallback (macOS remotes).
+#[tauri::command]
+async fn remote_stat(host: String, path: String) -> Result<String, String> {
+    validate_host(&host)?;
+    tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
+        let q = shell_quote(&path);
+        let output = ssh_base()
+            .arg("--")
+            .arg(&host)
+            .arg(format!("stat -c '%Y %s' -- {q} 2>/dev/null || stat -f '%m %z' -- {q}"))
+            .output()
+            .map_err(|e| format!("Could not run ssh: {e}"))?;
+        if !output.status.success() {
+            return Err(String::from_utf8_lossy(&output.stderr).trim().to_string());
+        }
+        Ok(String::from_utf8_lossy(&output.stdout).trim().to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
 }
 
 /// Read a file from a remote host over SSH (`ssh HOST cat -- PATH`).
@@ -743,10 +766,13 @@ pub fn run() {
         .plugin(tauri_plugin_clipboard_manager::init())
         .manage(AppState(Mutex::new(PendingFiles::default())))
         .manage(publish::SessionState::default())
+        .manage(watch::WatchState::default())
         .invoke_handler(tauri::generate_handler![
             read_file,
             write_file,
             read_remote,
+            remote_stat,
+            watch::watch_files,
             list_remote,
             upload_remote,
             download_remote,
