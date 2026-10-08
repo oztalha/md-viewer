@@ -572,6 +572,22 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         )
         .separator()
         .item(
+            &MenuItemBuilder::with_id("find", "Find…")
+                .accelerator("CmdOrCtrl+F")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("find-next", "Find Next")
+                .accelerator("CmdOrCtrl+G")
+                .build(app)?,
+        )
+        .item(
+            &MenuItemBuilder::with_id("find-prev", "Find Previous")
+                .accelerator("Shift+CmdOrCtrl+G")
+                .build(app)?,
+        )
+        .separator()
+        .item(
             &MenuItemBuilder::with_id("copy-path", "Copy Path")
                 .accelerator("Shift+CmdOrCtrl+C")
                 .build(app)?,

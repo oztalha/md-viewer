@@ -12,6 +12,7 @@ import { formatDocument } from "./format";
 import { useStore } from "./store";
 import { displayTitle } from "./types";
 import { getEditorView } from "./editor/registry";
+import { findNext, findPrevious, openSearchPanel } from "@codemirror/search";
 import { REPO_URL } from "./links";
 import { latestPublished } from "./publish";
 
@@ -118,6 +119,28 @@ function selectAll() {
   }
 }
 
+/**
+ * ⌘F / ⌘G / ⇧⌘G. The menu owns these keys, so route them: the editor (when it
+ * has focus or is the only pane) gets CodeMirror's search; otherwise the
+ * preview's find bar.
+ */
+function find(id: "find" | "find-next" | "find-prev") {
+  const s = useStore.getState();
+  const mode = s.views[s.activeId]?.mode;
+  const view = getEditorView(s.activeId);
+  const inEditor =
+    !!view && (mode === "editor" || view.hasFocus || !!view.dom.querySelector(".cm-search")?.contains(document.activeElement));
+  if (inEditor && view) {
+    if (id === "find") openSearchPanel(view);
+    else if (id === "find-next") findNext(view);
+    else findPrevious(view);
+    return;
+  }
+  if (id === "find") s.setFindOpen(true);
+  else if (s.findOpen) window.dispatchEvent(new CustomEvent("mdv-find-step", { detail: id === "find-next" ? 1 : -1 }));
+  else s.setFindOpen(true);
+}
+
 declare global {
   interface Window {
     __MD_VIEWER_INITIALIZED__?: boolean;
@@ -151,6 +174,11 @@ function handleMenu(id: string) {
       break;
     case "select-all":
       selectAll();
+      break;
+    case "find":
+    case "find-next":
+    case "find-prev":
+      find(id as "find" | "find-next" | "find-prev");
       break;
     case "publish":
       s.setPublishOpen(true);

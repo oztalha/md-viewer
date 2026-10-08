@@ -5,6 +5,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Find** (⌘F, Edit menu): in the preview, a find bar highlights every
+  match, shows "3 of 12", and steps with Enter / ⇧Enter or ⌘G / ⇧⌘G. In the
+  editor, ⌘F opens the editor's search and replace.
+
 ## [0.7.0] — 2026-10-07
 
 Open files keep themselves current: when an agent (or anything else) rewrites

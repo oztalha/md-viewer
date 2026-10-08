@@ -92,6 +92,11 @@ interface AppState {
   publishOpen: boolean;
   /** Bumped after each publish so views re-read saved links. */
   publishTick: number;
+  /** Preview find bar (⌘F outside the editor). */
+  findOpen: boolean;
+  /** Bumped by ⌘F while the bar is open, to refocus its field. */
+  findFocusTick: number;
+  setFindOpen(open: boolean): void;
   /** Docs whose file changed on disk while they had unsaved edits. */
   changedOnDisk: Record<string, true>;
   /** Mark (or clear) a doc as changed on disk. */
@@ -200,6 +205,13 @@ export const useStore = create<AppState>()((set, get) => ({
   publishOpen: false,
   publishTick: 0,
   changedOnDisk: {},
+  findOpen: false,
+  findFocusTick: 0,
+
+  setFindOpen(open) {
+    if (open && get().findOpen) set({ findFocusTick: get().findFocusTick + 1 });
+    else if (get().findOpen !== open) set({ findOpen: open });
+  },
 
   setChangedOnDisk(docId, changed) {
     const cur = get().changedOnDisk;

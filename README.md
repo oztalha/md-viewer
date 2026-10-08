@@ -144,6 +144,7 @@ Append `:LINE` (or `&line=33` to the link) to open at a line.
 | Sidebar: Files · Outline | ⇧⌘F · ⇧⌘0 |
 | Line numbers on / off | ⇧⌘N |
 | Select all | ⌘A |
+| Find / next / previous | ⌘F / ⌘G / ⇧⌘G |
 | Paste and match style | ⌥⇧⌘V |
 | Zoom in / out / reset | ⌘+ / ⌘− / ⌘0 |
 | Bold / Italic / Code / Strike / Link | ⌘B / ⌘I / ⌘E / ⇧⌘X / ⌘K |

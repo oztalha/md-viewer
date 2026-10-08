@@ -6,6 +6,7 @@ import { getEditorView } from "../editor/registry";
 import { EditorView } from "@codemirror/view";
 import { Editor } from "./Editor";
 import { Preview } from "./Preview";
+import { FindBar } from "./FindBar";
 import { readRemoteFile, readTextFile } from "../ipc";
 
 /** 1-based markdown line at the top of the editor viewport. */
@@ -246,6 +247,7 @@ export function Tile({ leaf }: { leaf: LeafNode }) {
           <button onClick={() => useStore.getState().setChangedOnDisk(leaf.docId, false)}>Keep mine</button>
         </div>
       )}
+      <FindBar />
       <div className="tile-body" ref={attachBody}>
         <div className={`pane${showEditor ? "" : " pane-hidden"}`} style={{ flex: editorFlex }}>
           <Editor doc={doc} />
