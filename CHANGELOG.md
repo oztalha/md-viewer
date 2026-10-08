@@ -70,8 +70,9 @@ md-viewer becomes a viewer for more than markdown (code, JSON, line numbers,
 - Open files in the sidebar show their host (or `local`) like Recent files.
 - Recent files: the host label lines up on the right, and the ✕ appears in
   its place on hover instead of pushing it aside.
-- Hovering an open or recent file, or a tab, shows its full path
-  (`host:/path`).
+- Hovering a tab, an open or recent file, or the title in the title bar
+  shows the full path (`host:/path`), so you no longer need Copy Path just to
+  see where a file is.
 
 ### Fixed
 - Sidebar ✕ tooltips (Close tab, Remove from recents) were cut off, and a

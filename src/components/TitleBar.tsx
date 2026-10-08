@@ -276,7 +276,10 @@ export function TitleBar() {
         void showTileContextMenu(activeId);
       }}
     >
-      <div className="titlebar-title">
+      <div
+        className="titlebar-title"
+        data-tip={doc?.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc?.path ?? undefined)}
+      >
         {doc?.remote && <span className="titlebar-host">{doc.remote.host}:</span>}
         <span className="titlebar-name">{doc ? displayTitle(doc) : ""}</span>
         {dirty && <span className="dirty-dot" />}
