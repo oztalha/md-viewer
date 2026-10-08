@@ -46,7 +46,7 @@ export function TabBar() {
                 e.preventDefault();
                 void showTileContextMenu(docId);
               }}
-              title={displayTitle(doc)}
+              title={doc.remote ? `${doc.remote.host}:${doc.remote.path}` : (doc.path ?? displayTitle(doc))}
             >
               {modHeld && i < 9 && <span className="tab-keycap">⌘{i + 1}</span>}
               {doc.remote && (
