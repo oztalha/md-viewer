@@ -512,6 +512,26 @@ body.sort-dragging [data-tip]:hover::after {
    Tile (one document)
 --------------------------------------------------------------------------- */
 
+/* Mermaid diagrams (```mermaid): centred, scaled down to fit the column. */
+.preview-content .mermaid-block {
+  margin: 1em 0;
+  text-align: center;
+  overflow-x: auto;
+}
+.preview-content .mermaid-block svg {
+  max-width: 100%;
+  height: auto;
+}
+.preview-content .mermaid-block[data-rendered] > pre {
+  display: none;
+}
+.mermaid-error {
+  text-align: left;
+  color: #e5484d;
+  font-size: 12.5px;
+  margin-bottom: 4px;
+}
+
 /* Find and replace (⌘F): a compact bar over the top-right of the document,
    VS Code style. The chevron reveals the replace row. */
 .tile {

@@ -1,3 +1,4 @@
+import { renderMermaid } from "../mermaid";
 import { useCallback } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { renderBlocks, subscribeRerender } from "../markdown";
@@ -145,6 +146,7 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
             : renderBlocks(source, localDir());
     records = patchBlocks(container, records, blocks);
     markWideTables(container);
+    void renderMermaid(container);
     applyAnnotations(container, annotationKey());
     rendered = source;
     renderedBase = path;

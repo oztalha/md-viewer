@@ -55,6 +55,10 @@ src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
   **after** the cache lookup so cached HTML stays line-agnostic. These anchors
   drive editor ⇄ preview scroll sync (split view and the ⇧⌘V toggle) by
   source line, not scroll percentage (raw and rendered heights differ).
+- Mermaid is async and heavy, so a ```` ```mermaid ```` fence renders as a
+  placeholder holding its source, and `mermaid.ts` draws it in after each
+  update (loaded on first use; SVGs cached by theme + source). Read the source
+  from the placeholder's `<code>`: DOMPurify strips data- attributes here.
 - All rendered HTML goes through DOMPurify. KaTeX (math) is synchronous, so it
   fits the per-block cache.
 - Tables wider than the text column get `.table-wide` (measured after render

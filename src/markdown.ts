@@ -168,6 +168,19 @@ md.use(taskLists, { label: true }).use(footnote).use(emoji).use(githubAlerts);
 // as a red error span instead of throwing.
 md.use(mathKatex, { enableFencedBlocks: true, throwOnError: false });
 
+// ```mermaid fences become a placeholder carrying the source; mermaid.ts draws
+// the diagram into it after render (Mermaid is async, this pipeline isn't).
+// The source stays visible as code until then, and in exported HTML.
+const renderFence = md.renderer.rules.fence!;
+md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+  const token = tokens[idx];
+  if (token.info.trim().split(/\s+/)[0] !== "mermaid" || (env as { exporting?: boolean }).exporting) {
+    return renderFence(tokens, idx, options, env, self);
+  }
+  const src = md.utils.escapeHtml(token.content);
+  return `<div class="mermaid-block"><pre><code>${src}</code></pre></div>\n`;
+};
+
 // Local image paths (relative to the document, or absolute) are rewritten to
 // the asset protocol so the webview can actually load them. Remote URLs pass
 // through untouched.

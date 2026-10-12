@@ -69,6 +69,7 @@ for what's new in each version.
 - **`file:LINE` jumps to the line** — paste or click `notes.md:33` or
   `host:/path/run.py:120` (as printed by tools and agents) and it opens there
 - LaTeX math with KaTeX: `$inline$`, `$$display$$`, and ```` ```math ```` blocks
+- Mermaid diagrams from ```` ```mermaid ```` blocks
 - Highlight passages and attach notes in the preview
 - **Find and replace** (⌘F) in the editor or the rendered preview, with
   match case, whole word and regex

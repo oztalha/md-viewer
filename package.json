@@ -42,6 +42,7 @@
     "markdown-it-footnote": "^4.0.0",
     "markdown-it-github-alerts": "^1.0.1",
     "markdown-it-task-lists": "^2.1.1",
+    "mermaid": "^12.1.0",
     "prettier": "^3.8.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",

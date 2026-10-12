@@ -2,7 +2,7 @@ import { Menu, MenuItem, PredefinedMenuItem } from "@tauri-apps/api/menu";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { useStore } from "./store";
 import { keybindFor, useSettings } from "./settings";
-import { copyToClipboard } from "./ipc";
+import { copyToClipboard, downloadRemote, pickDownloadPath, showError } from "./ipc";
 import { isPinned, removeRecent, togglePin } from "./recent";
 import { remoteUrl } from "./remote";
 import { parseOpenSpec } from "./remote";
@@ -47,11 +47,30 @@ export async function showTileContextMenu(docId: string): Promise<void> {
     // No leading separator on an untitled doc (the menu is then just Close Tab).
     ...(hasFile ? [separator()] : []),
     ...(path ? [item("Reveal in Finder", () => void revealItemInDir(path))] : []),
+    ...(doc.remote ? [item("Download…", () => void downloadDoc(docId))] : []),
     item("Close Tab", () => void useStore.getState().closeTab(docId), "close-pane"),
   ]);
 
   const menu = await Menu.new({ items });
   await menu.popup();
+}
+
+/**
+ * Copy a remote document's file to this Mac (save dialog, then Finder shows
+ * it). It's the file as saved on the remote machine; unsaved edits aren't in it.
+ */
+async function downloadDoc(docId: string): Promise<void> {
+  const doc = useStore.getState().docs[docId];
+  if (!doc?.remote) return;
+  const name = doc.remote.path.split("/").pop() || "download.md";
+  const local = await pickDownloadPath(name);
+  if (!local) return;
+  try {
+    await downloadRemote(doc.remote.host, doc.remote.path, local);
+    void revealItemInDir(local);
+  } catch (err) {
+    await showError(String(err));
+  }
 }
 
 /** Right-click on a Recent entry in the sidebar. */

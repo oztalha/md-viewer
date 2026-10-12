@@ -127,6 +127,8 @@ export function applySettings(settings: Settings): void {
   root.style.setProperty("--content-width", WIDTHS[settings.editorWidth]);
   root.classList.toggle("no-caret-animation", !settings.caretAnimation);
   root.classList.toggle("show-line-numbers", settings.lineNumbers);
+  // Diagrams are drawn in theme colours, so redraw them on a theme switch.
+  void import("./mermaid").then((m) => m.rerenderAllMermaid());
 
   // Live-reconfigure every open editor's bindable keymap.
   const binds = settings.keybinds;
