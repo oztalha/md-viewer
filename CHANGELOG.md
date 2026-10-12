@@ -13,6 +13,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   it, and the close button shows on hover or on the active tab.
 - With the sidebar open, tabs start over the document, and the Files | Outline
   switch sits in the tab bar, taller and rounder.
+- The accent colour is yellow instead of blue (links, caret, selection,
+  buttons, focus rings); text on yellow fills is dark.
 
 ## [0.9.0] — 2026-10-11
 

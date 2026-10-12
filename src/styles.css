@@ -15,13 +15,15 @@
   --fg: #1d1d1f;
   --fg-muted: #73737a;
   --fg-faint: #b3b3ba;
-  --accent: #3478f6;
+  --accent: #c99700;
   /* Filled buttons: the dark theme's link blue is too pale behind white text. */
-  --button-primary: #3478f6;
-  --accent-soft: rgba(52, 120, 246, 0.1);
+  --button-primary: #f5c518;
+  /* Text on yellow fills; white is unreadable there. */
+  --on-accent: #1d1d1f;
+  --accent-soft: rgba(245, 197, 24, 0.15);
   --border: rgba(0, 0, 0, 0.09);
   --code-bg: rgba(0, 0, 0, 0.045);
-  --selection: rgba(52, 120, 246, 0.22);
+  --selection: rgba(245, 197, 24, 0.3);
   --search-match: rgba(255, 200, 0, 0.35);
   --search-match-selected: rgba(255, 150, 0, 0.5);
 
@@ -42,12 +44,12 @@
   --fg: #e8e8ea;
   --fg-muted: #98989f;
   --fg-faint: #5c5c64;
-  --accent: #6f9eff;
-  --button-primary: #0a84ff;
-  --accent-soft: rgba(111, 158, 255, 0.14);
+  --accent: #ffd23f;
+  --button-primary: #ffc800;
+  --accent-soft: rgba(255, 210, 63, 0.14);
   --border: rgba(255, 255, 255, 0.09);
   --code-bg: rgba(255, 255, 255, 0.06);
-  --selection: rgba(111, 158, 255, 0.3);
+  --selection: rgba(255, 210, 63, 0.28);
   --search-match: rgba(255, 200, 0, 0.25);
   --search-match-selected: rgba(255, 160, 0, 0.45);
   --syn-keyword: #fc5fa3;
@@ -67,12 +69,12 @@
     --fg: #e8e8ea;
     --fg-muted: #98989f;
     --fg-faint: #5c5c64;
-    --accent: #6f9eff;
-    --button-primary: #0a84ff;
-    --accent-soft: rgba(111, 158, 255, 0.14);
+    --accent: #ffd23f;
+    --button-primary: #ffc800;
+    --accent-soft: rgba(255, 210, 63, 0.14);
     --border: rgba(255, 255, 255, 0.09);
     --code-bg: rgba(255, 255, 255, 0.06);
-    --selection: rgba(111, 158, 255, 0.3);
+    --selection: rgba(255, 210, 63, 0.28);
     --search-match: rgba(255, 200, 0, 0.25);
     --search-match-selected: rgba(255, 160, 0, 0.45);
 
@@ -733,7 +735,7 @@ body.sort-dragging [data-tip]:hover::after {
 .disk-banner button:first-of-type {
   background: var(--button-primary);
   border-color: transparent;
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .tile {
@@ -1288,7 +1290,7 @@ html.no-caret-animation .editor .cm-cursor {
 .preview-content .task-list-item input[type="checkbox"]:checked {
   border-color: var(--button-primary);
   background: var(--button-primary)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%231d1d1f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / 85% no-repeat;
 }
 
@@ -1841,7 +1843,7 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .rb-row.selected {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .rb-row svg {
   flex: none;
@@ -1851,7 +1853,7 @@ html.no-caret-animation .editor .cm-cursor {
   color: var(--accent);
 }
 .rb-row.selected svg {
-  color: #fff;
+  color: var(--on-accent);
 }
 .rb-row.rb-other {
   color: var(--fg-muted);
@@ -1986,7 +1988,7 @@ html.no-caret-animation .editor .cm-cursor {
 
 .remote-prompt-open {
   background: var(--button-primary);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 500;
 }
 
