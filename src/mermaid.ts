@@ -28,7 +28,16 @@ async function mermaid(): Promise<MermaidApi> {
   const theme = isDark() ? "dark" : "default";
   if (theme !== configuredTheme) {
     // `strict`: labels are sanitized and click handlers/scripts are disabled.
-    api.initialize({ startOnLoad: false, securityLevel: "strict", theme, fontFamily: "inherit" });
+    // suppressErrorRendering: on a syntax error Mermaid otherwise appends its
+    // own "Syntax error" graphic to <body>, outside the preview, which wrecks
+    // the whole window layout. We show the error inside the block instead.
+    api.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme,
+      fontFamily: "inherit",
+      suppressErrorRendering: true,
+    });
     configuredTheme = theme;
   }
   return api;
@@ -53,11 +62,17 @@ export async function renderMermaid(root: ParentNode): Promise<void> {
     const key = `${theme}\n${source}`;
     let svg = cache.get(key);
     if (svg === undefined) {
+      const id = `mdv-mermaid-${++counter}`;
       try {
-        ({ svg } = await api.render(`mdv-mermaid-${++counter}`, source));
+        // Validate first, so a bad diagram never reaches the renderer.
+        await api.parse(source);
+        ({ svg } = await api.render(id, source));
       } catch (err) {
+        // Belt and braces: drop any scratch element Mermaid left in <body>.
+        document.getElementById(id)?.remove();
+        document.getElementById(`d${id}`)?.remove();
         const message = err instanceof Error ? err.message : String(err);
-        svg = `<div class="mermaid-error">Mermaid: ${escapeHtml(message.split("\n")[0])}</div><pre><code>${escapeHtml(source)}</code></pre>`;
+        svg = `<div class="mermaid-error">Mermaid: ${escapeHtml(message)}</div><pre class="mermaid-source"><code>${escapeHtml(source)}</code></pre>`;
       }
       cache.set(key, svg);
     }

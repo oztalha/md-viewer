@@ -8,7 +8,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Added
 - **Mermaid diagrams:** ```` ```mermaid ```` blocks render as diagrams in the
   preview (flowcharts, sequence, class, state, Gantt, …), in light and dark
-  colours. A diagram with a syntax error shows the error and its source.
+  colours. A diagram with a syntax error shows the error and its source in
+  place (Mermaid's own error graphic, which took over the window, is off).
   Mermaid is loaded only for documents that have a diagram.
 - **Download…** in a remote tab's right-click menu copies the file to your Mac
   (a save dialog asks where; Finder shows it). It's the saved version on the
