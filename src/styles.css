@@ -272,7 +272,7 @@ body.sort-dragging [data-tip]:hover::after {
   flex: none;
   display: flex;
   align-items: stretch;
-  height: 34px;
+  height: 46px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-secondary);
   user-select: none;
@@ -293,11 +293,24 @@ body.sort-dragging [data-tip]:hover::after {
   color: var(--fg);
 }
 
+.tabbar-sidebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin-bottom: -1px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
 .tab-list {
   flex: 1;
   min-width: 0;
   display: flex;
   align-items: stretch;
+  gap: 1px;
+  padding: 6px 0 0 6px;
+  /* Lets the active tab cover the bar's bottom border. */
+  margin-bottom: -1px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -317,27 +330,65 @@ body.sort-dragging [data-tip]:hover::after {
   padding: 0 8px 0 12px;
   font-size: 12px;
   color: var(--fg-muted);
-  border-right: 1px solid var(--border);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
   cursor: default;
   position: relative;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+/* Thin divider between neighbouring inactive tabs. */
+.tab:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 25%;
+  bottom: 25%;
+  width: 1px;
+  background: var(--border);
+}
+
+.tab.active::before,
+.tab.active + .tab::before,
+.tab:hover::before,
+.tab:hover + .tab::before {
+  display: none;
 }
 
 .tab:hover {
-  background: var(--bg);
+  background: var(--code-bg);
+  color: var(--fg);
 }
 
 .tab.active {
   background: var(--bg);
   color: var(--fg);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  border-color: var(--border);
 }
 
-.tab-name {
+.tab.active .tab-name {
+  font-weight: 500;
+}
+
+.tab-label {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tab-name,
+.tab-meta {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tab-meta {
+  font-size: 10px;
+  color: var(--fg-faint);
 }
 
 .tab .dirty-dot {
@@ -374,6 +425,12 @@ body.sort-dragging [data-tip]:hover::after {
 .tab-close {
   width: 16px;
   height: 16px;
+  opacity: 0;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 1;
 }
 
 .tab-close:hover {
@@ -382,13 +439,16 @@ body.sort-dragging [data-tip]:hover::after {
 }
 
 .tab-new {
-  width: 30px;
+  width: 28px;
+  height: 28px;
+  align-self: center;
+  margin: 3px 6px 0 4px;
   font-size: 15px;
   color: var(--fg-muted);
 }
 
 .tab-new:hover {
-  background: var(--bg);
+  background: var(--code-bg);
   color: var(--fg);
 }
 
@@ -2476,19 +2536,20 @@ html.no-caret-animation .editor .cm-cursor {
 .sidebar-tabs {
   flex: none;
   display: flex;
+  flex: 1;
   gap: 2px;
-  margin: 8px 10px 4px;
-  padding: 2px;
-  border-radius: 7px;
+  margin: 0 10px;
+  padding: 3px;
+  border-radius: 10px;
   background: var(--code-bg);
 }
 .sidebar-tabs button {
   all: unset;
   flex: 1;
-  padding: 3px 0;
-  border-radius: 5px;
+  padding: 5px 0;
+  border-radius: 7px;
   text-align: center;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--fg-muted);
   cursor: default;
@@ -2503,7 +2564,7 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .sidebar .outline-list {
   flex: 1;
-  padding-top: 4px;
+  padding-top: 8px;
 }
 .sidebar-tab-keycap {
   margin-left: 6px;
