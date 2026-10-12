@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.9.0] — 2026-10-11
+
 ### Added
 - **Mermaid diagrams:** ```` ```mermaid ```` blocks render as diagrams in the
   preview (flowcharts, sequence, class, state, Gantt, …), in light and dark
@@ -277,6 +279,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.9.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.9.0
 [0.8.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.8.0
 [0.7.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.7.0
 [0.6.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.6.0

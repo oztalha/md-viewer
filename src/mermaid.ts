@@ -37,6 +37,9 @@ async function mermaid(): Promise<MermaidApi> {
       theme,
       fontFamily: "inherit",
       suppressErrorRendering: true,
+      // Mermaid 12 strokes node borders with a gradient by default (bright on
+      // one side, fading on the other); plain one-colour borders read better.
+      themeVariables: { useGradient: false },
     });
     configuredTheme = theme;
   }
