@@ -15,6 +15,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   switch sits in the tab bar, taller and rounder.
 - The accent colour is yellow instead of blue (links, caret, selection,
   buttons, focus rings); text on yellow fills is dark.
+- `bun run tauri dev` shows "Markdown" in the Dock, like the built app,
+  instead of "md-viewer".
 
 ## [0.9.0] — 2026-10-11
 
