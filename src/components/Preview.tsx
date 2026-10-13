@@ -1,3 +1,4 @@
+import { onPreviewCopy } from "../copy";
 import { renderMermaid } from "../mermaid";
 import { useCallback } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -269,6 +270,7 @@ export function Preview({ docId, empty }: { docId: string; empty: boolean }) {
         data-doc-id={docId}
         data-jsonl={jsonl || undefined}
         onClick={handleClick}
+        onCopy={(e) => onPreviewCopy(e.nativeEvent)}
       />
       {empty && <div className="preview-empty">Nothing to preview</div>}
     </div>

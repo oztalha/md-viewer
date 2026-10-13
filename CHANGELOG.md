@@ -5,6 +5,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- Copying from the preview and pasting into Slack (and other rich-text apps)
+  lost the line breaks between paragraphs and list items. The preview now
+  copies clean HTML: headings, lists, links and bold kept, styling dropped.
+
 ## [0.10.0] — 2026-10-12
 
 ### Added
