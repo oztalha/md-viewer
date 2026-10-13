@@ -15,7 +15,9 @@
   --fg: #1d1d1f;
   --fg-muted: #73737a;
   --fg-faint: #b3b3ba;
-  --accent: #c99700;
+  /* Accent used as text (links, caret, toggles): a dark amber, since yellow
+     on white is unreadable (#c99700 was 2.6:1; this is 5.3:1). Fills stay yellow. */
+  --accent: #8a6500;
   /* Filled buttons: the dark theme's link blue is too pale behind white text. */
   --button-primary: #f5c518;
   /* Text on yellow fills; white is unreadable there. */
@@ -23,7 +25,8 @@
   --accent-soft: rgba(245, 197, 24, 0.15);
   --border: rgba(0, 0, 0, 0.09);
   --code-bg: rgba(0, 0, 0, 0.045);
-  --selection: rgba(245, 197, 24, 0.3);
+  /* Neutral, so it can't be confused with the yellow search-match highlights. */
+  --selection: rgba(120, 120, 128, 0.24);
   --search-match: rgba(255, 200, 0, 0.35);
   --search-match-selected: rgba(255, 150, 0, 0.5);
 
@@ -49,7 +52,7 @@
   --accent-soft: rgba(255, 210, 63, 0.14);
   --border: rgba(255, 255, 255, 0.09);
   --code-bg: rgba(255, 255, 255, 0.06);
-  --selection: rgba(255, 210, 63, 0.28);
+  --selection: rgba(255, 255, 255, 0.17);
   --search-match: rgba(255, 200, 0, 0.25);
   --search-match-selected: rgba(255, 160, 0, 0.45);
   --syn-keyword: #fc5fa3;
@@ -74,7 +77,7 @@
     --accent-soft: rgba(255, 210, 63, 0.14);
     --border: rgba(255, 255, 255, 0.09);
     --code-bg: rgba(255, 255, 255, 0.06);
-    --selection: rgba(255, 210, 63, 0.28);
+    --selection: rgba(255, 255, 255, 0.17);
     --search-match: rgba(255, 200, 0, 0.25);
     --search-match-selected: rgba(255, 160, 0, 0.45);
 
@@ -680,7 +683,7 @@ body.sort-dragging [data-tip]:hover::after {
   font-family: var(--font-mono);
 }
 .find-bar .find-opt.on {
-  color: var(--button-primary);
+  color: var(--accent);
   background: color-mix(in srgb, var(--button-primary) 18%, transparent);
 }
 .find-word {
@@ -2536,7 +2539,6 @@ html.no-caret-animation .editor .cm-cursor {
 
 /* Sidebar: Files | Outline switch */
 .sidebar-tabs {
-  flex: none;
   display: flex;
   flex: 1;
   gap: 2px;

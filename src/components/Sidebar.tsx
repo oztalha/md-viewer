@@ -46,11 +46,6 @@ function describeRecent(entry: RecentEntry): {
 }
 
 /**
- * Collapsible left rail. **Open**: every open document (mirrors the tab strip;
- * click to switch, ✕ to close). **Recent**: recently opened files that aren't
- * open now (click to reopen, local or remote; ✕ drops one from the list).
- */
-/**
  * Files | Outline switch. Rendered in the tab bar, above the sidebar, so the
  * sidebar's controls line up with the tabs.
  */
@@ -88,6 +83,11 @@ export function SidebarTabs() {
   );
 }
 
+/**
+ * Collapsible left rail. **Open**: every open document (mirrors the tab strip;
+ * click to switch, ✕ to close). **Recent**: recently opened files that aren't
+ * open now (click to reopen, local or remote; ✕ drops one from the list).
+ */
 export function Sidebar() {
   const tabs = useStore((s) => s.tabs);
   const docs = useStore((s) => s.docs);

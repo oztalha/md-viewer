@@ -13,8 +13,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   it, and the close button shows on hover or on the active tab.
 - With the sidebar open, tabs start over the document, and the Files | Outline
   switch sits in the tab bar, taller and rounder.
-- The accent colour is yellow instead of blue (links, caret, selection,
-  buttons, focus rings); text on yellow fills is dark.
+- The accent colour is yellow instead of blue (links, caret, buttons, focus
+  rings); text on yellow fills is dark. In light mode, links and the caret
+  use a darker amber so they stay readable on white. Selected text is a
+  neutral grey, so it doesn't look like a search match.
 - `bun run tauri dev` shows "Markdown" in the Dock, like the built app,
   instead of "md-viewer".
 

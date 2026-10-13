@@ -6,16 +6,19 @@ import { useModHeld } from "../keybindings/useModHeld";
 import { CloseIcon, SwapIcon } from "./icons";
 import { SidebarTabs } from "./Sidebar";
 
+/** "1,234 words · 7,890 chars" for the active tab's second line. */
+function docStats(content: string): string {
+  const trimmed = content.trim();
+  const words = trimmed ? trimmed.split(/\s+/).length : 0;
+  const n = (x: number) => x.toLocaleString();
+  return `${n(words)} ${words === 1 ? "word" : "words"} · ${n(content.length)} chars`;
+}
+
 /**
  * Browser-style tab strip: every open document, in tab order. Clicking a tab
  * activates it; the ✕ closes it; dragging a tab left/right reorders it. While
  * ⌘/Ctrl is held, the first nine tabs show a ⌘N keycap (jump-to-tab hint).
  */
-function docStats(content: string) {
-  const trimmed = content.trim();
-  const words = trimmed ? trimmed.split(/\s+/).length : 0;
-  return `Words: ${words} • Characters: ${content.length}`;
-}
 
 export function TabBar() {
   const tabs = useStore((s) => s.tabs);

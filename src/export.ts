@@ -21,7 +21,7 @@ function escapeHtml(s: string): string {
 const EXPORT_CSS = `
 :root {
   --fg: #1d1d1f; --fg-muted: #73737a; --bg: #fff; --bg-secondary: #f5f5f6;
-  --border: rgba(0,0,0,.1); --code-bg: rgba(0,0,0,.05); --accent: #c99700;
+  --border: rgba(0,0,0,.1); --code-bg: rgba(0,0,0,.05); --accent: #8a6500;
 }
 @media (prefers-color-scheme: dark) {
   :root {
