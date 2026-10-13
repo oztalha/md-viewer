@@ -4,12 +4,22 @@ import { showTileContextMenu } from "../contextMenu";
 import { displayTitle, isDirty } from "../types";
 import { useModHeld } from "../keybindings/useModHeld";
 import { CloseIcon, SwapIcon } from "./icons";
+import { SidebarTabs } from "./Sidebar";
+
+/** "1,234 words · 7,890 chars" for the active tab's second line. */
+function docStats(content: string): string {
+  const trimmed = content.trim();
+  const words = trimmed ? trimmed.split(/\s+/).length : 0;
+  const n = (x: number) => x.toLocaleString();
+  return `${n(words)} ${words === 1 ? "word" : "words"} · ${n(content.length)} chars`;
+}
 
 /**
  * Browser-style tab strip: every open document, in tab order. Clicking a tab
  * activates it; the ✕ closes it; dragging a tab left/right reorders it. While
  * ⌘/Ctrl is held, the first nine tabs show a ⌘N keycap (jump-to-tab hint).
  */
+
 export function TabBar() {
   const tabs = useStore((s) => s.tabs);
   const docs = useStore((s) => s.docs);
@@ -17,6 +27,8 @@ export function TabBar() {
   const selectTab = useStore((s) => s.selectTab);
   const closeTab = useStore((s) => s.closeTab);
   const newDoc = useStore((s) => s.newDoc);
+  const sidebarOpen = useStore((s) => s.sidebarOpen);
+  const sidebarWidth = useStore((s) => s.sidebarWidth);
   const modHeld = useModHeld();
 
   // Drag a tab left/right to reorder it; selecting happens on pointerdown.
@@ -32,6 +44,12 @@ export function TabBar() {
 
   return (
     <div className="tabbar">
+      {/* Keeps tabs over the document, so the sidebar reads as one full-height column. */}
+      {sidebarOpen && (
+        <div className="tabbar-sidebar" style={{ width: sidebarWidth }}>
+          <SidebarTabs />
+        </div>
+      )}
       <div className="tab-list">
         {tabs.map((docId, i) => {
           const doc = docs[docId];
@@ -54,7 +72,10 @@ export function TabBar() {
                   <SwapIcon size={11} />
                 </span>
               )}
-              <span className="tab-name">{displayTitle(doc)}</span>
+              <span className="tab-label">
+                <span className="tab-name">{displayTitle(doc)}</span>
+                {active && <span className="tab-meta">{docStats(doc.content)}</span>}
+              </span>
               {isDirty(doc) && <span className="dirty-dot" aria-label="Unsaved changes" />}
               <button
                 className="tab-close"

@@ -5,6 +5,12 @@ description = "A minimal, fast, native-feeling markdown editor/viewer for macOS.
 authors = ["Max Leiter"]
 license = "MIT"
 edition = "2021"
+# The binary's name is what the Dock shows for `tauri dev`, which runs it unbundled.
+default-run = "Markdown"
+
+[[bin]]
+name = "Markdown"
+path = "src/main.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

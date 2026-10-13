@@ -15,13 +15,18 @@
   --fg: #1d1d1f;
   --fg-muted: #73737a;
   --fg-faint: #b3b3ba;
-  --accent: #3478f6;
+  /* Accent used as text (links, caret, toggles): a dark amber, since yellow
+     on white is unreadable (#c99700 was 2.6:1; this is 5.3:1). Fills stay yellow. */
+  --accent: #8a6500;
   /* Filled buttons: the dark theme's link blue is too pale behind white text. */
-  --button-primary: #3478f6;
-  --accent-soft: rgba(52, 120, 246, 0.1);
+  --button-primary: #f5c518;
+  /* Text on yellow fills; white is unreadable there. */
+  --on-accent: #1d1d1f;
+  --accent-soft: rgba(245, 197, 24, 0.15);
   --border: rgba(0, 0, 0, 0.09);
   --code-bg: rgba(0, 0, 0, 0.045);
-  --selection: rgba(52, 120, 246, 0.22);
+  /* Neutral, so it can't be confused with the yellow search-match highlights. */
+  --selection: rgba(120, 120, 128, 0.24);
   --search-match: rgba(255, 200, 0, 0.35);
   --search-match-selected: rgba(255, 150, 0, 0.5);
 
@@ -42,12 +47,12 @@
   --fg: #e8e8ea;
   --fg-muted: #98989f;
   --fg-faint: #5c5c64;
-  --accent: #6f9eff;
-  --button-primary: #0a84ff;
-  --accent-soft: rgba(111, 158, 255, 0.14);
+  --accent: #ffd23f;
+  --button-primary: #ffc800;
+  --accent-soft: rgba(255, 210, 63, 0.14);
   --border: rgba(255, 255, 255, 0.09);
   --code-bg: rgba(255, 255, 255, 0.06);
-  --selection: rgba(111, 158, 255, 0.3);
+  --selection: rgba(255, 255, 255, 0.17);
   --search-match: rgba(255, 200, 0, 0.25);
   --search-match-selected: rgba(255, 160, 0, 0.45);
   --syn-keyword: #fc5fa3;
@@ -67,12 +72,12 @@
     --fg: #e8e8ea;
     --fg-muted: #98989f;
     --fg-faint: #5c5c64;
-    --accent: #6f9eff;
-    --button-primary: #0a84ff;
-    --accent-soft: rgba(111, 158, 255, 0.14);
+    --accent: #ffd23f;
+    --button-primary: #ffc800;
+    --accent-soft: rgba(255, 210, 63, 0.14);
     --border: rgba(255, 255, 255, 0.09);
     --code-bg: rgba(255, 255, 255, 0.06);
-    --selection: rgba(111, 158, 255, 0.3);
+    --selection: rgba(255, 255, 255, 0.17);
     --search-match: rgba(255, 200, 0, 0.25);
     --search-match-selected: rgba(255, 160, 0, 0.45);
 
@@ -272,7 +277,7 @@ body.sort-dragging [data-tip]:hover::after {
   flex: none;
   display: flex;
   align-items: stretch;
-  height: 34px;
+  height: 46px;
   border-bottom: 1px solid var(--border);
   background: var(--bg-secondary);
   user-select: none;
@@ -293,11 +298,24 @@ body.sort-dragging [data-tip]:hover::after {
   color: var(--fg);
 }
 
+.tabbar-sidebar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  margin-bottom: -1px;
+  border-right: 1px solid var(--border);
+  background: var(--bg-secondary);
+}
+
 .tab-list {
   flex: 1;
   min-width: 0;
   display: flex;
   align-items: stretch;
+  gap: 1px;
+  padding: 6px 0 0 6px;
+  /* Lets the active tab cover the bar's bottom border. */
+  margin-bottom: -1px;
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
@@ -317,27 +335,65 @@ body.sort-dragging [data-tip]:hover::after {
   padding: 0 8px 0 12px;
   font-size: 12px;
   color: var(--fg-muted);
-  border-right: 1px solid var(--border);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
   cursor: default;
   position: relative;
+  transition: background-color 0.12s, color 0.12s;
+}
+
+/* Thin divider between neighbouring inactive tabs. */
+.tab:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  left: -1px;
+  top: 25%;
+  bottom: 25%;
+  width: 1px;
+  background: var(--border);
+}
+
+.tab.active::before,
+.tab.active + .tab::before,
+.tab:hover::before,
+.tab:hover + .tab::before {
+  display: none;
 }
 
 .tab:hover {
-  background: var(--bg);
+  background: var(--code-bg);
+  color: var(--fg);
 }
 
 .tab.active {
   background: var(--bg);
   color: var(--fg);
-  box-shadow: inset 0 -2px 0 var(--accent);
+  border-color: var(--border);
 }
 
-.tab-name {
+.tab.active .tab-name {
+  font-weight: 500;
+}
+
+.tab-label {
   flex: 1;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tab-name,
+.tab-meta {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tab-meta {
+  font-size: 10px;
+  color: var(--fg-faint);
 }
 
 .tab .dirty-dot {
@@ -374,6 +430,12 @@ body.sort-dragging [data-tip]:hover::after {
 .tab-close {
   width: 16px;
   height: 16px;
+  opacity: 0;
+}
+
+.tab:hover .tab-close,
+.tab.active .tab-close {
+  opacity: 1;
 }
 
 .tab-close:hover {
@@ -382,13 +444,16 @@ body.sort-dragging [data-tip]:hover::after {
 }
 
 .tab-new {
-  width: 30px;
+  width: 28px;
+  height: 28px;
+  align-self: center;
+  margin: 3px 6px 0 4px;
   font-size: 15px;
   color: var(--fg-muted);
 }
 
 .tab-new:hover {
-  background: var(--bg);
+  background: var(--code-bg);
   color: var(--fg);
 }
 
@@ -618,7 +683,7 @@ body.sort-dragging [data-tip]:hover::after {
   font-family: var(--font-mono);
 }
 .find-bar .find-opt.on {
-  color: var(--button-primary);
+  color: var(--accent);
   background: color-mix(in srgb, var(--button-primary) 18%, transparent);
 }
 .find-word {
@@ -673,7 +738,7 @@ body.sort-dragging [data-tip]:hover::after {
 .disk-banner button:first-of-type {
   background: var(--button-primary);
   border-color: transparent;
-  color: #fff;
+  color: var(--on-accent);
 }
 
 .tile {
@@ -1228,7 +1293,7 @@ html.no-caret-animation .editor .cm-cursor {
 .preview-content .task-list-item input[type="checkbox"]:checked {
   border-color: var(--button-primary);
   background: var(--button-primary)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='white' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%231d1d1f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
     center / 85% no-repeat;
 }
 
@@ -1781,7 +1846,7 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .rb-row.selected {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent);
 }
 .rb-row svg {
   flex: none;
@@ -1791,7 +1856,7 @@ html.no-caret-animation .editor .cm-cursor {
   color: var(--accent);
 }
 .rb-row.selected svg {
-  color: #fff;
+  color: var(--on-accent);
 }
 .rb-row.rb-other {
   color: var(--fg-muted);
@@ -1926,7 +1991,7 @@ html.no-caret-animation .editor .cm-cursor {
 
 .remote-prompt-open {
   background: var(--button-primary);
-  color: #fff;
+  color: var(--on-accent);
   font-weight: 500;
 }
 
@@ -2474,21 +2539,21 @@ html.no-caret-animation .editor .cm-cursor {
 
 /* Sidebar: Files | Outline switch */
 .sidebar-tabs {
-  flex: none;
   display: flex;
+  flex: 1;
   gap: 2px;
-  margin: 8px 10px 4px;
-  padding: 2px;
-  border-radius: 7px;
+  margin: 0 10px;
+  padding: 3px;
+  border-radius: 10px;
   background: var(--code-bg);
 }
 .sidebar-tabs button {
   all: unset;
   flex: 1;
-  padding: 3px 0;
-  border-radius: 5px;
+  padding: 5px 0;
+  border-radius: 7px;
   text-align: center;
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--fg-muted);
   cursor: default;
@@ -2503,7 +2568,7 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .sidebar .outline-list {
   flex: 1;
-  padding-top: 4px;
+  padding-top: 8px;
 }
 .sidebar-tab-keycap {
   margin-left: 6px;
