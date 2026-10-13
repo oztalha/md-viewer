@@ -8,6 +8,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Added
 - The active tab shows the document's word and character count under its name.
 
+The tab redesign, word count and yellow accent are by
+[@senaoz](https://github.com/senaoz) ([#1](https://github.com/oztalha/md-viewer/pull/1)).
+
 ### Changed
 - Tabs are taller, with rounded tops; the active tab joins the document below
   it, and the close button shows on hover or on the active tab.

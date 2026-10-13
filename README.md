@@ -48,7 +48,8 @@ for what's new in each version.
   `mdviewer://` link — handy when an agent on the remote box writes a report
 
 **Tabs**
-- Every file opens as a tab; drag to reorder, **⌘1–9** to jump, **⌃Tab** to cycle
+- Every file opens as a tab; drag to reorder, **⌘1–9** to jump, **⌃Tab** to cycle;
+  the active tab shows the word and character count
 - Sidebar with **Files** (open and recent files, local or remote; drag open files to reorder, right-click to **Pin** the ones you keep coming back to) and **Outline** tabs (⇧⌘F / ⇧⌘0); the title bar shows `host:` for remote files
 
 **Editing and preview**
