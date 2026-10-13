@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.10.0] — 2026-10-12
+
 ### Added
 - The active tab shows the document's word and character count under its name.
 
@@ -297,6 +299,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.10.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.10.0
 [0.9.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.9.0
 [0.8.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.8.0
 [0.7.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.7.0
