@@ -577,6 +577,20 @@ body.sort-dragging [data-tip]:hover::after {
    Tile (one document)
 --------------------------------------------------------------------------- */
 
+/* An image file opened on its own: centred, scaled down to fit, on a
+   checkerboard so transparency shows. */
+.preview-content .image-view {
+  display: flex;
+  justify-content: center;
+  padding: 8px 0;
+}
+.preview-content .image-view img {
+  max-width: 100%;
+  height: auto;
+  background: repeating-conic-gradient(var(--code-bg) 0 25%, transparent 0 50%) 0 0 / 16px 16px;
+  border-radius: 4px;
+}
+
 /* A remote document's image that couldn't be fetched. */
 .preview-content .img-missing {
   display: inline-block;

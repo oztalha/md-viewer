@@ -1,5 +1,5 @@
 import { codeLanguage } from "./code";
-import { isJsonPath, isJsonlPath } from "./types";
+import { isImagePath, isJsonPath, isJsonlPath, isSvgPath } from "./types";
 import { formatJson, formatJsonl } from "./json";
 import { EditorSelection } from "@codemirror/state";
 import { getEditorView } from "./editor/registry";
@@ -34,6 +34,7 @@ export async function formatDocument(docId: string): Promise<void> {
   const stored = useStore.getState().docs[docId];
   const path = stored?.path ?? stored?.remote?.path ?? "";
   // Code and data files aren't markdown: never run the markdown formatter on them.
+  if (isSvgPath(path) || isImagePath(path)) return;
   if (codeLanguage(path) && !isJsonPath(path) && !isJsonlPath(path)) return;
   const formatted = isJsonPath(path)
     ? formatJson(source)

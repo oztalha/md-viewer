@@ -11,10 +11,10 @@ import { basename, displayTitle, isCodePath } from "../types";
 
 const HOST_KEY = "remoteBrowserHost";
 const dirKey = (host: string) => `remoteBrowserDir:${host}`;
-const DOC_RE = /\.(md|markdown|mdown|mkdn|mkd|txt|csv|tsv|json|jsonl|ndjson)$/i;
+const DOC_RE = /\.(md|markdown|mdown|mkdn|mkd|txt|csv|tsv|json|jsonl|ndjson|svg|png|jpe?g|gif|webp|bmp|ico|avif)$/i;
 /** Files that can't be opened as text: clicking one downloads it instead. */
 const BINARY_RE =
-  /\.(zip|gz|tgz|bz2|xz|zst|7z|rar|tar|jar|war|whl|dmg|pkg|iso|bin|exe|so|dylib|o|a|class|pyc|png|jpe?g|gif|webp|heic|ico|bmp|tiff?|pdf|docx?|xlsx?|pptx?|mp3|mp4|mov|wav|avi|mkv|parquet|db|sqlite)$/i;
+  /\.(zip|gz|tgz|bz2|xz|zst|7z|rar|tar|jar|war|whl|dmg|pkg|iso|bin|exe|so|dylib|o|a|class|pyc|heic|tiff?|pdf|docx?|xlsx?|pptx?|mp3|mp4|mov|wav|avi|mkv|parquet|db|sqlite)$/i;
 /** `host:/path` or `host:~/path` pasted into the path bar switches host too. */
 const SPEC_RE = /^([A-Za-z0-9._@[\]-]+):((?:~|\/).*)$/;
 

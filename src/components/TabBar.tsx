@@ -74,7 +74,7 @@ export function TabBar() {
               )}
               <span className="tab-label">
                 <span className="tab-name">{displayTitle(doc)}</span>
-                {active && <span className="tab-meta">{docStats(doc.content)}</span>}
+                {active && !doc.image && <span className="tab-meta">{docStats(doc.content)}</span>}
               </span>
               {isDirty(doc) && <span className="dirty-dot" aria-label="Unsaved changes" />}
               <button

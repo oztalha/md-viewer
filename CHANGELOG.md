@@ -6,6 +6,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ## [Unreleased]
 
 ### Added
+- **Open images directly:** PNG, JPG, GIF, WebP and other images open in a
+  tab as a picture (scaled to fit, on a checkerboard so transparency shows),
+  locally or over ssh. In the remote browser, clicking one opens it instead
+  of downloading it (right-click → Download… still works). SVG files open
+  as the image with their source in the editor, so edits redraw it live.
 - **Images in remote documents:** `![](img/diagram.png)` and absolute paths
   in a document on another machine are fetched over ssh and shown in the
   preview (PNG, JPG, GIF, WebP, SVG, up to 25 MB each). A missing image says

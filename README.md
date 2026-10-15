@@ -62,7 +62,8 @@ for what's new in each version.
   preview and keeps your place
 - Semi-WYSIWYG editing: `**bold**` renders bold with the markers still visible
 - GitHub-flavored preview: tables, task lists, alerts, footnotes, highlighted
-  code, images; CSV/TSV files open as tables
+  code, images; CSV/TSV files open as tables; PNG/JPG/SVG files open as images
+  (also on remote machines)
 - **Code and JSON files** open highlighted, like a fenced block (Python,
   JS/TS, shell, Rust, Go, Java, YAML, TOML, SQL, …); JSON is pretty-printed,
   and JSONL/NDJSON shows one block per record

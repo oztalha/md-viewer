@@ -1,12 +1,13 @@
 import { Transaction } from "@codemirror/state";
 import { create } from "zustand";
 import type { Doc, LeafNode, TabView, ViewMode } from "./types";
-import { basename, displayTitle, isCodePath, isDataPath, isDirty, isPristine } from "./types";
+import { basename, displayTitle, isCodePath, isDataPath, isDirty, isImagePath, isPristine } from "./types";
 import {
   askToSave,
   confirmReloadDiscard,
   copyToClipboard,
   pathExists,
+  allowAsset,
   pickFilesToOpen,
   pickSavePath,
   readRemoteFile,
@@ -470,7 +471,11 @@ export const useStore = create<AppState>()((set, get) => ({
 
       let content: string;
       try {
-        content = await readTextFile(path);
+        if (isImagePath(path)) {
+          if (!(await pathExists(path))) throw new Error(`No such file or directory (os error 2)`);
+          await allowAsset(path);
+          content = "";
+        } else content = await readTextFile(path);
       } catch (err) {
         const msg = String(err);
         if (isNotFound(msg)) {
@@ -492,7 +497,7 @@ export const useStore = create<AppState>()((set, get) => ({
         continue;
       }
 
-      const doc = makeDoc({ path, title: basename(path), content, saved: content });
+      const doc = makeDoc({ path, title: basename(path), content, saved: content, image: isImagePath(path) || undefined });
       // Data files open straight into the table view; markdown follows the preference.
       const openMode = isDataPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
       get().placeDoc(doc, openMode);
@@ -522,7 +527,8 @@ export const useStore = create<AppState>()((set, get) => ({
 
     let content: string;
     try {
-      content = await readRemoteFile(host, path);
+      // Raster images are fetched by the preview, not read as text.
+      content = isImagePath(path) ? "" : await readRemoteFile(host, path);
     } catch (err) {
       if (isNotFound(String(err))) await missingFile(key, `${host}:${path}`);
       else await showError(String(err));
@@ -537,7 +543,7 @@ export const useStore = create<AppState>()((set, get) => ({
       return;
     }
 
-    const doc = makeDoc({ remote, title: basename(path), content, saved: content });
+    const doc = makeDoc({ remote, title: basename(path), content, saved: content, image: isImagePath(path) || undefined });
     const openMode = isDataPath(path) ? "preview" : useSettings.getState().settings.defaultMode;
     get().placeDoc(doc, openMode);
     if (line) revealLine(doc.id, line, isCodePath(path));
@@ -597,6 +603,7 @@ export const useStore = create<AppState>()((set, get) => ({
   async saveDoc(docId, saveAs = false) {
     const doc = get().docs[docId];
     if (!doc) return false;
+    if (doc.image) return true; // nothing to write: images are view-only
 
     // Editor → store syncing is coalesced; the live view is the source of
     // truth, so saves always take the freshest text.

@@ -17,6 +17,8 @@ export interface Doc {
   content: string;
   /** The content as it exists on disk/remote (used to compute dirty state). */
   saved: string;
+  /** A raster image (PNG, JPG, …): shown, never edited or saved. */
+  image?: boolean;
 }
 
 export interface LeafNode {
@@ -77,6 +79,16 @@ export function isJsonlPath(path: string | null): boolean {
   return !!path && /\.(jsonl|ndjson)$/i.test(path);
 }
 
+/** Raster images, opened as a picture rather than text. */
+export function isImagePath(path: string | null): boolean {
+  return !!path && /\.(png|jpe?g|gif|webp|bmp|ico|avif|heic|tiff?)$/i.test(path);
+}
+
+/** SVG: text you can edit, previewed as the image it draws. */
+export function isSvgPath(path: string | null): boolean {
+  return !!path && /\.svg$/i.test(path);
+}
+
 /** Code files (by extension), previewed as one highlighted code block. */
 export function isCodePath(path: string | null): boolean {
   return !!codeLanguage(path) && !isJsonPath(path) && !isJsonlPath(path);
@@ -84,7 +96,7 @@ export function isCodePath(path: string | null): boolean {
 
 /** Data and code files: open in preview, never markdown-formatted. */
 export function isDataPath(path: string | null): boolean {
-  return isCsvPath(path) || isJsonPath(path) || isJsonlPath(path) || isCodePath(path);
+  return isCsvPath(path) || isJsonPath(path) || isJsonlPath(path) || isCodePath(path) || isSvgPath(path) || isImagePath(path);
 }
 
 /** Where a dragged tile is about to land relative to the tile under the pointer. */

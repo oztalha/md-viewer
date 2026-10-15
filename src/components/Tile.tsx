@@ -196,9 +196,10 @@ export function Tile({ leaf }: { leaf: LeafNode }) {
 
   if (!doc) return null;
 
-  const empty = !/\S/.test(doc.content);
-  const showEditor = leaf.mode !== "preview";
-  const showPreview = leaf.mode !== "editor";
+  // A raster image has no text: show only the picture.
+  const empty = !doc.image && !/\S/.test(doc.content);
+  const showEditor = !doc.image && leaf.mode !== "preview";
+  const showPreview = !!doc.image || leaf.mode !== "editor";
   const editorFlex = showEditor ? `${leaf.ratio * 100} 1 0%` : "0.0001 1 0%";
   const previewFlex = showPreview ? `${(1 - leaf.ratio) * 100} 1 0%` : "0.0001 1 0%";
 

@@ -5,7 +5,9 @@ import { useCallback } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { renderBlocks, subscribeRerender } from "../markdown";
 import { renderCsvBlocks } from "../csv";
-import { classifyPath, isCsvPath, isJsonPath, isJsonlPath } from "../types";
+import { classifyPath, isCsvPath, isJsonPath, isJsonlPath, isSvgPath } from "../types";
+import type { Doc } from "../types";
+import { convertFileSrc } from "@tauri-apps/api/core";
 import { renderJsonBlocks, renderJsonlBlocks } from "../json";
 import { codeLanguage, renderCodeBlocks } from "../code";
 import { useStore } from "../store";
@@ -92,6 +94,28 @@ function markWideTables(container: HTMLElement): void {
   }
 }
 
+/** Blob URL of the SVG last shown, revoked when the text changes. */
+const svgUrls = new Map<string, string>();
+
+/**
+ * An image document shown on its own: a raster file by its path (local via the
+ * asset protocol; remote paths are fetched by loadRemoteImages), an SVG from
+ * its text, so edits in the editor redraw it live.
+ */
+function imageBlocks(doc: Doc, source: string): string[] {
+  let src: string;
+  if (doc.image) {
+    src = doc.path ? convertFileSrc(doc.path) : (doc.remote?.path ?? "");
+  } else {
+    const old = svgUrls.get(doc.id);
+    if (old) URL.revokeObjectURL(old);
+    src = URL.createObjectURL(new Blob([source], { type: "image/svg+xml" }));
+    svgUrls.set(doc.id, src);
+  }
+  const alt = doc.title.replace(/"/g, "&quot;");
+  return [`<div class="image-view"><img src="${src.replace(/"/g, "%22")}" alt="${alt}"></div>`];
+}
+
 function createPreviewController(container: HTMLElement, docId: string): () => void {
   // React reuses the same <article> node across StrictMode remounts and docId
   // swaps, calling this ref callback again. Reset to a known-empty state so the
@@ -137,7 +161,10 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
     const path = docPath();
     if (source === undefined || (rendered === source && renderedBase === path)) return;
     const start = performance.now();
-    const blocks = isCsvPath(path)
+    const doc = useStore.getState().docs[docId];
+    const blocks = doc?.image || isSvgPath(path)
+      ? imageBlocks(doc!, source)
+      : isCsvPath(path)
       ? renderCsvBlocks(source, path)
       : isJsonPath(path)
         ? renderJsonBlocks(source)
