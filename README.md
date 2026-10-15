@@ -40,6 +40,8 @@ for what's new in each version.
 - Browse a remote machine and open files with **Open Remote…** (⇧⌘O); save new
   or local documents to any host with **Save to Remote…** (⇧⌘S)
 - Edits save straight back over SSH, atomically; **⌘R** reloads by hand
+- Images in remote documents show in the preview (fetched over SSH), and
+  image files on the remote machine open in a tab
 - **Copy files to a remote machine:** drag files or folders from Finder onto the
   remote browser to copy them into the folder it shows (any file type, via
   `scp`); it asks before replacing anything. Download goes the other way: click
@@ -63,7 +65,8 @@ for what's new in each version.
 - Semi-WYSIWYG editing: `**bold**` renders bold with the markers still visible
 - GitHub-flavored preview: tables, task lists, alerts, footnotes, highlighted
   code, images; CSV/TSV files open as tables; PNG/JPG/SVG files open as images
-  (also on remote machines)
+- Copy from the preview keeps paragraphs and lists when pasted into Slack
+  and other rich-text apps
 - **Code and JSON files** open highlighted, like a fenced block (Python,
   JS/TS, shell, Rust, Go, Java, YAML, TOML, SQL, …); JSON is pretty-printed,
   and JSONL/NDJSON shows one block per record
