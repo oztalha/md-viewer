@@ -1,3 +1,4 @@
+import { loadRemoteImages } from "../remoteImages";
 import { onPreviewCopy } from "../copy";
 import { renderMermaid } from "../mermaid";
 import { useCallback } from "react";
@@ -148,6 +149,8 @@ function createPreviewController(container: HTMLElement, docId: string): () => v
     records = patchBlocks(container, records, blocks);
     markWideTables(container);
     void renderMermaid(container);
+    const remote = useStore.getState().docs[docId]?.remote;
+    if (remote) loadRemoteImages(container, remote);
     applyAnnotations(container, annotationKey());
     rendered = source;
     renderedBase = path;

@@ -106,6 +106,35 @@ async fn remote_stat(host: String, path: String) -> Result<String, String> {
     .map_err(|e| e.to_string())?
 }
 
+/// Images referenced by a remote document are fetched for the preview; cap the
+/// size so a stray link to a huge file can't stall the app.
+const REMOTE_IMAGE_LIMIT: usize = 25 * 1024 * 1024;
+
+/// Read a remote file's raw bytes (images in remote documents), base64-encoded
+/// for the trip to the webview.
+#[tauri::command]
+async fn read_remote_bytes(host: String, path: String) -> Result<String, String> {
+    use base64::Engine;
+    validate_host(&host)?;
+    tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
+        let output = ssh_base()
+            .arg("--")
+            .arg(&host)
+            .arg(format!("head -c {} -- {}", REMOTE_IMAGE_LIMIT + 1, shell_quote(&path)))
+            .output()
+            .map_err(|e| format!("Could not run ssh: {e}"))?;
+        if !output.status.success() {
+            return Err(format!("Could not read {host}:{path}: {}", String::from_utf8_lossy(&output.stderr).trim()));
+        }
+        if output.stdout.len() > REMOTE_IMAGE_LIMIT {
+            return Err(format!("{host}:{path} is larger than 25 MB"));
+        }
+        Ok(base64::engine::general_purpose::STANDARD.encode(&output.stdout))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Read a file from a remote host over SSH (`ssh HOST cat -- PATH`).
 #[tauri::command]
 async fn read_remote(host: String, path: String) -> Result<String, String> {
@@ -788,6 +817,7 @@ pub fn run() {
             write_file,
             read_remote,
             remote_stat,
+            read_remote_bytes,
             watch::watch_files,
             list_remote,
             upload_remote,

@@ -577,6 +577,16 @@ body.sort-dragging [data-tip]:hover::after {
    Tile (one document)
 --------------------------------------------------------------------------- */
 
+/* A remote document's image that couldn't be fetched. */
+.preview-content .img-missing {
+  display: inline-block;
+  padding: 4px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--fg-faint);
+}
+
 /* Mermaid diagrams (```mermaid): centred, scaled down to fit the column. */
 .preview-content .mermaid-block {
   margin: 1em 0;

@@ -2125,6 +2125,7 @@ dependencies = [
 name = "md-viewer"
 version = "0.10.0"
 dependencies = [
+ "base64 0.22.1",
  "core-foundation",
  "notify",
  "serde",

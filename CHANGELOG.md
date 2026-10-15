@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Images in remote documents:** `![](img/diagram.png)` and absolute paths
+  in a document on another machine are fetched over ssh and shown in the
+  preview (PNG, JPG, GIF, WebP, SVG, up to 25 MB each). A missing image says
+  which file it couldn't find.
+
 ### Fixed
 - Copying from the preview and pasting into Slack (and other rich-text apps)
   lost the line breaks between paragraphs and list items. The preview now
