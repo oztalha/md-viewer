@@ -152,7 +152,8 @@ const md: MarkdownIt = new MarkdownIt({
   // sanitized before it reaches the DOM, so scripts/handlers never survive.
   html: true,
   linkify: true,
-  typographer: true,
+  // Off, like GitHub: (c) stays (c), quotes stay straight, -- stays --.
+  typographer: false,
   highlight: (code, lang) => highlightCode(code, lang),
 });
 

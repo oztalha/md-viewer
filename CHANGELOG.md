@@ -5,6 +5,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- The preview shows text as typed, like GitHub: `(c)` no longer becomes ©,
+  `--` no longer becomes a dash, and quotes stay straight (so copied
+  commands and JSON still work).
+
 ## [0.11.0] — 2026-10-14
 
 ### Added
