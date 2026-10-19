@@ -174,6 +174,8 @@ export async function showError(text: string): Promise<void> {
 
 export interface PublishStep {
   tool: string;
+  /** A shell `command` step; the command itself stays in the backend. */
+  run?: boolean;
   args?: unknown;
   save?: Record<string, string>;
 }
@@ -213,6 +215,16 @@ export function mcpCall(session: number, tool: string, args: unknown): Promise<M
 
 export function mcpClose(session: number): Promise<void> {
   return invoke<void>("publish_mcp_close", { session });
+}
+
+/** Run step `index` of a target's create/update list, which is a shell command. */
+export function publishStepCommand(
+  targetId: string,
+  update: boolean,
+  index: number,
+  vars: Record<string, string>,
+): Promise<unknown> {
+  return invoke<unknown>("publish_step_command", { targetId, update, index, vars });
 }
 
 export interface McpResult {

@@ -11,6 +11,7 @@ import {
   mcpOpen,
   publishCommand,
   publishGist,
+  publishStepCommand,
   writePublishTemp,
 } from "./ipc";
 import type { McpResult, PublishStep, PublishTarget } from "./ipc";
@@ -104,24 +105,32 @@ function pick(data: unknown, path: string): unknown {
 
 async function runSteps(
   target: PublishTarget,
-  steps: PublishStep[],
+  update: boolean,
   vars: Record<string, string>,
 ): Promise<void> {
-  const session = await mcpOpen(target.id);
+  const steps: PublishStep[] = update ? target.update : target.create;
+  // Started on the first tool step, so command-only lists don't spawn a server.
+  let session: number | undefined;
   try {
-    for (const step of steps) {
-      const result = await mcpCall(session, step.tool, fill(step.args ?? {}, vars));
-      if (result.isError) {
-        throw new Error(`${target.label} (${step.tool}): ${resultText(result) || "failed"}`);
+    for (const [index, step] of steps.entries()) {
+      let data: unknown;
+      if (step.run) {
+        data = await publishStepCommand(target.id, update, index, vars);
+      } else {
+        session ??= await mcpOpen(target.id);
+        const result = await mcpCall(session, step.tool, fill(step.args ?? {}, vars));
+        if (result.isError) {
+          throw new Error(`${target.label} (${step.tool}): ${resultText(result) || "failed"}`);
+        }
+        data = resultData(result);
       }
-      const data = resultData(result);
       for (const [name, path] of Object.entries(step.save ?? {})) {
         const value = pick(data, path);
         if (value != null && value !== "") vars[name] = String(value);
       }
     }
   } finally {
-    void mcpClose(session);
+    if (session !== undefined) void mcpClose(session);
   }
 }
 
@@ -155,7 +164,7 @@ export async function publishDoc(
     const updating = !!previous && target.update.length > 0;
     const vars: Record<string, string> = { file, title, content: contents };
     if (updating) vars.id = previous.id;
-    await runSteps(target, updating ? target.update : target.create, vars);
+    await runSteps(target, updating, vars);
     id = vars.id ?? "";
     if (!id) throw new Error(`${target.label}: couldn't find the new document's id in the reply`);
     // Keep the link from the first publish (update replies may be less friendly),

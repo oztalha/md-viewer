@@ -5,6 +5,13 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Command steps in publish targets:** a server target's `create` or `update`
+  list can include `{ "command": "..." }` steps, for things the server has no
+  tool for (such as turning on link sharing after a document is created). The
+  document's id, link, file and title are passed in `MDV_*` environment
+  variables. See [docs/PUBLISHING.md](docs/PUBLISHING.md).
+
 ## [0.12.0] — 2026-10-19
 
 ### Added

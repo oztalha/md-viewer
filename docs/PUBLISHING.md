@@ -77,6 +77,12 @@ Each target has an `id` (used to remember where a document was published), a
   identifies the published document, and `url` is the link.
 - `urlTemplate` builds the link from saved values (e.g. `{id}`) when the reply
   doesn't include one. The link from the first publish is kept on updates.
+- A step can be `{ "command": "..." }` instead of a tool call, for things the
+  server has no tool for (e.g. turning on link sharing after `create`). It runs
+  with `sh -c`, with every value so far in the environment as `MDV_<NAME>`
+  (`MDV_ID`, `MDV_URL`, `MDV_FILE`, `MDV_TITLE`, …; not `content`, which is in
+  `MDV_FILE`). If it prints JSON, `save` can pick from it; a failing command
+  stops the publish and shows its error.
 
 **`"kind": "gist"`**: a GitHub Gist via `gh`. `"public": true` makes new gists
 public.

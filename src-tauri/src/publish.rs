@@ -37,9 +37,17 @@ struct ServerCfg {
     env: HashMap<String, String>,
 }
 
+/// One step of an MCP target: a tool call, or a shell `command` (e.g. a
+/// follow-up the server has no tool for). The webview only learns that a step
+/// is a command (`run`), never the command itself.
 #[derive(Deserialize, Serialize, Clone)]
 pub struct Step {
+    #[serde(default)]
     tool: String,
+    #[serde(default, skip_serializing)]
+    command: Option<String>,
+    #[serde(default, skip_deserializing)]
+    run: bool,
     #[serde(default)]
     args: Value,
     #[serde(default)]
@@ -119,6 +127,9 @@ fn load_config() -> Result<Config, String> {
             // Resolve the kind once so the frontend gets it explicitly.
             for t in &mut config.targets {
                 t.kind = Some(t.kind().to_string());
+                for s in t.create.iter_mut().chain(t.update.iter_mut()) {
+                    s.run = s.command.is_some();
+                }
             }
             Ok(config)
         }
@@ -416,7 +427,13 @@ pub async fn publish_mcp_open(
         .get(&server_name)
         .cloned()
         .ok_or_else(|| format!("{}: no server named {server_name:?} under \"servers\"", target.label))?;
-    let allowed = target.create.iter().chain(&target.update).map(|s| s.tool.clone()).collect();
+    let allowed = target
+        .create
+        .iter()
+        .chain(&target.update)
+        .filter(|s| s.command.is_none())
+        .map(|s| s.tool.clone())
+        .collect();
     let label = target.label.clone();
     let session = tauri::async_runtime::spawn_blocking(move || start_session(&label, &server, allowed))
         .await
@@ -541,6 +558,41 @@ pub async fn publish_command(
     .map_err(|e| e.to_string())?
 }
 
+/// Env vars for a command step: each publish variable as `MDV_<NAME>`, except
+/// `content` (the document is in `MDV_FILE`; env vars have size limits).
+fn step_env(vars: &HashMap<String, String>) -> Vec<(String, String)> {
+    vars.iter()
+        .filter(|(k, _)| k.as_str() != "content" && k.chars().all(|c| c.is_ascii_alphanumeric() || c == '_'))
+        .map(|(k, v)| (format!("MDV_{}", k.to_ascii_uppercase()), v.clone()))
+        .collect()
+}
+
+/// Run a `command` step of an MCP target, looked up in the config by position
+/// (the webview never supplies the command). Returns stdout as JSON if it is
+/// JSON, else `{"text": ...}`, so `save` works as for tool replies.
+#[tauri::command]
+pub async fn publish_step_command(
+    target_id: String,
+    update: bool,
+    index: usize,
+    vars: HashMap<String, String>,
+) -> Result<Value, String> {
+    let target = find_target(&load_config()?, &target_id)?;
+    let steps = if update { &target.update } else { &target.create };
+    let command = steps
+        .get(index)
+        .and_then(|s| s.command.clone())
+        .ok_or_else(|| format!("{}: step {} has no \"command\"", target.label, index + 1))?;
+    tauri::async_runtime::spawn_blocking(move || {
+        let mut cmd = base_command("/bin/sh");
+        cmd.args(["-c", &command]).envs(step_env(&vars));
+        let out = run(cmd, &target.label)?;
+        Ok(serde_json::from_str(out.trim()).unwrap_or_else(|_| json!({ "text": out })))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -567,5 +619,34 @@ mod tests {
         assert_eq!(t.kind(), "mcp");
         let t: Target = serde_json::from_str(r#"{"id":"a","label":"A","command":"x"}"#).unwrap();
         assert_eq!(t.kind(), "command");
+    }
+
+    #[test]
+    fn command_steps_hide_the_command() {
+        let mut t: Target = serde_json::from_str(
+            r#"{"id":"a","label":"A","server":"s","create":[{"tool":"t"},{"command":"secret-cmd"}]}"#,
+        )
+        .unwrap();
+        for s in &mut t.create {
+            s.run = s.command.is_some();
+        }
+        let json = serde_json::to_string(&t).unwrap();
+        assert!(!json.contains("secret-cmd"));
+        assert!(json.contains(r#""run":true"#));
+    }
+
+    #[test]
+    fn step_env_skips_content() {
+        let vars: HashMap<String, String> =
+            [("id", "d1"), ("content", "big"), ("file", "/t/a.md"), ("bad name", "x")]
+                .iter()
+                .map(|(k, v)| (k.to_string(), v.to_string()))
+                .collect();
+        let mut env = step_env(&vars);
+        env.sort();
+        assert_eq!(
+            env,
+            vec![("MDV_FILE".into(), "/t/a.md".into()), ("MDV_ID".into(), "d1".into())]
+        );
     }
 }

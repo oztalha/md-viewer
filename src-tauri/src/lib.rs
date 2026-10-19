@@ -830,6 +830,7 @@ pub fn run() {
             publish::publish_mcp_close,
             publish::publish_gist,
             publish::publish_command,
+            publish::publish_step_command,
             write_remote,
             allow_asset,
             path_exists,
