@@ -5,6 +5,13 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Paste keeps formatting:** pasting rich text (Slack, a browser, Google
+  Docs, Notion, …) into the editor turns it into markdown, so links, bold,
+  italics, `code`, code blocks, lists, quotes, headings and tables survive.
+  Code-editor copies and pastes inside a code block stay plain text, and
+  **Paste and Match Style** (⌥⇧⌘V) always pastes plain text.
+
 ### Changed
 - The preview shows text as typed, like GitHub: `(c)` no longer becomes ©,
   `--` no longer becomes a dash, and quotes stay straight (so copied

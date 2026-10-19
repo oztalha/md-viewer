@@ -18,6 +18,7 @@ import {
 } from "./commands";
 import { navigationKeymap, toggleTaskItem } from "./navigation";
 import { selectionToolbar } from "./selectionToolbar";
+import { richPaste } from "./richPaste";
 
 /**
  * User-rebindable editor shortcuts live in a compartment so the settings
@@ -254,6 +255,7 @@ export function editorExtensions(keybinds: Record<string, string> = {}, showLine
     markdownPairing,
     listMarkerGuard,
     pasteLinkify,
+    richPaste,
     closeBrackets(),
     editorKeybindCompartment.of(editorKeybindings(keybinds)),
     keymap.of([

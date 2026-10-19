@@ -241,7 +241,7 @@ function handleMenu(id: string) {
       void s.copyDocPath(s.activeId);
       break;
     case "paste-plain": {
-      // ⌘V in the editor is already plain text; this covers the ⇧⌘V muscle memory.
+      // ⌘V converts rich text to markdown (richPaste.ts); this pastes it plain.
       const view = getEditorView(s.activeId);
       if (!view) break;
       void readText().then((text) => {
