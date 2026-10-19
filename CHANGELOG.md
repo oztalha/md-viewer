@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.12.0] — 2026-10-19
+
 ### Added
 - **Paste keeps formatting:** pasting rich text (Slack, a browser, Google
   Docs, Notion, …) into the editor turns it into markdown, so links, bold,
@@ -329,6 +331,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.12.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.12.0
 [0.11.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.11.0
 [0.10.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.10.0
 [0.9.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.9.0
