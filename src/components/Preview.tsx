@@ -293,7 +293,8 @@ export function Preview({ docId, empty }: { docId: string; empty: boolean }) {
   };
 
   return (
-    <div className="preview">
+    // Focusable (not via Tab) so it can take focus from a collapsed editor.
+    <div className="preview" tabIndex={-1}>
       <article
         ref={attach}
         className="preview-content"

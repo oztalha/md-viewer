@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- After switching from the editor to the preview (⇧⌘V), ⌘A selected nothing
+  visible until you clicked the preview: the hidden editor kept keyboard
+  focus, so typing could also change text you couldn't see. The preview now
+  takes focus, so ⌘A, arrow keys and Page Up/Down work right away.
+
 ## [0.13.0] — 2026-10-19
 
 ### Added

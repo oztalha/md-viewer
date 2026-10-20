@@ -103,7 +103,9 @@ function selectAll() {
   const s = useStore.getState();
   const mode = s.views[s.activeId]?.mode;
   const view = getEditorView(s.activeId);
-  if (view && (view.hasFocus || mode === "editor")) {
+  // Not in preview mode: the collapsed editor stays mounted and may still
+  // report focus.
+  if (view && (mode === "editor" || (mode === "split" && view.hasFocus))) {
     view.dispatch({ selection: { anchor: 0, head: view.state.doc.length } });
     view.focus();
     return;

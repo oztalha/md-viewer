@@ -1047,6 +1047,10 @@ html.no-caret-animation .editor .cm-cursor {
   container-type: inline-size;
 }
 
+.preview:focus {
+  outline: none;
+}
+
 .preview-empty {
   position: absolute;
   inset: 0;

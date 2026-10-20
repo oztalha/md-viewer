@@ -178,6 +178,11 @@ export function Tile({ leaf }: { leaf: LeafNode }) {
     }
     if (leaf.mode !== "editor") {
       const preview = body.querySelector<HTMLElement>(".preview");
+      // The collapsed editor stays mounted and keeps keyboard focus, so typing
+      // would edit text you can't see and ⌘A/arrows wouldn't reach the preview.
+      if (preview && leaf.mode === "preview" && getEditorView(leaf.docId)?.hasFocus) {
+        preview.focus({ preventScroll: true });
+      }
       if (preview) {
         const run = () => scrollPreviewToLine(preview, line);
         const ro = new ResizeObserver(run);
