@@ -506,14 +506,10 @@ function Publish() {
           </p>
         )}
         {status.kind === "done" && protectedPage && (
-          <div className="publish-current">
-            <span>Password</span>
-            <CopyButton text={password} tip="Copy password" />
-            <span className="publish-when">
-              Live in about a minute. Send the password separately from the
-              link.
-            </span>
-          </div>
+          <p className="publish-status">
+            Live in about a minute. Send the password separately from the link
+            (copy it above).
+          </p>
         )}
         {status.kind === "done" && status.skipped.length > 0 && (
           <p className="publish-status rb-error">

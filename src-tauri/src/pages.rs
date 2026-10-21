@@ -88,6 +88,19 @@ fn ensure_repo(token: &Option<String>, login: &str) -> Result<String, String> {
         )?,
         Err((false, e)) => return Err(e),
     };
+    // Serve files as they are: skips Jekyll, so builds are quicker and fail less.
+    if let Err((true, _)) = api(token, &[&format!("{repo}/contents/.nojekyll"), "--jq", ".name"]) {
+        api_ok(
+            token,
+            &[
+                "-X", "PUT", &format!("{repo}/contents/.nojekyll"),
+                "-f", "message=Serve pages as they are",
+                "-f", "content=",
+                "-f", &format!("branch={branch}"),
+                "--jq", ".content.name",
+            ],
+        )?;
+    }
     match api(token, &[&format!("{repo}/pages"), "--jq", ".url"]) {
         Ok(_) => {}
         Err((true, _)) => {
