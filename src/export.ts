@@ -46,8 +46,9 @@ pre { background: var(--code-bg); border-radius: 8px; padding: 14px 16px; overfl
 pre code { background: none; padding: 0; font-size: .85em; }
 blockquote { margin: .8em 0; padding: .1em 0 .1em 1em; border-left: 3px solid var(--fg-muted); color: var(--fg-muted); }
 ul, ol { padding-left: 1.5em; } li { margin: .25em 0; }
-/* Wide tables scroll inside themselves instead of widening the page. */
-table { border-collapse: collapse; margin: 1em 0; display: block; max-width: 100%; overflow-x: auto; }
+/* Tables fill the text column and may grow past it up to 90rem (centered);
+   beyond the window they scroll inside themselves, never widening the page. */
+table { border-collapse: collapse; margin: 1em 0; display: block; overflow-x: auto; width: max-content; min-width: 100%; max-width: min(90rem, calc(100vw - 32px)); position: relative; left: 50%; transform: translateX(-50%); }
 th, td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; overflow-wrap: anywhere; min-width: 6em; }
 th { background: var(--bg-secondary); font-weight: 600; }
 hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
