@@ -27,6 +27,7 @@ import {
 import { isGithubHost, splitGithubSpec } from "./remote";
 import { encryptPage, MIN_PASSWORD, newPageId } from "./pageCrypt";
 import { localDocLinks, resolveLink, rewriteLinks } from "./docLinks";
+import { idFromLink } from "./publishSearch";
 import type { McpResult, PublishStep, PublishTarget } from "./ipc";
 
 /**
@@ -72,6 +73,77 @@ export function publishedFor(doc: Doc | undefined, _version = 0): Record<string,
 /** The most recently published link for a document, if any. */
 export function latestPublished(doc: Doc | undefined, version = 0): PublishRecord | undefined {
   return Object.values(publishedFor(doc, version)).sort((x, y) => y.at - x.at)[0];
+}
+
+/** One publish (create or update), kept so a link can be traced to its file. */
+export interface PublishLogEntry {
+  /** Where the document lives: a local path, or `host:path`. */
+  key: string;
+  host?: string;
+  path: string;
+  title: string;
+  target: string;
+  targetLabel: string;
+  id: string;
+  url: string;
+  at: number;
+  updated: boolean;
+}
+
+const LOG_KEY = "publishLog";
+
+/**
+ * Every publish, oldest first. Unlike the per-document records (latest link
+ * per target only), nothing here is overwritten. The first read seeds it from
+ * those records, so links published before the log existed show up too.
+ */
+function loadLog(): PublishLogEntry[] {
+  const raw = localStorage.getItem(LOG_KEY);
+  if (raw) {
+    try {
+      return JSON.parse(raw) as PublishLogEntry[];
+    } catch {
+      return [];
+    }
+  }
+  const seeded: PublishLogEntry[] = [];
+  for (const [key, byTarget] of Object.entries(loadRecords())) {
+    for (const [target, rec] of Object.entries(byTarget)) {
+      seeded.push({ ...whereFromKey(key), key, title: "", target, targetLabel: target, id: rec.id, url: rec.url, at: rec.at, updated: false });
+    }
+  }
+  seeded.sort((a, b) => a.at - b.at);
+  localStorage.setItem(LOG_KEY, JSON.stringify(seeded));
+  return seeded;
+}
+
+/** A record key back to host/path (`host:/path`, `host:~/path`, or a local path). */
+function whereFromKey(key: string): { host?: string; path: string } {
+  const m = /^([^/:]+):((?:\/|~).*)$/.exec(key);
+  return m ? { host: m[1], path: m[2] } : { path: key };
+}
+
+function appendLog(entry: PublishLogEntry): void {
+  const log = loadLog();
+  log.push(entry);
+  localStorage.setItem(LOG_KEY, JSON.stringify(log));
+}
+
+/**
+ * Every publish, as one entry per published page (newest first), with when it
+ * was first published and how often it was updated since. `_version`: see
+ * `publishedFor`.
+ */
+export function publishedPages(
+  _version = 0,
+): (PublishLogEntry & { first: number; updates: number })[] {
+  const byUrl = new Map<string, PublishLogEntry & { first: number; updates: number }>();
+  for (const e of loadLog()) {
+    const page = byUrl.get(e.url);
+    if (!page) byUrl.set(e.url, { ...e, first: e.at, updates: 0 });
+    else byUrl.set(e.url, { ...e, title: e.title || page.title, first: page.first, updates: page.updates + 1 });
+  }
+  return [...byUrl.values()].sort((a, b) => b.at - a.at);
 }
 
 function saveRecord(doc: Doc, targetId: string, record: PublishRecord): void {
@@ -244,6 +316,26 @@ export interface PublishOutcome {
   skipped: string[];
 }
 
+/**
+ * Link a document to a page published before (e.g. from another Mac, or
+ * before its record was lost), so the next publish updates that page instead
+ * of creating a new one. Throws if the link isn't one of this target's pages.
+ */
+export function linkExistingPage(doc: Doc, target: PublishTarget, link: string): PublishRecord {
+  const id = idFromLink(link, target);
+  if (!id) throw new Error(`That doesn't look like a ${target.label} link.`);
+  const url =
+    target.kind === "gist"
+      ? `https://gist.github.com/${id}`
+      : target.kind === "command"
+        ? id
+        : String(fill(target.urlTemplate ?? "", { id }));
+  const record = { id, url, at: Date.now() };
+  saveRecord(doc, target.id, record);
+  useStore.getState().bumpPublished();
+  return record;
+}
+
 /** The text to publish: the live editor (unsaved edits included), else the doc. */
 function liveMarkdown(doc: Doc): string {
   const view = getEditorView(doc.id);
@@ -353,6 +445,21 @@ async function publishText(
     sha: extra.sha ?? previous?.sha,
     account,
   });
+  const key = keyForDoc(doc);
+  if (key) {
+    appendLog({
+      key,
+      host: doc.remote?.host,
+      path: doc.remote?.path ?? doc.path ?? key,
+      title,
+      target: target.id,
+      targetLabel: target.label,
+      id,
+      url,
+      at: Date.now(),
+      updated: !!previous,
+    });
+  }
   useStore.getState().bumpPublished();
   return { url, updated: !!previous, marker };
 }

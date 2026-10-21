@@ -10,6 +10,15 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   published; publishing again creates a new gist.
 
 ### Added
+- **Published Documents…** (File menu, ⌥⇧⌘P): everything you've published,
+  newest first, with when it was first published and last updated. Search by
+  title, file or link; paste a published link to find the file behind it, and
+  click the file to open it. Every publish is now kept in a history, so
+  publishing as a new copy no longer loses the earlier link.
+- **Update an existing page:** a document this Mac hasn't published yet (say,
+  one you published from another Mac) can be linked to its page: in
+  **Publish…**, click **Update an existing page instead…** and paste the link.
+  Publishing then updates that page instead of creating a new one.
 - **Unpublish:** the Publish dialog can delete a published gist or protected
   page (after a confirmation), or forget the link for other targets.
 - **Password-protected pages:** Publish… → *Password-protected page* encrypts

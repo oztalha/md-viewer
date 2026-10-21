@@ -610,6 +610,11 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
                 .build(app)?,
         )
         .item(
+            &MenuItemBuilder::with_id("published-list", "Published Documents…")
+                .accelerator("Shift+Alt+CmdOrCtrl+P")
+                .build(app)?,
+        )
+        .item(
             &MenuItemBuilder::with_id("export-html", "Export as HTML…")
                 .accelerator("Shift+CmdOrCtrl+E")
                 .build(app)?,

@@ -53,6 +53,7 @@ export const KEYBINDS: KeybindDef[] = [
   { id: "save-remote", label: "Save to remote…", kind: "menu", defaultKey: "Shift+CmdOrCtrl+S" },
   { id: "publish", label: "Publish…", kind: "menu", defaultKey: "Shift+CmdOrCtrl+P" },
   { id: "open-published", label: "Open published page", kind: "menu", defaultKey: "Shift+CmdOrCtrl+L" },
+  { id: "published-list", label: "Published documents", kind: "menu", defaultKey: "Shift+Alt+CmdOrCtrl+P" },
   { id: "export-html", label: "Export as HTML…", kind: "menu", defaultKey: "Shift+CmdOrCtrl+E" },
   { id: "reload", label: "Reload", kind: "menu", defaultKey: "CmdOrCtrl+R" },
   { id: "copy-path", label: "Copy path", kind: "menu", defaultKey: "Shift+CmdOrCtrl+C" },

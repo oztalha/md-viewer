@@ -88,6 +88,8 @@ for what's new in each version.
   Documents opened from GitHub can stay in sync with the repo. Add places
   under **Edit targets…**, starting from examples.
   See [docs/PUBLISHING.md](docs/PUBLISHING.md).
+- **Published Documents…** (⌥⇧⌘P) lists everything you've published, with
+  dates; search by title, file or link (paste a link to find the file behind it).
 
 ![Publishing a document: pick a target, and the link is copied](docs/publish.png)
 
@@ -159,6 +161,7 @@ GitHub* (see [docs/PUBLISHING.md](docs/PUBLISHING.md)).
 | Open published page | ⇧⌘L |
 | Copy path | ⇧⌘C |
 | Publish… | ⇧⌘P |
+| Published documents… | ⌥⇧⌘P |
 | Export as HTML… | ⇧⌘E |
 | Go to tab 1–9 | ⌘1 … ⌘9 |
 | Next / previous tab | ⌃Tab / ⌃⇧Tab, or ⇧⌘] / ⇧⌘[ |

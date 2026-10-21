@@ -181,6 +181,9 @@ function handleMenu(id: string) {
     case "publish":
       s.setPublishOpen(true);
       break;
+    case "published-list":
+      s.setPublishedOpen(true);
+      break;
     case "open-published": {
       const rec = latestPublished(s.docs[s.activeId]);
       if (rec) void openUrl(rec.url);

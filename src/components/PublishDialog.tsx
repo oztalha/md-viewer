@@ -13,6 +13,7 @@ import { generatePassword, MIN_PASSWORD } from "../pageCrypt";
 import type { PublishTarget } from "../ipc";
 import {
   isGithubDoc,
+  linkExistingPage,
   linkedDocs,
   publishDoc,
   publishErrorKey,
@@ -68,6 +69,10 @@ function Publish() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>(localStorage.getItem(LAST_TARGET_KEY) ?? "");
   const [asNew, setAsNew] = useState(false);
+  // Pasting the link of a page published before, so this updates it.
+  const [linking, setLinking] = useState(false);
+  const [linkDraft, setLinkDraft] = useState("");
+  const [linkError, setLinkError] = useState<string | null>(null);
   // On unless turned off once: otherwise links to local files break once published.
   const [withLinked, setWithLinked] = useState(localStorage.getItem(LINKED_KEY) !== "0");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
@@ -97,6 +102,7 @@ function Publish() {
     setStatus((cur) => (cur.kind === "busy" ? cur : { kind: "idle" }));
     setAsNew(false);
     void verifyPublished(useStore.getState().docs[docId ?? ""], true);
+    setLinking(false);
   }, [docId]);
 
   const load = () =>
@@ -141,7 +147,7 @@ function Publish() {
       // in the dialog, and never reaches the editor underneath. On a focused
       // button or link, let that element handle it natively.
       const el = event.target as HTMLElement | null;
-      if (el?.closest("button, a")) return;
+      if (el?.closest("button, a, .publish-link-existing")) return;
       event.preventDefault();
       event.stopPropagation();
       publishRef.current();
@@ -157,6 +163,23 @@ function Publish() {
     target && docKey ? s.publishErrors[publishErrorKey(docKey, target.id)] : undefined,
   );
   const busy = status.kind === "busy";
+  // Targets whose links carry the page id (so a pasted link can be linked).
+  const canLink =
+    !!target && (target.kind !== "mcp" || !!target.urlTemplate?.includes("{id}"));
+
+  const linkPage = () => {
+    if (!doc || !target) return;
+    try {
+      linkExistingPage(doc, target, linkDraft);
+      setLinking(false);
+      setLinkDraft("");
+      setLinkError(null);
+      setStatus({ kind: "idle" });
+      publishButton.current?.focus();
+    } catch (err) {
+      setLinkError(err instanceof Error ? err.message : String(err));
+    }
+  };
 
   // Password-protected pages: a strong generated password for a new page, the
   // saved one (Keychain) for an existing page, so republishing changes nothing.
@@ -344,6 +367,7 @@ function Publish() {
                       // A new target starts fresh (so you can publish the same doc elsewhere).
                       setSelected(t.id);
                       setAsNew(false);
+                      setLinking(false);
                       if (status.kind !== "busy") setStatus({ kind: "idle" });
                     }}
                   />
@@ -476,6 +500,38 @@ function Publish() {
               ? "Unpublish (delete it)…"
               : "Forget this link…"}
           </button>
+        )}
+
+        {!existing && canLink && status.kind !== "busy" && (
+          linking ? (
+            <div className="publish-link-existing">
+              <input
+                className="remote-prompt-input"
+                placeholder={`Paste the ${target!.label} link to update`}
+                value={linkDraft}
+                spellCheck={false}
+                autoFocus
+                onChange={(event) => {
+                  setLinkDraft(event.target.value);
+                  setLinkError(null);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    event.preventDefault();
+                    linkPage();
+                  }
+                }}
+              />
+              <button className="publish-edit" onClick={linkPage} disabled={!linkDraft.trim()}>
+                Link
+              </button>
+              {linkError && <p className="publish-status rb-error">{linkError}</p>}
+            </div>
+          ) : (
+            <button className="publish-edit publish-link-toggle" onClick={() => setLinking(true)}>
+              Update an existing page instead…
+            </button>
+          )
         )}
 
         {existing && (

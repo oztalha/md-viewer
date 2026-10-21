@@ -96,6 +96,8 @@ interface AppState {
   aboutOpen: boolean;
   /** Whether the Publish dialog is showing. */
   publishOpen: boolean;
+  /** Whether the Published Documents window is showing. */
+  publishedOpen: boolean;
   /** Bumped after each publish so views re-read saved links. */
   publishTick: number;
   /** Failed GitHub syncs, by `publishErrorKey(doc key, target id)`. */
@@ -131,6 +133,7 @@ interface AppState {
   setAboutOpen(open: boolean): void;
   setRemoteDrop(paths: string[] | null): void;
   setPublishOpen(open: boolean): void;
+  setPublishedOpen(open: boolean): void;
   bumpPublished(): void;
   setPublishError(key: string, message: string | null): void;
   setTargetsEditorOpen(open: boolean): void;
@@ -217,6 +220,7 @@ export const useStore = create<AppState>()((set, get) => ({
   aboutOpen: false,
   remoteDrop: null,
   publishOpen: false,
+  publishedOpen: false,
   publishTick: 0,
   publishErrors: {},
   targetsEditorOpen: false,
@@ -321,6 +325,10 @@ export const useStore = create<AppState>()((set, get) => ({
 
   setPublishOpen(open) {
     if (get().publishOpen !== open) set({ publishOpen: open });
+  },
+
+  setPublishedOpen(open) {
+    if (get().publishedOpen !== open) set({ publishedOpen: open });
   },
 
   setRemoteDrop(paths) {
