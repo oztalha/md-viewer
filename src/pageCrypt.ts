@@ -8,6 +8,8 @@
  * implementation of the format; a test round-trips through it.
  */
 
+import { THEME_INIT } from "./pageTheme";
+
 export const ITERATIONS = 600_000;
 export const MIN_PASSWORD = 12;
 
@@ -105,6 +107,8 @@ export async function decryptPayload(
   return { html: new TextDecoder().decode(plain), key: btoa(raw) };
 }
 
+const PROMPT_DARK = "--bg: #1e1e20; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --accent: #4c9bff;";
+
 /**
  * The published page: a password prompt that decrypts and shows `html`, and
  * can remember the page's key in this browser so the next visit skips the
@@ -127,9 +131,12 @@ export async function encryptPage(
 <meta name="robots" content="noindex, nofollow">
 <meta name="referrer" content="no-referrer">
 <title>Protected page</title>
+<script>${THEME_INIT}</script>
 <style>
 :root { color-scheme: light dark; --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --accent: #0a66d8; }
-@media (prefers-color-scheme: dark) { :root { --bg: #1e1e20; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --accent: #4c9bff; } }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; ${PROMPT_DARK} }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ${PROMPT_DARK} } }
 html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 body { display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
 form { width: min(360px, 100%); display: grid; gap: 10px; }

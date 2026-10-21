@@ -5,6 +5,16 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- Published and exported HTML pages (password-protected pages, HTML gists,
+  **Export as HTML**) have a light/dark toggle in the corner: match the system,
+  light, or dark, remembered in the reader's browser. The password prompt uses
+  the same choice.
+
+### Fixed
+- Code blocks in published and exported HTML pages had no syntax colors; they
+  are highlighted now, in light and dark.
+
 ## [0.16.3] — 2026-10-21
 
 ### Changed

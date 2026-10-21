@@ -48,6 +48,8 @@ open the link, type the password, and read the page; they need no account.
   default) keeps the page's key, not the password, in that browser, so later
   visits open straight away, also after you update the page. Changing the
   password locks out every remembered device.
+- The page follows the reader's light or dark mode; the toggle in its corner
+  picks one, and the password prompt remembers it too.
 - Encryption: PBKDF2-SHA256 (600,000 iterations) and AES-256-GCM, a salt fixed
   per page (from its random id) and a fresh IV every publish, decrypted in the reader's browser with no external
   scripts. Passwords need at least 12 characters, since anyone can download

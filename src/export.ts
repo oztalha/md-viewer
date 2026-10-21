@@ -1,5 +1,6 @@
 import { renderDocumentHtml } from "./markdown";
 import katexPackage from "katex/package.json";
+import { THEME_INIT, THEME_TOGGLE } from "./pageTheme";
 
 // Exported files are standalone, so math styling comes from the CDN build of
 // the same KaTeX version the app renders with (fonts load from there too).
@@ -13,20 +14,27 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+const DARK_VARS = `
+    --fg: #e8e8ea; --fg-muted: #98989f; --bg: #1e1e20; --bg-secondary: #29292c;
+    --border: rgba(255,255,255,.1); --code-bg: rgba(255,255,255,.06); --accent: #ffd23f;`;
+
 /**
  * Self-contained stylesheet for exported documents — a compact, theme-aware
- * (prefers-color-scheme) mirror of the in-app preview styling, so the .html
- * looks like the preview when opened anywhere with no external assets.
+ * mirror of the in-app preview styling, so the .html looks like the preview
+ * when opened anywhere with no external assets. It follows the system theme
+ * unless the reader picks one with the toggle (`data-theme` on <html>).
  */
 const EXPORT_CSS = `
 :root {
+  color-scheme: light dark;
   --fg: #1d1d1f; --fg-muted: #73737a; --bg: #fff; --bg-secondary: #f5f5f6;
   --border: rgba(0,0,0,.1); --code-bg: rgba(0,0,0,.05); --accent: #8a6500;
 }
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark;${DARK_VARS}
+}
 @media (prefers-color-scheme: dark) {
-  :root {
-    --fg: #e8e8ea; --fg-muted: #98989f; --bg: #1e1e20; --bg-secondary: #29292c;
-    --border: rgba(255,255,255,.1); --code-bg: rgba(255,255,255,.06); --accent: #ffd23f;
+  :root:not([data-theme="light"]) {${DARK_VARS}
   }
 }
 * { box-sizing: border-box; }
@@ -58,6 +66,19 @@ img { max-width: 100%; border-radius: 6px; }
 .markdown-alert { margin: .9em 0; padding: 2px 0 2px 14px; border-left: 3px solid var(--fg-muted); }
 .markdown-alert-title { display: flex; align-items: center; gap: 7px; font-weight: 600; margin: .2em 0 .4em; }
 .task-list-item { list-style: none; } ul.contains-task-list { padding-left: .4em; }
+/* shiki emits both themes' colors as --shiki-light / --shiki-dark. */
+.shiki, .shiki span { color: var(--shiki-light); }
+:root[data-theme="dark"] .shiki, :root[data-theme="dark"] .shiki span { color: var(--shiki-dark); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .shiki, :root:not([data-theme="light"]) .shiki span { color: var(--shiki-dark); }
+}
+.theme-toggle {
+  position: fixed; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0;
+  display: grid; place-items: center; border-radius: 8px; cursor: pointer;
+  border: 1px solid var(--border); background: var(--bg); color: var(--fg-muted);
+}
+.theme-toggle:hover { color: var(--fg); background: var(--bg-secondary); }
+@media print { .theme-toggle { display: none; } }
 `.trim();
 
 /** Build a complete standalone HTML document from markdown source. */
@@ -69,6 +90,7 @@ export function buildExportHtml(source: string, title: string): string {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
+<script>${THEME_INIT}</script>
 ${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
 ${EXPORT_CSS}
 </style>
@@ -77,6 +99,7 @@ ${EXPORT_CSS}
 <main>
 ${body}
 </main>
+<script>${THEME_TOGGLE}</script>
 </body>
 </html>
 `;
