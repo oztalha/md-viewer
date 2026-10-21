@@ -5,6 +5,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- The About window links to the license instead of a credit line, and the
+  app now includes the full MIT license text (`Contents/Resources/LICENSE`).
+
 ## [0.14.0] — 2026-10-20
 
 ### Added

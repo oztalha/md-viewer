@@ -2332,12 +2332,6 @@ html.no-caret-animation .editor .cm-cursor {
 .about-links a:hover {
   text-decoration: underline;
 }
-.about-credit {
-  margin: 0;
-  font-size: 11px;
-  color: var(--fg-faint);
-}
-
 /* Publish dialog */
 .publish-dialog {
   width: min(460px, calc(100vw - 48px));

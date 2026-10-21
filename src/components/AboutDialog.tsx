@@ -51,8 +51,11 @@ function About() {
           <a href={`${REPO_URL}/issues/new`} onClick={link(`${REPO_URL}/issues/new`)}>
             Report an issue
           </a>
+          <span aria-hidden="true"> · </span>
+          <a href={`${REPO_URL}/blob/main/LICENSE`} onClick={link(`${REPO_URL}/blob/main/LICENSE`)}>
+            License
+          </a>
         </p>
-        <p className="about-credit">Based on md-viewer by Max Leiter. MIT License.</p>
       </div>
     </div>
   );
