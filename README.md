@@ -83,6 +83,8 @@ for what's new in each version.
 **Publishing**
 - **Publish…** (⇧⌘P) shares a document as a GitHub Gist, or to any place you add
   through a local MCP server or a command; republishing updates the same link.
+  **Password-protected page** encrypts the page in the app and hosts it on
+  your GitHub Pages; readers just need the password.
   Documents opened from GitHub can stay in sync with the repo. Add places
   under **Edit targets…**, starting from examples.
   See [docs/PUBLISHING.md](docs/PUBLISHING.md).

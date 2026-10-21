@@ -25,6 +25,27 @@ sync fails, the publish icon's dot turns red and its tooltip says why.
 Limits: nothing syncs while the app is closed, and relative images in a
 private repo won't load on the published page.
 
+**Password-protected page:** built in, nothing to set up beyond your `gh`
+login. md-viewer renders the document, **encrypts it in the app** with a
+password, and publishes the encrypted page to your own GitHub Pages. Readers
+open the link, type the password, and read the page; they need no account.
+- The password is filled in with a strong generated one (**Show**, **New**,
+  copy). Send it to readers separately from the link.
+- The first publish creates a public repo `<you>/md-viewer-pages` and turns on
+  GitHub Pages. It's public because free GitHub Pages needs that; it only holds
+  encrypted pages with random names, and commit messages say nothing about the
+  document. A new page is live about a minute later.
+- The password is kept in your macOS Keychain, so updating (or syncing a
+  GitHub document) keeps the same link and password without asking. Typing a
+  different password before **Update** changes it; send readers the new one.
+- Encryption: PBKDF2-SHA256 (600,000 iterations) and AES-256-GCM, fresh salt
+  and IV every publish, decrypted in the reader's browser with no external
+  scripts. Passwords need at least 12 characters, since anyone can download
+  the encrypted page and try passwords offline.
+- Limits: anyone with the link and the password can read the page, and you
+  can't shut out one person (change the password instead). Older encrypted
+  versions stay in the repo's git history.
+
 Out of the box you can publish to a **GitHub Gist** (secret by default). It uses
 your logged-in [`gh`](https://cli.github.com) CLI, so install it and run
 `gh auth login` once. If you're logged in to several GitHub accounts, the
@@ -123,6 +144,8 @@ Export as HTML) instead of the markdown.
 
 - Only commands and servers from this file ever run. Documents, links and
   remote files can't supply them.
+- Password-protected pages are encrypted before they leave the app; GitHub
+  only stores ciphertext, and the password stays in your Keychain.
 - Saving a new or changed command or MCP server from Edit targets… asks first
   in a native macOS dialog that lists exactly what will run; the app's web
   view can't show or answer that dialog itself.

@@ -14,7 +14,7 @@ import { Select } from "./Select";
  */
 
 type Json = Record<string, unknown>;
-type Kind = "gist" | "command" | "mcp";
+type Kind = "gist" | "pages" | "command" | "mcp";
 
 interface Server {
   command: string;
@@ -35,6 +35,16 @@ const EXAMPLES: Example[] = [
     about:
       "Anyone with the link can read it; it's not listed on your profile. Uses your gh login.",
     target: { id: "gist", label: "GitHub Gist", kind: "gist", public: false },
+  },
+  {
+    name: "Password-protected page",
+    about:
+      "Encrypted in md-viewer, hosted on your GitHub Pages; readers need the password. Nothing to set up.",
+    target: {
+      id: "protected-page",
+      label: "Password-protected page",
+      kind: "pages",
+    },
   },
   {
     name: "GitHub Gist (public)",
@@ -106,12 +116,14 @@ const EXAMPLES: Example[] = [
 
 function kindOf(t: Json): Kind {
   if (t.kind === "gist") return "gist";
+  if (t.kind === "pages") return "pages";
   if (t.kind === "command" || typeof t.command === "string") return "command";
   return "mcp";
 }
 
 const KIND_LABEL: Record<Kind, string> = {
   gist: "Gist",
+  pages: "Protected",
   command: "Command",
   mcp: "MCP",
 };
@@ -335,18 +347,31 @@ function Editor() {
                     }
                   />
                 </Field>
-                <Field label="Publishes">
-                  <Select
-                    value={target.format === "html" ? "html" : "md"}
-                    options={[
-                      { value: "md", label: "The markdown" },
-                      { value: "html", label: "The rendered page (HTML)" },
-                    ]}
-                    onChange={(value) =>
-                      update({ format: value === "html" ? "html" : undefined })
-                    }
-                  />
-                </Field>
+                {kind !== "pages" && (
+                  <Field label="Publishes">
+                    <Select
+                      value={target.format === "html" ? "html" : "md"}
+                      options={[
+                        { value: "md", label: "The markdown" },
+                        { value: "html", label: "The rendered page (HTML)" },
+                      ]}
+                      onChange={(value) =>
+                        update({
+                          format: value === "html" ? "html" : undefined,
+                        })
+                      }
+                    />
+                  </Field>
+                )}
+
+                {kind === "pages" && (
+                  <p className="te-help">
+                    Publishes the rendered page, encrypted with a password you
+                    choose (or a generated one) in the Publish dialog. It lives
+                    in your public repo md-viewer-pages under a random name; the
+                    password is kept in your Keychain.
+                  </p>
+                )}
 
                 {kind === "gist" && (
                   <label className="publish-asnew">

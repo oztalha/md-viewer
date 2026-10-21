@@ -8,6 +8,9 @@ import {
   copyToClipboard,
   gistExists,
   mcpCall,
+  pagesPasswordGet,
+  pagesPasswordSet,
+  publishPages,
   mcpClose,
   mcpOpen,
   publishCommand,
@@ -20,6 +23,7 @@ import {
   writePublishTemp,
 } from "./ipc";
 import { isGithubHost, splitGithubSpec } from "./remote";
+import { encryptPage, MIN_PASSWORD, newPageId } from "./pageCrypt";
 import { localDocLinks, resolveLink, rewriteLinks } from "./docLinks";
 import type { McpResult, PublishStep, PublishTarget } from "./ipc";
 
@@ -268,19 +272,72 @@ async function publishText(
   markdown: string,
   target: PublishTarget,
   asNew: boolean,
-  extra: { sha?: string; account?: string } = {},
+  extra: { sha?: string; account?: string; password?: string } = {},
 ): Promise<{ url: string; updated: boolean }> {
   const title = displayTitle(doc).replace(/\.(md|markdown|mdown|mkdn|mkd|txt)$/i, "");
   const html = target.format === "html";
   const contents = html ? buildExportHtml(markdown, title) : markdown;
-  const file = await writePublishTemp(`${title || "document"}.${html ? "html" : "md"}`, contents);
-
   const previous = asNew ? undefined : publishedFor(doc)[target.id];
   let id = "";
   let url = "";
-  // An update must come from the gist's owner; a new gist uses the chosen account.
-  const account = target.kind === "gist" ? (previous ? previous.account : extra.account) : undefined;
+  // An update must come from the owner (gist, pages repo); a new one uses the chosen account.
+  const owned = target.kind === "gist" || target.kind === "pages";
+  const account = owned ? (previous ? previous.account : extra.account) : undefined;
 
+  if (target.kind === "pages") {
+    ({ id, url } = await publishProtected(doc, markdown, title, previous?.id, account, extra.password));
+  } else {
+    const file = await writePublishTemp(`${title || "document"}.${html ? "html" : "md"}`, contents);
+    ({ id, url } = await publishTo(doc, target, file, title, contents, previous, account));
+  }
+
+  saveRecord(doc, target.id, {
+    id,
+    url,
+    at: Date.now(),
+    sync: previous?.sync,
+    sha: extra.sha ?? previous?.sha,
+    account,
+  });
+  useStore.getState().bumpPublished();
+  return { url, updated: !!previous };
+}
+
+/**
+ * A password-protected page: the rendered page, encrypted here (the plaintext
+ * never leaves the app), uploaded under a random name. Without a password
+ * given (sync, republish), the one saved in the Keychain is used.
+ */
+async function publishProtected(
+  doc: Doc,
+  markdown: string,
+  title: string,
+  existingId: string | undefined,
+  account: string | undefined,
+  given: string | undefined,
+): Promise<{ id: string; url: string }> {
+  const password = given ?? (existingId ? await pagesPasswordGet(existingId) : null);
+  if (!password) throw new Error(`No saved password for “${displayTitle(doc)}”. Publish it from the Publish dialog.`);
+  if (password.length < MIN_PASSWORD) throw new Error(`Use a password of at least ${MIN_PASSWORD} characters.`);
+  const pageId = existingId ?? newPageId();
+  const page = await encryptPage(buildExportHtml(markdown, title), password);
+  const file = await writePublishTemp(`${pageId}.html`, page);
+  const out = await publishPages(file, pageId, account ?? null);
+  await pagesPasswordSet(out.id, password);
+  return out;
+}
+
+async function publishTo(
+  doc: Doc,
+  target: PublishTarget,
+  file: string,
+  title: string,
+  contents: string,
+  previous: PublishRecord | undefined,
+  account: string | undefined,
+): Promise<{ id: string; url: string }> {
+  let id = "";
+  let url = "";
   if (target.kind === "gist") {
     try {
       ({ id, url } = await publishGist(target.id, file, title, previous?.id ?? null, account ?? null));
@@ -310,17 +367,7 @@ async function publishText(
       (target.urlTemplate ? String(fill(target.urlTemplate, vars)) : "");
     if (!url) throw new Error(`${target.label}: no link in the reply and no "urlTemplate" set`);
   }
-
-  saveRecord(doc, target.id, {
-    id,
-    url,
-    at: Date.now(),
-    sync: previous?.sync,
-    sha: extra.sha ?? previous?.sha,
-    account,
-  });
-  useStore.getState().bumpPublished();
-  return { url, updated: !!previous };
+  return { id, url };
 }
 
 /**
@@ -332,7 +379,14 @@ async function publishText(
 export async function publishDoc(
   doc: Doc,
   target: PublishTarget,
-  options: { asNew?: boolean; linked?: boolean; account?: string; onProgress?: (text: string) => void } = {},
+  options: {
+    asNew?: boolean;
+    linked?: boolean;
+    account?: string;
+    /** Password-protected pages: also used for the linked documents. */
+    password?: string;
+    onProgress?: (text: string) => void;
+  } = {},
 ): Promise<PublishOutcome> {
   let markdown = liveMarkdown(doc);
   const skipped: string[] = [];
@@ -346,6 +400,7 @@ export async function publishDoc(
       try {
         const { url } = await publishText(linked, await readLinked(linked), target, false, {
           account: options.account,
+          password: options.password,
         });
         for (const href of hrefs) urls.set(href, url);
         linkedCount++;
@@ -357,7 +412,10 @@ export async function publishDoc(
     options.onProgress?.(displayTitle(doc));
   }
 
-  const out = await publishText(doc, markdown, target, !!options.asNew, { account: options.account });
+  const out = await publishText(doc, markdown, target, !!options.asNew, {
+    account: options.account,
+    password: options.password,
+  });
   await copyToClipboard(out.url);
   return { ...out, linked: linkedCount, skipped };
 }

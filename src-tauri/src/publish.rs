@@ -102,12 +102,11 @@ fn config_path() -> PathBuf {
     PathBuf::from(home).join(".config/md-viewer/publish.json")
 }
 
-/// Used when there's no config file yet: just the built-in gist target.
-fn default_targets() -> Vec<Target> {
-    vec![Target {
-        id: "gist".into(),
-        label: "GitHub Gist".into(),
-        kind: Some("gist".into()),
+fn builtin(id: &str, label: &str, kind: &str) -> Target {
+    Target {
+        id: id.into(),
+        label: label.into(),
+        kind: Some(kind.into()),
         server: None,
         command: None,
         create: vec![],
@@ -115,7 +114,18 @@ fn default_targets() -> Vec<Target> {
         url_template: None,
         public: false,
         format: None,
-    }]
+    }
+}
+
+/// Used when there's no config file yet: the built-in targets.
+fn default_targets() -> Vec<Target> {
+    vec![builtin("gist", "GitHub Gist", "gist"), protected_page()]
+}
+
+/// Password-protected pages (pages.rs) need no setup, so they're always
+/// offered, even with a config file that predates them.
+fn protected_page() -> Target {
+    builtin("protected-page", "Password-protected page", "pages")
 }
 
 fn load_config() -> Result<Config, String> {
@@ -130,6 +140,9 @@ fn load_config() -> Result<Config, String> {
                 for s in t.create.iter_mut().chain(t.update.iter_mut()) {
                     s.run = s.command.is_some();
                 }
+            }
+            if !config.targets.iter().any(|t| t.kind() == "pages" || t.id == "protected-page") {
+                config.targets.push(protected_page());
             }
             Ok(config)
         }
@@ -580,7 +593,7 @@ fn run(mut cmd: Command, what: &str) -> Result<String, String> {
 }
 
 /// A chosen account's token; `None` means gh's active account.
-fn account_token(account: &Option<String>) -> Result<Option<String>, String> {
+pub(crate) fn account_token(account: &Option<String>) -> Result<Option<String>, String> {
     match account {
         Some(login) => crate::github::account_token(login)
             .map(Some)
@@ -589,7 +602,7 @@ fn account_token(account: &Option<String>) -> Result<Option<String>, String> {
     }
 }
 
-fn gh_as(token: &Option<String>) -> Command {
+pub(crate) fn gh_as(token: &Option<String>) -> Command {
     let mut cmd = base_command("gh");
     if let Some(token) = token {
         cmd.env("GH_TOKEN", token);

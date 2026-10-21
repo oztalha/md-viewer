@@ -1,6 +1,7 @@
 use std::sync::Mutex;
 
 mod github;
+mod pages;
 mod publish;
 mod watch;
 
@@ -857,6 +858,10 @@ pub fn run() {
             publish::publish_mcp_close,
             publish::publish_gist,
             publish::gist_exists,
+            pages::pages_status,
+            pages::publish_pages,
+            pages::pages_password_get,
+            pages::pages_password_set,
             publish::publish_command,
             publish::publish_step_command,
             github::github_resolve_url,

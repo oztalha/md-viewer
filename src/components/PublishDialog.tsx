@@ -1,9 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
-import { ghAccounts, publishTargets } from "../ipc";
+import {
+  ghAccounts,
+  pagesPasswordGet,
+  pagesStatus,
+  publishTargets,
+} from "../ipc";
+import { generatePassword, MIN_PASSWORD } from "../pageCrypt";
 import type { PublishTarget } from "../ipc";
-import { isGithubDoc, linkedDocs, publishDoc, publishErrorKey, publishedFor, setSync, verifyPublished } from "../publish";
+import {
+  isGithubDoc,
+  linkedDocs,
+  publishDoc,
+  publishErrorKey,
+  publishedFor,
+  setSync,
+  verifyPublished,
+} from "../publish";
 import { keyForDoc } from "../annotations";
 import { displayTitle } from "../types";
 import { CopyButton } from "./CopyButton";
@@ -25,7 +39,14 @@ function timeAgo(at: number): string {
 type Status =
   | { kind: "idle" }
   | { kind: "busy"; label: string; detail?: string }
-  | { kind: "done"; url: string; updated: boolean; label: string; linked: number; skipped: string[] }
+  | {
+      kind: "done";
+      url: string;
+      updated: boolean;
+      label: string;
+      linked: number;
+      skipped: string[];
+    }
   | { kind: "error"; message: string };
 
 /** File → Publish… (⇧⌘P): pick a target; the link is copied when done. */
@@ -39,20 +60,31 @@ function Publish() {
   const doc = useStore((s) => s.docs[s.activeId]);
   const [targets, setTargets] = useState<PublishTarget[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string>(localStorage.getItem(LAST_TARGET_KEY) ?? "");
+  const [selected, setSelected] = useState<string>(
+    localStorage.getItem(LAST_TARGET_KEY) ?? "",
+  );
   const [asNew, setAsNew] = useState(false);
   // On unless turned off once: otherwise links to local files break once published.
-  const [withLinked, setWithLinked] = useState(localStorage.getItem(LINKED_KEY) !== "0");
+  const [withLinked, setWithLinked] = useState(
+    localStorage.getItem(LINKED_KEY) !== "0",
+  );
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   // gh accounts for gists: the last one picked if still logged in, else gh's active one.
-  const [accounts, setAccounts] = useState<{ logins: string[]; active: string | null } | null>(null);
+  const [accounts, setAccounts] = useState<{
+    logins: string[];
+    active: string | null;
+  } | null>(null);
   const [account, setAccount] = useState("");
   useEffect(() => {
     ghAccounts()
       .then((list) => {
         setAccounts(list);
         const last = localStorage.getItem(ACCOUNT_KEY) ?? "";
-        setAccount(list.logins.includes(last) ? last : (list.active ?? list.logins[0] ?? ""));
+        setAccount(
+          list.logins.includes(last)
+            ? last
+            : (list.active ?? list.logins[0] ?? ""),
+        );
       })
       .catch(() => setAccounts({ logins: [], active: null })); // no gh: publishing shows the real error
   }, []);
@@ -74,7 +106,9 @@ function Publish() {
       .then((list) => {
         setTargets(list);
         setLoadError(null);
-        setSelected((cur) => (list.some((t) => t.id === cur) ? cur : (list[0]?.id ?? "")));
+        setSelected((cur) =>
+          list.some((t) => t.id === cur) ? cur : (list[0]?.id ?? ""),
+        );
       })
       .catch((err) => setLoadError(String(err)));
 
@@ -124,12 +158,61 @@ function Publish() {
   const existing = target ? records[target.id] : undefined;
   const docKey = keyForDoc(doc);
   const syncError = useStore((s) =>
-    target && docKey ? s.publishErrors[publishErrorKey(docKey, target.id)] : undefined,
+    target && docKey
+      ? s.publishErrors[publishErrorKey(docKey, target.id)]
+      : undefined,
   );
   const busy = status.kind === "busy";
 
+  // Password-protected pages: a strong generated password for a new page, the
+  // saved one (Keychain) for an existing page, so republishing changes nothing.
+  const protectedPage = target?.kind === "pages";
+  const [password, setPassword] = useState("");
+  const [savedPassword, setSavedPassword] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [pagesRepo, setPagesRepo] = useState<{
+    repo: string;
+    exists: boolean;
+  } | null>(null);
+  const pageId = protectedPage && existing && !asNew ? existing.id : null;
+  useEffect(() => {
+    if (!protectedPage) return;
+    setSavedPassword(null);
+    if (!pageId) {
+      setPassword(generatePassword());
+      return;
+    }
+    let live = true;
+    pagesPasswordGet(pageId)
+      .then((saved) => {
+        if (!live) return;
+        setSavedPassword(saved);
+        setPassword(saved ?? "");
+      })
+      .catch(() => live && setPassword(""));
+    return () => {
+      live = false;
+    };
+  }, [protectedPage, pageId, docId]);
+  // Whether the first publish will create the repo (said in the dialog).
+  const updatingPage = !!existing && !asNew;
+  const pagesAccount = updatingPage
+    ? (existing?.account ?? null)
+    : account || null;
+  useEffect(() => {
+    if (!protectedPage || updatingPage) return setPagesRepo(null);
+    let live = true;
+    pagesStatus(pagesAccount)
+      .then((st) => live && setPagesRepo(st))
+      .catch(() => live && setPagesRepo(null));
+    return () => {
+      live = false;
+    };
+  }, [protectedPage, pagesAccount, updatingPage]);
+  const passwordTooShort = protectedPage && password.length < MIN_PASSWORD;
+
   const publish = async () => {
-    if (!doc || !target || busy || inFlight.current) return;
+    if (!doc || !target || busy || inFlight.current || passwordTooShort) return;
     inFlight.current = true;
     localStorage.setItem(LAST_TARGET_KEY, target.id);
     setStatus({ kind: "busy", label: target.label });
@@ -137,12 +220,20 @@ function Publish() {
       const out = await publishDoc(doc, target, {
         asNew,
         linked: withLinked && linked.length > 0,
-        account: target.kind === "gist" ? account || undefined : undefined,
-        onProgress: (detail) => setStatus({ kind: "busy", label: target.label, detail }),
+        account:
+          target.kind === "gist" || target.kind === "pages"
+            ? account || undefined
+            : undefined,
+        password: target.kind === "pages" ? password : undefined,
+        onProgress: (detail) =>
+          setStatus({ kind: "busy", label: target.label, detail }),
       });
       setStatus({ kind: "done", ...out, label: target.label });
     } catch (err) {
-      setStatus({ kind: "error", message: err instanceof Error ? err.message : String(err) });
+      setStatus({
+        kind: "error",
+        message: err instanceof Error ? err.message : String(err),
+      });
     } finally {
       inFlight.current = false;
     }
@@ -153,7 +244,8 @@ function Publish() {
     close();
   };
 
-  const primary = () => (status.kind === "done" ? openAndClose(status.url) : void publish());
+  const primary = () =>
+    status.kind === "done" ? openAndClose(status.url) : void publish();
   publishRef.current = primary;
   openSavedRef.current = () => {
     if (existing && !busy) openAndClose(existing.url);
@@ -190,7 +282,10 @@ function Publish() {
             {targets.map((t) => {
               const rec = records[t.id];
               return (
-                <label key={t.id} className={`publish-target${t.id === selected ? " selected" : ""}`}>
+                <label
+                  key={t.id}
+                  className={`publish-target${t.id === selected ? " selected" : ""}`}
+                >
                   <input
                     type="radio"
                     name="publish-target"
@@ -205,7 +300,12 @@ function Publish() {
                   />
                   <span className="publish-target-label">{t.label}</span>
                   {rec ? (
-                    <a className="publish-target-link" href={rec.url} onClick={link(rec.url)} title={rec.url}>
+                    <a
+                      className="publish-target-link"
+                      href={rec.url}
+                      onClick={link(rec.url)}
+                      title={rec.url}
+                    >
                       published ↗
                     </a>
                   ) : (
@@ -217,37 +317,112 @@ function Publish() {
           </div>
         )}
 
-        {target?.kind === "gist" && accounts && accounts.logins.length > 0 && (
-          <label className="publish-asnew publish-account">
-            Account
-            {existing && !asNew ? (
-              // Only the account that created a gist can update it.
-              <Select
-                value={existing.account ?? ""}
-                options={[{ value: existing.account ?? "", label: existing.account ?? "gh's active account (when it was published)" }]}
-                disabled
-                title="A gist can only be updated by the account that created it"
-              />
-            ) : (
-              <Select
-                value={account}
-                disabled={busy}
-                options={accounts.logins.map((login) => ({
-                  value: login,
-                  label: login === accounts.active ? `${login} (active)` : login,
-                }))}
-                onChange={(value) => {
-                  setAccount(value);
-                  localStorage.setItem(ACCOUNT_KEY, value);
-                }}
-              />
-            )}
-          </label>
+        {(target?.kind === "gist" || protectedPage) &&
+          accounts &&
+          accounts.logins.length > 0 && (
+            <label className="publish-asnew publish-account">
+              Account
+              {existing && !asNew ? (
+                // Only the account that created a gist can update it.
+                <Select
+                  value={existing.account ?? ""}
+                  options={[
+                    {
+                      value: existing.account ?? "",
+                      label:
+                        existing.account ??
+                        "gh's active account (when it was published)",
+                    },
+                  ]}
+                  disabled
+                  title="A gist can only be updated by the account that created it"
+                />
+              ) : (
+                <Select
+                  value={account}
+                  disabled={busy}
+                  options={accounts.logins.map((login) => ({
+                    value: login,
+                    label:
+                      login === accounts.active ? `${login} (active)` : login,
+                  }))}
+                  onChange={(value) => {
+                    setAccount(value);
+                    localStorage.setItem(ACCOUNT_KEY, value);
+                  }}
+                />
+              )}
+            </label>
+          )}
+
+        {protectedPage && (
+          <div className="publish-password">
+            <span className="publish-password-label">Password</span>
+            <input
+              className="remote-prompt-input"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              spellCheck={false}
+              autoComplete="off"
+              disabled={busy}
+              onChange={(event) => setPassword(event.target.value)}
+            />
+            <button
+              className="rb-github-btn"
+              onClick={() => setShowPassword((v) => !v)}
+              disabled={busy}
+            >
+              {showPassword ? "Hide" : "Show"}
+            </button>
+            <button
+              className="rb-github-btn"
+              onClick={() => {
+                setPassword(generatePassword());
+                setShowPassword(true);
+              }}
+              disabled={busy}
+              title="Make a new strong password"
+            >
+              New
+            </button>
+            <CopyButton text={password} tip="Copy password" />
+          </div>
+        )}
+        {protectedPage && passwordTooShort && password && (
+          <p className="publish-status rb-error">
+            Use at least {MIN_PASSWORD} characters: the page is public, only the
+            password protects it.
+          </p>
+        )}
+        {protectedPage && pageId && savedPassword === null && !password && (
+          <p className="publish-status">
+            This page's password isn't saved on this Mac. Enter it, or set a new
+            one.
+          </p>
+        )}
+        {protectedPage &&
+          pageId &&
+          savedPassword &&
+          password !== savedPassword && (
+            <p className="publish-status">
+              Updating will change the password: send readers the new one.
+            </p>
+          )}
+        {protectedPage && pagesRepo && !pagesRepo.exists && (
+          <p className="publish-status">
+            First time: this creates the public repo <b>{pagesRepo.repo}</b> for
+            your encrypted pages. Pages get random names, and nobody can read
+            one without its password.
+          </p>
         )}
 
         {existing && (
           <div className="publish-current">
-            <a href={existing.url} onClick={link(existing.url)} title={existing.url}>
+            <a
+              href={existing.url}
+              onClick={link(existing.url)}
+              title={existing.url}
+            >
               {existing.url.replace(/^https?:\/\//, "")}
             </a>
             <CopyButton text={existing.url} tip="Copy link" />
@@ -273,13 +448,18 @@ function Publish() {
               type="checkbox"
               checked={!!existing.sync}
               disabled={busy}
-              onChange={(event) => setSync(doc, target.id, event.target.checked)}
+              onChange={(event) =>
+                setSync(doc, target.id, event.target.checked)
+              }
             />
-            Keep in sync with GitHub (checked every few minutes while md-viewer is open)
+            Keep in sync with GitHub (checked every few minutes while md-viewer
+            is open)
           </label>
         )}
         {existing?.sync && syncError && (
-          <p className="publish-status rb-error">Couldn't sync with GitHub: {syncError}</p>
+          <p className="publish-status rb-error">
+            Couldn't sync with GitHub: {syncError}
+          </p>
         )}
 
         {linked.length > 0 && (
@@ -293,29 +473,47 @@ function Publish() {
               disabled={busy}
               onChange={(event) => {
                 setWithLinked(event.target.checked);
-                localStorage.setItem(LINKED_KEY, event.target.checked ? "1" : "0");
+                localStorage.setItem(
+                  LINKED_KEY,
+                  event.target.checked ? "1" : "0",
+                );
               }}
             />
-            Also publish {linked.length} linked document{linked.length === 1 ? "" : "s"}, and link to
-            them
+            Also publish {linked.length} linked document
+            {linked.length === 1 ? "" : "s"}, and link to them
           </label>
         )}
 
         {status.kind === "busy" && (
           <p className="publish-status">
-            Publishing to {status.label}…{status.detail ? ` ${status.detail}` : ""}
+            Publishing to {status.label}…
+            {status.detail ? ` ${status.detail}` : ""}
           </p>
         )}
-        {status.kind === "error" && <p className="publish-status rb-error">{status.message}</p>}
+        {status.kind === "error" && (
+          <p className="publish-status rb-error">{status.message}</p>
+        )}
         {status.kind === "done" && (
           <p className="publish-status publish-done">
             {status.updated ? "Updated on" : "Published to"} {status.label}
-            {status.linked > 0 ? `, with ${status.linked} linked document${status.linked === 1 ? "" : "s"}` : ""}
+            {status.linked > 0
+              ? `, with ${status.linked} linked document${status.linked === 1 ? "" : "s"}`
+              : ""}
             . Link copied:{" "}
             <a href={status.url} onClick={link(status.url)}>
               {status.url}
             </a>
           </p>
+        )}
+        {status.kind === "done" && protectedPage && (
+          <div className="publish-current">
+            <span>Password</span>
+            <CopyButton text={password} tip="Copy password" />
+            <span className="publish-when">
+              Live in about a minute. Send the password separately from the
+              link.
+            </span>
+          </div>
         )}
         {status.kind === "done" && status.skipped.length > 0 && (
           <p className="publish-status rb-error">
@@ -332,7 +530,11 @@ function Publish() {
           >
             Edit targets…
           </button>
-          <button className="remote-prompt-cancel" onClick={close} disabled={busy}>
+          <button
+            className="remote-prompt-cancel"
+            onClick={close}
+            disabled={busy}
+          >
             {status.kind === "done" ? "Close" : "Cancel"}
           </button>
           {existing && status.kind !== "done" && (
@@ -349,8 +551,16 @@ function Publish() {
             ref={publishButton}
             className="remote-prompt-open"
             onClick={primary}
-            disabled={!target || busy}
-            data-tip={status.kind === "done" ? "Open in browser · ↩" : existing ? "⌘↩ opens the published page" : undefined}
+            disabled={
+              !target || busy || (status.kind !== "done" && passwordTooShort)
+            }
+            data-tip={
+              status.kind === "done"
+                ? "Open in browser · ↩"
+                : existing
+                  ? "⌘↩ opens the published page"
+                  : undefined
+            }
           >
             {busy
               ? "Publishing…"
@@ -358,7 +568,9 @@ function Publish() {
                 ? "Open ↗"
                 : existing && !asNew
                   ? "Update"
-                  : "Publish"}
+                  : protectedPage && pagesRepo && !pagesRepo.exists
+                    ? "Create & publish"
+                    : "Publish"}
           </button>
         </div>
       </div>

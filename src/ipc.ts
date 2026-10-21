@@ -188,7 +188,7 @@ export interface PublishStep {
 export interface PublishTarget {
   id: string;
   label: string;
-  kind: "mcp" | "gist" | "command";
+  kind: "mcp" | "gist" | "command" | "pages";
   create: PublishStep[];
   update: PublishStep[];
   urlTemplate?: string;
@@ -261,6 +261,26 @@ export function publishConfigRead(): Promise<string> {
 /** Save publish.json; new or changed commands need a native yes first. */
 export function publishConfigWrite(text: string): Promise<void> {
   return invoke<void>("publish_config_write", { text });
+}
+
+// --- password-protected pages (see src-tauri/src/pages.rs) ------------------
+
+/** The account's encrypted-pages repo, and whether it exists yet. */
+export function pagesStatus(account: string | null): Promise<{ repo: string; exists: boolean }> {
+  return invoke("pages_status", { account });
+}
+
+/** Upload an encrypted page as `<id>.html` (creating the repo on first use). */
+export function publishPages(file: string, id: string, account: string | null): Promise<{ id: string; url: string }> {
+  return invoke("publish_pages", { file, id, account });
+}
+
+export function pagesPasswordGet(id: string): Promise<string | null> {
+  return invoke("pages_password_get", { id });
+}
+
+export function pagesPasswordSet(id: string, password: string): Promise<void> {
+  return invoke("pages_password_set", { id, password });
 }
 
 /** Logged-in gh accounts (for choosing which one owns a gist). */

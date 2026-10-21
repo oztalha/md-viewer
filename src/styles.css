@@ -2934,3 +2934,21 @@ html.no-caret-animation .editor .cm-cursor {
   right: 10px;
   pointer-events: none;
 }
+
+/* Publish: password row for protected pages */
+.publish-password {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.publish-password-label {
+  flex: none;
+  font-size: 12px;
+  color: var(--fg-muted);
+}
+.publish-password .remote-prompt-input {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 9px;
+  font-size: 12.5px;
+}

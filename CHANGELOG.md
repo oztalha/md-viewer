@@ -10,6 +10,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   published; publishing again creates a new gist.
 
 ### Added
+- **Password-protected pages:** Publish… → *Password-protected page* encrypts
+  the rendered document in the app (AES-256-GCM, key from the password) and
+  publishes it to your own GitHub Pages; readers type the password to read it.
+  A strong password is generated for you and kept in the Keychain, so updates
+  keep the same link and password. The first publish creates the repo
+  `md-viewer-pages`; nothing else to set up.
 - **GitHub repos as a remote source:** paste a github.com link (repo, folder
   or file) into Open Remote… (⇧⌘O), pass it to `mdv`, or type
   `github:owner/repo@branch` as the host. Folders browse like an SSH host and
