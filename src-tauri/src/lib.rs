@@ -209,6 +209,28 @@ async fn list_remote(host: String, path: String) -> Result<RemoteListing, String
     .map_err(|e| e.to_string())?
 }
 
+/// Create a remote folder and any missing parents (`mkdir -p`), for saving into
+/// a folder that doesn't exist yet.
+#[tauri::command]
+async fn make_remote_dir(host: String, path: String) -> Result<(), String> {
+    validate_host(&host)?;
+    tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
+        let output = ssh_base()
+            .arg("--")
+            .arg(&host)
+            .arg(format!("mkdir -p -- {}", shell_quote(&path)))
+            .output()
+            .map_err(|e| format!("Could not run ssh: {e}"))?;
+        if !output.status.success() {
+            let err = String::from_utf8_lossy(&output.stderr);
+            return Err(format!("Could not create {host}:{path}\n{}", err.trim()));
+        }
+        Ok(())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Copy local files or folders into a remote directory (drag-and-drop onto the
 /// remote browser). Uses the system `scp`, so `~/.ssh/config` (aliases, keys,
 /// ProxyCommand) applies, and binary files are fine.
@@ -832,6 +854,7 @@ pub fn run() {
             publish::publish_command,
             publish::publish_step_command,
             write_remote,
+            make_remote_dir,
             allow_asset,
             path_exists,
             log_error,

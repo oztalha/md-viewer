@@ -5,6 +5,13 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Save into a new remote folder:** in **Save to Remote…**, typing a folder
+  that doesn't exist yet (e.g. `~/docs/`) offers **Create Folder** instead of
+  an error, and **Save** creates it (and any missing parents) before saving.
+  A name with folders in it (`notes/today.md`) creates those too, and a name
+  ending in `/` opens that folder.
+
 ## [0.14.1] — 2026-10-20
 
 ### Changed

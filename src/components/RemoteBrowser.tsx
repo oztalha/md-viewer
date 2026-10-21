@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useStore } from "../store";
 import { useSettings } from "../settings";
-import { confirmOverwrite, confirmReplaceRemote, copyToClipboard, downloadRemote, listRemoteDir, pickDownloadPath, uploadRemote } from "../ipc";
+import {
+  confirmOverwrite,
+  confirmReplaceRemote,
+  copyToClipboard,
+  downloadRemote,
+  listRemoteDir,
+  makeRemoteDir,
+  pickDownloadPath,
+  uploadRemote,
+} from "../ipc";
 import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { CopyButton } from "./CopyButton";
@@ -88,6 +97,8 @@ function Browser({ mode }: { mode: "open" | "save" }) {
   const [listing, setListing] = useState<RemoteListing | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // A folder that doesn't exist (yet): offered to create, and Save creates it.
+  const [missing, setMissing] = useState<string | null>(null);
   const [showHidden, setShowHidden] = useState(false);
   const [fileName, setFileName] = useState(initial.name);
   const request = useRef(0);
@@ -106,6 +117,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     const id = ++request.current;
     setLoading(true);
     setError(null);
+    setMissing(null);
     try {
       const result = await listRemoteDir(h, dir);
       if (id !== request.current) return;
@@ -124,6 +136,12 @@ function Browser({ mode }: { mode: "open" | "save" }) {
       if (id !== request.current) return false;
       // `cd` into a file: the caller decides what to do with it (download).
       if (/not a directory/i.test(String(err))) return true;
+      if (/no such file or directory/i.test(String(err))) {
+        setListing(null);
+        setMissing(dir);
+        if (!pathEdited.current) setPathDraft(dir);
+        return false;
+      }
       setError(String(err));
     } finally {
       if (id === request.current) setLoading(false);
@@ -184,10 +202,43 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     void useStore.getState().openRemote(h, path);
   };
 
+  // `mkdir -p` the missing folder, then show it.
+  const createFolder = async () => {
+    if (!missing) return false;
+    setUpload(`Creating ${host}:${missing}…`);
+    try {
+      await makeRemoteDir(host, missing);
+    } catch (err) {
+      setUpload(null);
+      setError(String(err));
+      return false;
+    }
+    setUpload(null);
+    await load(host, missing);
+    return true;
+  };
+
   const save = async (name = fileName.trim()) => {
-    if (!listing || !name) return;
-    const target = name.startsWith("/") || name.startsWith("~") ? name : joinPath(listing.dir, name);
-    const exists = listing.entries.some((e) => !e.isDir && e.name === name);
+    const dir = listing?.dir ?? missing;
+    if (!dir || !name) return;
+    const target = name.startsWith("/") || name.startsWith("~") ? name : joinPath(dir, name);
+    // A folder typed as the name: go there rather than save over it.
+    if (name.endsWith("/")) {
+      setFileName(initial.name);
+      void load(host, target);
+      return;
+    }
+    if (!listing && !(await createFolder())) return;
+    // A name with folders in it ("notes/today.md"): create any that are missing.
+    if (name.includes("/")) {
+      try {
+        await makeRemoteDir(host, parentOf(target));
+      } catch (err) {
+        setError(String(err));
+        return;
+      }
+    }
+    const exists = listing?.entries.some((e) => !e.isDir && e.name === name);
     if (exists && !(await confirmOverwrite(name))) return;
     const s = useStore.getState();
     if (await s.saveToRemote(s.activeId, host, target)) close();
@@ -357,6 +408,16 @@ function Browser({ mode }: { mode: "open" | "save" }) {
         <div className="rb-list" aria-busy={loading}>
           {error ? (
             <div className="rb-status rb-error">{error}</div>
+          ) : missing ? (
+            <div className="rb-status">
+              <p className="rb-missing">
+                {host}:{missing} doesn't exist yet.
+                {mode === "save" ? " Save will create it." : ""}
+              </p>
+              <button className="rb-create" onClick={() => void createFolder()}>
+                Create Folder
+              </button>
+            </div>
           ) : !listing ? (
             <div className="rb-status">Connecting…</div>
           ) : (
@@ -434,7 +495,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
             <button
               className="remote-prompt-open"
               onClick={() => void save()}
-              disabled={!listing || !fileName.trim()}
+              disabled={!(listing || missing) || !fileName.trim()}
             >
               Save
             </button>

@@ -1901,6 +1901,21 @@ html.no-caret-animation .editor .cm-cursor {
   color: var(--fg-muted);
   white-space: pre-wrap;
 }
+.rb-missing {
+  margin: 0 0 10px;
+}
+.rb-create {
+  padding: 4px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--bg-elevated);
+  color: var(--fg);
+  font: inherit;
+  cursor: default;
+}
+.rb-create:hover {
+  border-color: var(--accent);
+}
 .rb-error {
   color: #e5534b;
   font-family: var(--font-mono);

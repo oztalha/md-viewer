@@ -66,6 +66,11 @@ export function listRemoteDir(host: string, path: string): Promise<RemoteListing
   return invoke<RemoteListing>("list_remote", { host, path });
 }
 
+/** Create a remote folder and any missing parents (`mkdir -p`). */
+export function makeRemoteDir(host: string, path: string): Promise<void> {
+  return invoke<void>("make_remote_dir", { host, path });
+}
+
 /** Write a remote file over SSH (atomic on the remote side). */
 export function writeRemoteFile(host: string, path: string, contents: string): Promise<void> {
   return invoke<void>("write_remote", { host, path, contents });
