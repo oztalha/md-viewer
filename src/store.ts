@@ -100,6 +100,8 @@ interface AppState {
   publishTick: number;
   /** Failed GitHub syncs, by `publishErrorKey(doc key, target id)`. */
   publishErrors: Record<string, string>;
+  /** Whether the publish targets editor is showing. */
+  targetsEditorOpen: boolean;
   /** Preview find bar (⌘F outside the editor). */
   findOpen: boolean;
   /** Bumped by ⌘F while the bar is open, to refocus its field. */
@@ -131,6 +133,7 @@ interface AppState {
   setPublishOpen(open: boolean): void;
   bumpPublished(): void;
   setPublishError(key: string, message: string | null): void;
+  setTargetsEditorOpen(open: boolean): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
   setSidebarTab(tab: "files" | "outline"): void;
@@ -216,6 +219,7 @@ export const useStore = create<AppState>()((set, get) => ({
   publishOpen: false,
   publishTick: 0,
   publishErrors: {},
+  targetsEditorOpen: false,
   changedOnDisk: {},
   findOpen: false,
   findFocusTick: 0,
@@ -309,6 +313,10 @@ export const useStore = create<AppState>()((set, get) => ({
     if (message === null) delete next[key];
     else next[key] = message;
     set({ publishErrors: next });
+  },
+
+  setTargetsEditorOpen(open) {
+    if (get().targetsEditorOpen !== open) set({ targetsEditorOpen: open });
   },
 
   setPublishOpen(open) {

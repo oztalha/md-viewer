@@ -2410,42 +2410,6 @@ html.no-caret-animation .editor .cm-cursor {
   font-size: 12px;
   color: var(--fg-muted);
 }
-/* Drawn in theme colors: the native control stays light in dark mode. */
-.publish-select {
-  position: relative;
-  display: inline-flex;
-}
-.publish-select select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 4px 26px 4px 9px;
-  font: inherit;
-  font-size: 12.5px;
-  color: var(--fg);
-  background: var(--bg-secondary);
-  border: 1px solid var(--border);
-  border-radius: 7px;
-}
-.publish-select select:focus {
-  outline: none;
-  border-color: var(--accent);
-}
-.publish-select select:disabled {
-  color: var(--fg-muted);
-}
-.publish-select::after {
-  content: "";
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  width: 5px;
-  height: 5px;
-  margin-top: -4px;
-  border-right: 1.5px solid var(--fg-muted);
-  border-bottom: 1.5px solid var(--fg-muted);
-  transform: rotate(45deg);
-  pointer-events: none;
-}
 .publish-status {
   margin: 0;
   font-size: 12.5px;
@@ -2794,4 +2758,179 @@ html.no-caret-animation .editor .cm-cursor {
   background: var(--accent-soft);
   border-radius: 4px;
   transition: background 0.8s ease-out;
+}
+
+/* Publish targets editor */
+.targets-editor {
+  width: min(760px, calc(100vw - 48px));
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.te-body {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  gap: 14px;
+  height: min(460px, calc(100vh - 220px));
+}
+.te-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow-y: auto;
+  padding-right: 10px;
+  border-right: 1px solid var(--border);
+}
+.te-item,
+.te-add,
+.te-example,
+.te-remove {
+  all: unset;
+  cursor: default;
+}
+.te-item,
+.te-add {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 9px;
+  border-radius: 7px;
+  font-size: 12.5px;
+}
+.te-item:hover,
+.te-add:hover {
+  background: var(--code-bg);
+}
+.te-item.selected,
+.te-add.selected {
+  background: var(--selection);
+}
+.te-item-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.te-item-kind {
+  flex: none;
+  font-size: 10.5px;
+  color: var(--fg-faint);
+}
+.te-add {
+  margin-top: 4px;
+  color: var(--accent);
+}
+.te-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.te-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.te-field-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--fg-muted);
+}
+.te-field .remote-prompt-input {
+  font-size: 12.5px;
+  padding: 6px 9px;
+}
+.te-code {
+  resize: vertical;
+  line-height: 1.45;
+}
+.te-hint,
+.te-help {
+  margin: 0;
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.te-example {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.te-example:hover {
+  background: var(--code-bg);
+}
+.te-example-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+.te-example-about {
+  font-size: 11.5px;
+  color: var(--fg-muted);
+}
+.te-server {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.te-server-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+.te-remove {
+  align-self: flex-start;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #e5534b;
+}
+.te-remove:hover {
+  text-decoration: underline;
+}
+
+/* Dropdown (components/Select.tsx): a native select in theme colors. */
+.select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  max-width: 100%;
+  color: var(--fg-muted);
+}
+.select select {
+  appearance: none;
+  -webkit-appearance: none;
+  min-width: 140px;
+  max-width: 100%;
+  height: 28px;
+  padding: 0 28px 0 10px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--fg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  text-overflow: ellipsis;
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+.select select:hover:not(:disabled) {
+  background: var(--code-bg);
+}
+.select select:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.select.disabled select {
+  color: var(--fg-muted);
+  opacity: 0.75;
+}
+.select-chevron {
+  position: absolute;
+  right: 10px;
+  pointer-events: none;
 }

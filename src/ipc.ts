@@ -253,6 +253,16 @@ export function gistExists(id: string, account: string | null): Promise<boolean>
   return invoke("gist_exists", { id, account });
 }
 
+/** publish.json's text, for the in-app targets editor. */
+export function publishConfigRead(): Promise<string> {
+  return invoke<string>("publish_config_read");
+}
+
+/** Save publish.json; new or changed commands need a native yes first. */
+export function publishConfigWrite(text: string): Promise<void> {
+  return invoke<void>("publish_config_write", { text });
+}
+
 /** Logged-in gh accounts (for choosing which one owns a gist). */
 export function ghAccounts(): Promise<{ logins: string[]; active: string | null }> {
   return invoke("gh_accounts");

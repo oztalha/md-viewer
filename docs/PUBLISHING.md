@@ -33,7 +33,10 @@ you used last, else gh's active account). Updates always use the account that
 created the gist, since only it can change it.
 
 Other places are added in a config file, `~/.config/md-viewer/publish.json`.
-**Edit targets…** in the Publish dialog creates and opens it.
+**Edit targets…** in the Publish dialog edits it in the app: pick a target to
+change it, or **+ Add a target** to start from an example (secret or public
+gist, your web server over `scp`, a rendered HTML page, cloud storage with
+`rclone`, an MCP server). **Open JSON file…** there opens the file itself.
 
 ## The config file
 
@@ -120,6 +123,9 @@ Export as HTML) instead of the markdown.
 
 - Only commands and servers from this file ever run. Documents, links and
   remote files can't supply them.
+- Saving a new or changed command or MCP server from Edit targets… asks first
+  in a native macOS dialog that lists exactly what will run; the app's web
+  view can't show or answer that dialog itself.
 - A target can only call the tools listed in its own steps.
 - Each tool call times out after two minutes. Errors from the server (e.g. an
   expired login) are shown in the dialog.

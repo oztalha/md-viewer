@@ -7,6 +7,7 @@ import { SettingsPanel } from "./components/SettingsPanel";
 import { RemoteBrowser } from "./components/RemoteBrowser";
 import { AboutDialog } from "./components/AboutDialog";
 import { PublishDialog } from "./components/PublishDialog";
+import { TargetsEditor } from "./components/TargetsEditor";
 import { AnnotationLayer } from "./components/AnnotationLayer";
 
 export default function App() {
@@ -44,6 +45,7 @@ export default function App() {
       <RemoteBrowser />
       <AboutDialog />
       <PublishDialog />
+      <TargetsEditor />
       <AnnotationLayer />
     </div>
   );

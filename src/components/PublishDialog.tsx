@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
-import { editPublishConfig, ghAccounts, publishTargets } from "../ipc";
+import { ghAccounts, publishTargets } from "../ipc";
 import type { PublishTarget } from "../ipc";
 import { isGithubDoc, linkedDocs, publishDoc, publishErrorKey, publishedFor, setSync, verifyPublished } from "../publish";
 import { keyForDoc } from "../annotations";
 import { displayTitle } from "../types";
 import { CopyButton } from "./CopyButton";
+import { Select } from "./Select";
 
 const LAST_TARGET_KEY = "publishLastTarget";
 const LINKED_KEY = "publishLinked";
@@ -83,9 +84,16 @@ function Publish() {
   const inFlight = useRef(false);
   const publishButton = useRef<HTMLButtonElement | null>(null);
 
+  // Targets (re)load on open and after the targets editor closes.
+  const editingTargets = useStore((s) => s.targetsEditorOpen);
   useEffect(() => {
-    void load();
+    if (!editingTargets) void load();
+  }, [editingTargets]);
+
+  useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      // The targets editor is on top and handles its own keys.
+      if (useStore.getState().targetsEditorOpen) return;
       if (event.key === "Escape") {
         event.stopPropagation();
         useStore.getState().setPublishOpen(false);
@@ -212,36 +220,28 @@ function Publish() {
         {target?.kind === "gist" && accounts && accounts.logins.length > 0 && (
           <label className="publish-asnew publish-account">
             Account
-            <span className="publish-select">
-              {existing && !asNew ? (
-                // Only the account that created a gist can update it.
-                <select
-                  value={existing.account ?? ""}
-                  disabled
-                  title="A gist can only be updated by the account that created it"
-                >
-                  <option value={existing.account ?? ""}>
-                    {existing.account ?? "gh's active account (when it was published)"}
-                  </option>
-                </select>
-              ) : (
-                <select
-                  value={account}
-                  disabled={busy}
-                  onChange={(event) => {
-                    setAccount(event.target.value);
-                    localStorage.setItem(ACCOUNT_KEY, event.target.value);
-                  }}
-                >
-                  {accounts.logins.map((login) => (
-                    <option key={login} value={login}>
-                      {login}
-                      {login === accounts.active ? " (active)" : ""}
-                    </option>
-                  ))}
-                </select>
-              )}
-            </span>
+            {existing && !asNew ? (
+              // Only the account that created a gist can update it.
+              <Select
+                value={existing.account ?? ""}
+                options={[{ value: existing.account ?? "", label: existing.account ?? "gh's active account (when it was published)" }]}
+                disabled
+                title="A gist can only be updated by the account that created it"
+              />
+            ) : (
+              <Select
+                value={account}
+                disabled={busy}
+                options={accounts.logins.map((login) => ({
+                  value: login,
+                  label: login === accounts.active ? `${login} (active)` : login,
+                }))}
+                onChange={(value) => {
+                  setAccount(value);
+                  localStorage.setItem(ACCOUNT_KEY, value);
+                }}
+              />
+            )}
           </label>
         )}
 
@@ -327,7 +327,7 @@ function Publish() {
         <div className="remote-prompt-actions">
           <button
             className="publish-edit"
-            onClick={() => void editPublishConfig().then(() => setTimeout(load, 500))}
+            onClick={() => useStore.getState().setTargetsEditorOpen(true)}
             disabled={busy}
           >
             Edit targets…

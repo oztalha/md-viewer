@@ -180,6 +180,84 @@ pub fn publish_edit_config() -> Result<String, String> {
     Ok(path.display().to_string())
 }
 
+/// The config file's text for the in-app editor (the starter config if there's
+/// none yet). Unlike `publish_targets`, this includes commands: the editor
+/// shows them, and saving new ones needs the user's native confirmation.
+#[tauri::command]
+pub fn publish_config_read() -> Result<String, String> {
+    match std::fs::read_to_string(config_path()) {
+        Ok(text) => Ok(text),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(STARTER_CONFIG.to_string()),
+        Err(e) => Err(format!("Could not read {}: {e}", config_path().display())),
+    }
+}
+
+/// Everything in a config that runs a program, one readable line each.
+fn executables(config: &Config) -> std::collections::BTreeSet<String> {
+    let mut out = std::collections::BTreeSet::new();
+    for (name, server) in &config.servers {
+        let mut env: Vec<_> = server.env.iter().map(|(k, v)| format!("{k}={v}")).collect();
+        env.sort();
+        let env = if env.is_empty() { String::new() } else { format!("  (env: {})", env.join(" ")) };
+        out.insert(format!("MCP server \"{name}\": {} {}{env}", server.command, server.args.join(" ")).trim_end().to_string());
+    }
+    for target in &config.targets {
+        if let Some(command) = &target.command {
+            out.insert(format!("Target \"{}\": {command}", target.id));
+        }
+        for step in target.create.iter().chain(target.update.iter()) {
+            if let Some(command) = &step.command {
+                out.insert(format!("Target \"{}\" step: {command}", target.id));
+            }
+        }
+    }
+    out
+}
+
+/// Commands in `new` that `old` doesn't already have, exactly.
+fn new_executables(old: &Config, new: &Config) -> Vec<String> {
+    let known = executables(old);
+    executables(new).into_iter().filter(|e| !known.contains(e)).collect()
+}
+
+/// Save the config from the in-app editor. Adding or changing anything that
+/// runs a program needs a yes in a native dialog, which the webview can't
+/// show or answer itself, so documents still can't smuggle in commands.
+#[tauri::command]
+pub async fn publish_config_write(app: tauri::AppHandle, text: String) -> Result<(), String> {
+    use tauri_plugin_dialog::{DialogExt, MessageDialogButtons, MessageDialogKind};
+    let new: Config = serde_json::from_str(&text).map_err(|e| format!("Not valid: {e}"))?;
+    let path = config_path();
+    let old = match std::fs::read_to_string(&path) {
+        Ok(old) => serde_json::from_str::<Config>(&old).unwrap_or_default(),
+        Err(_) => Config::default(),
+    };
+    let added = new_executables(&old, &new);
+    if !added.is_empty() {
+        let message = format!(
+            "These will run on your Mac when you publish:\n\n{}\n\nOnly allow commands you trust.",
+            added.join("\n")
+        );
+        let allowed = tauri::async_runtime::spawn_blocking(move || {
+            app.dialog()
+                .message(message)
+                .title("Allow new publish commands?")
+                .kind(MessageDialogKind::Warning)
+                .buttons(MessageDialogButtons::OkCancelCustom("Allow".into(), "Cancel".into()))
+                .blocking_show()
+        })
+        .await
+        .map_err(|e| e.to_string())?;
+        if !allowed {
+            return Err("Not saved: the new commands weren't allowed.".into());
+        }
+    }
+    if let Some(dir) = path.parent() {
+        std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
+    }
+    std::fs::write(&path, text).map_err(|e| format!("Could not write {}: {e}", path.display()))
+}
+
 /// Write the content to publish into a temp file whose name some services use
 /// as the title / content type (e.g. `Notes.md`).
 #[tauri::command]
@@ -644,6 +722,22 @@ pub async fn publish_step_command(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn new_commands_need_confirmation() {
+        let parse = |s: &str| serde_json::from_str::<super::Config>(s).unwrap();
+        let old = parse(r#"{"servers":{"n":{"command":"notes-mcp"}},"targets":[{"id":"a","label":"A","command":"up \"$MDV_FILE\""}]}"#);
+        // Relabeling, reordering or adding a gist runs nothing new.
+        let same = parse(r#"{"targets":[{"id":"g","label":"G","kind":"gist"},{"id":"a","label":"Renamed","command":"up \"$MDV_FILE\""}],"servers":{"n":{"command":"notes-mcp"}}}"#);
+        assert!(super::new_executables(&old, &same).is_empty());
+        // A changed command, new args/env, or a new step command all count.
+        let changed = parse(r#"{"servers":{"n":{"command":"notes-mcp","args":["--x"],"env":{"K":"v"}}},"targets":[{"id":"a","label":"A","command":"evil"},{"id":"m","label":"M","server":"n","create":[{"command":"also-evil"}]}]}"#);
+        let added = super::new_executables(&old, &changed);
+        assert_eq!(added.len(), 3, "{added:?}");
+        assert!(added.iter().any(|l| l.contains("evil") && l.starts_with("Target \"a\"")));
+        assert!(added.iter().any(|l| l.contains("--x") && l.contains("K=v")));
+        assert!(added.iter().any(|l| l.contains("also-evil")));
+    }
+
     use super::*;
 
     #[test]

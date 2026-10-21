@@ -849,6 +849,8 @@ pub fn run() {
             download_remote,
             publish::publish_targets,
             publish::publish_edit_config,
+            publish::publish_config_read,
+            publish::publish_config_write,
             publish::publish_write_temp,
             publish::publish_mcp_open,
             publish::publish_mcp_call,

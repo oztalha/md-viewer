@@ -5,6 +5,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- A document whose gist was deleted on github.com no longer shows as
+  published; publishing again creates a new gist.
+
 ### Added
 - **GitHub repos as a remote source:** paste a github.com link (repo, folder
   or file) into Open Remote… (⇧⌘O), pass it to `mdv`, or type
@@ -15,6 +19,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - **Choose the gist account:** with several `gh` accounts logged in, the
   Publish dialog's Account menu picks which one owns a new gist. Updates and
   syncs keep using the account that created it.
+- **Edit targets in the app:** Edit targets… opens an editor with examples
+  (gists, your web server, a rendered page, cloud storage, an MCP server)
+  instead of the JSON file. New or changed commands need a yes in a native
+  dialog that shows exactly what will run.
 - **Open all .md files:** the remote browser can open every markdown file in
   the folder it shows, each in its own tab.
 - **Keep a published copy in sync with GitHub:** for a document opened from

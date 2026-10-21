@@ -83,7 +83,8 @@ for what's new in each version.
 **Publishing**
 - **Publish…** (⇧⌘P) shares a document as a GitHub Gist, or to any place you add
   through a local MCP server or a command; republishing updates the same link.
-  Documents opened from GitHub can stay in sync with the repo.
+  Documents opened from GitHub can stay in sync with the repo. Add places
+  under **Edit targets…**, starting from examples.
   See [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 ![Publishing a document: pick a target, and the link is copied](docs/publish.png)
