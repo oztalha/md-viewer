@@ -5,6 +5,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- A **Published documents** button in the title bar, next to Publish (⌘P).
+
 ## [0.16.3] — 2026-10-21
 
 ### Changed
