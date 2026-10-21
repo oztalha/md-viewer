@@ -71,6 +71,11 @@ export function githubResolveUrl(url: string): Promise<{ host: string; path: str
   return invoke("github_resolve_url", { url });
 }
 
+/** Create a remote folder and any missing parents (`mkdir -p`). */
+export function makeRemoteDir(host: string, path: string): Promise<void> {
+  return invoke<void>("make_remote_dir", { host, path });
+}
+
 /** Write a remote file over SSH (atomic on the remote side). */
 export function writeRemoteFile(host: string, path: string, contents: string): Promise<void> {
   return invoke<void>("write_remote", { host, path, contents });

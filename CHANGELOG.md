@@ -30,6 +30,15 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   it checks every few minutes and republishes when the file changed on GitHub,
   so the shared link follows the repo no matter who pushes.
 
+## [0.15.0] — 2026-10-21
+
+### Added
+- **Save into a new remote folder:** in **Save to Remote…**, typing a folder
+  that doesn't exist yet (e.g. `~/docs/`) offers **Create Folder** instead of
+  an error, and **Save** creates it (and any missing parents) before saving.
+  A name with folders in it (`notes/today.md`) creates those too, and a name
+  ending in `/` opens that folder.
+
 ## [0.14.1] — 2026-10-20
 
 ### Changed
@@ -387,6 +396,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.15.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.15.0
 [0.14.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.1
 [0.14.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.0
 [0.13.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.13.1
