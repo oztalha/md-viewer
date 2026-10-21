@@ -35,7 +35,7 @@ body {
   font: 16px/1.65 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
-main { max-width: 46rem; margin: 0 auto; padding: 48px 28px 96px; }
+main { max-width: 64rem; margin: 0 auto; padding: 48px 28px 96px; }
 h1, h2, h3, h4, h5, h6 { font-weight: 700; line-height: 1.3; letter-spacing: -.01em; margin: 1.4em 0 .5em; }
 h1 { font-size: 1.9em; letter-spacing: -.02em; } h2 { font-size: 1.5em; } h3 { font-size: 1.22em; }
 h1:first-child, h2:first-child { margin-top: 0; }
@@ -46,8 +46,9 @@ pre { background: var(--code-bg); border-radius: 8px; padding: 14px 16px; overfl
 pre code { background: none; padding: 0; font-size: .85em; }
 blockquote { margin: .8em 0; padding: .1em 0 .1em 1em; border-left: 3px solid var(--fg-muted); color: var(--fg-muted); }
 ul, ol { padding-left: 1.5em; } li { margin: .25em 0; }
-table { border-collapse: collapse; margin: 1em 0; width: 100%; }
-th, td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; }
+/* Wide tables scroll inside themselves instead of widening the page. */
+table { border-collapse: collapse; margin: 1em 0; display: block; max-width: 100%; overflow-x: auto; }
+th, td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; overflow-wrap: anywhere; min-width: 6em; }
 th { background: var(--bg-secondary); font-weight: 600; }
 hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 img { max-width: 100%; border-radius: 6px; }
