@@ -105,6 +105,9 @@ bar. **Save to Remote…** (⇧⌘S) uses the same browser with a filename field
 that the document is remote, so ⌘S writes back to that host. The browser
 remembers your last host and the last folder on each host.
 
+**Open all .md files** at the bottom of the browser opens every markdown file
+in the folder you're looking at (not subfolders), each in its own tab.
+
 **Copying files over:** with the remote browser open on a folder, drag files or
 folders from Finder onto it. They're copied there with `scp` (so your SSH
 config applies, and any file type works); if a name already exists, it asks
@@ -129,9 +132,10 @@ mdv <your-ssh-alias>:/abs/path/to/file.md
 
 Append `:LINE` (or `&line=33` to the link) to open at a line.
 
-**GitHub repos** work as a read-only remote too. Paste a github.com link to a
-repo, folder or file into Open Remote… (or pass it to `mdv`), or type
-`github:owner/repo@branch` as the host. Private repos work through your
+**GitHub repos** work as a read-only remote too. In Open Remote…, click
+**Open from GitHub…** and paste a github.com link to a repo, folder or file,
+or type `owner/repo` (`owner/repo@branch` for another branch). Links also work
+in the path bar and with `mdv`, and `github:owner/repo@branch` works as a host. Private repos work through your
 [`gh`](https://cli.github.com) login; if the active account can't see a repo,
 md-viewer tries your other logged-in `gh` accounts. To share a file with
 people who can't see the repo, publish it and turn on *Keep in sync with

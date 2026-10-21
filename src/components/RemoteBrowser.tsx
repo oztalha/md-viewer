@@ -12,6 +12,7 @@ import { basename, displayTitle, isCodePath } from "../types";
 const HOST_KEY = "remoteBrowserHost";
 const dirKey = (host: string) => `remoteBrowserDir:${host}`;
 const DOC_RE = /\.(md|markdown|mdown|mkdn|mkd|txt|csv|tsv|json|jsonl|ndjson|svg|png|jpe?g|gif|webp|bmp|ico|avif)$/i;
+const MARKDOWN_RE = /\.(md|markdown|mdown|mkdn|mkd)$/i;
 /** Files that can't be opened as text: clicking one downloads it instead. */
 const BINARY_RE =
   /\.(zip|gz|tgz|bz2|xz|zst|7z|rar|tar|jar|war|whl|dmg|pkg|iso|bin|exe|so|dylib|o|a|class|pyc|heic|tiff?|pdf|docx?|xlsx?|pptx?|mp3|mp4|mov|wav|avi|mkv|parquet|db|sqlite)$/i;
@@ -154,7 +155,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
   }, []);
 
   // A pasted github.com link: browse its folder, or open the file it points at.
-  const goToGithubUrl = async (url: string) => {
+  const goToGithubUrl = async (url: string): Promise<boolean> => {
     try {
       const { host: h, path, isDir } = await githubResolveUrl(url);
       setHost(h);
@@ -165,9 +166,32 @@ function Browser({ mode }: { mode: "open" | "save" }) {
         setFileName(basename(path));
         void load(h, parentOf(path));
       }
+      return true;
     } catch (err) {
       setError(String(err));
+      return false;
     }
+  };
+
+  // "Open from GitHub…": a link, or owner/repo with an optional @branch.
+  const [githubOpen, setGithubOpen] = useState(false);
+  const [githubDraft, setGithubDraft] = useState("");
+  const submitGithub = async () => {
+    const text = githubDraft.trim();
+    const short = /^([\w.-]+\/[\w.-]+)(?:@(.+))?$/.exec(text);
+    let ok: boolean;
+    if (short?.[2]) {
+      const h = `github:${short[1]}@${short[2]}`;
+      ok = isGithubHost(h);
+      if (ok) switchHost(h);
+      else setError(`Not a valid GitHub repo and branch: ${text}`);
+    } else if (short || isGithubUrl(text)) {
+      ok = await goToGithubUrl(short ? `https://github.com/${short[1]}` : text);
+    } else {
+      setError("Paste a github.com link, or type owner/repo (add @branch for another branch).");
+      ok = false;
+    }
+    if (ok) setGithubOpen(false);
   };
 
   const switchHost = (next: string) => {
@@ -292,6 +316,17 @@ function Browser({ mode }: { mode: "open" | "save" }) {
 
   const entries = (listing?.entries ?? []).filter((e) => showHidden || !e.name.startsWith("."));
   const dir = listing?.dir ?? null;
+  // Markdown files in this folder (not subfolders), for "Open all".
+  const markdownHere = dir ? entries.filter((e) => !e.isDir && MARKDOWN_RE.test(e.name)) : [];
+  const openAllMarkdown = () => {
+    if (!dir) return;
+    const h = host;
+    const paths = markdownHere.map((e) => joinPath(dir, e.name));
+    close();
+    void (async () => {
+      for (const path of paths) await useStore.getState().openRemote(h, path);
+    })();
+  };
 
   return (
     <div className="settings-backdrop" onClick={close}>
@@ -309,6 +344,38 @@ function Browser({ mode }: { mode: "open" | "save" }) {
             Hidden files
           </label>
         </div>
+
+        {mode === "open" && !githubOpen && (
+          <button className="rb-github-btn" onClick={() => setGithubOpen(true)}>
+            Open from GitHub…
+          </button>
+        )}
+        {githubOpen && (
+          <div className="rb-location">
+            <input
+              className="remote-prompt-input rb-path"
+              placeholder="Paste a GitHub link, or owner/repo (owner/repo@branch for another branch)"
+              value={githubDraft}
+              spellCheck={false}
+              autoCapitalize="off"
+              autoCorrect="off"
+              autoFocus
+              onChange={(event) => setGithubDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void submitGithub();
+                }
+              }}
+            />
+            <button className="rb-github-btn" onClick={() => void submitGithub()}>
+              Open
+            </button>
+            <button className="rb-github-btn" onClick={() => setGithubOpen(false)}>
+              Cancel
+            </button>
+          </div>
+        )}
 
         <div className="rb-location">
           <input
@@ -452,11 +519,21 @@ function Browser({ mode }: { mode: "open" | "save" }) {
 
         <div className="remote-prompt-actions">
           <span className="rb-where" title={dir ? `${host}:${dir}` : ""}>
-            {upload ?? (dir ? `${host}:${dir} · drop files here to copy them in` : "")}
+            {upload ??
+              (dir
+                ? isGithubHost(host)
+                  ? `${host}:${dir}`
+                  : `${host}:${dir} · drop files here to copy them in`
+                : "")}
           </span>
           <button className="remote-prompt-cancel" onClick={close}>
             Cancel
           </button>
+          {mode === "open" && markdownHere.length > 0 && (
+            <button className="remote-prompt-open" onClick={openAllMarkdown}>
+              Open all {markdownHere.length} .md file{markdownHere.length === 1 ? "" : "s"}
+            </button>
+          )}
           {mode === "save" && (
             <button
               className="remote-prompt-open"

@@ -11,6 +11,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   `github:owner/repo@branch` as the host. Folders browse like an SSH host and
   files open read-only, with images. Uses your `gh` login; if the active
   account can't see a private repo, your other `gh` accounts are tried.
+  **Open from GitHub…** in the remote browser takes a link or `owner/repo`.
+- **Open all .md files:** the remote browser can open every markdown file in
+  the folder it shows, each in its own tab.
 - **Keep a published copy in sync with GitHub:** for a document opened from
   GitHub, Publish… offers *Keep in sync with GitHub*. While md-viewer is open
   it checks every few minutes and republishes when the file changed on GitHub,
