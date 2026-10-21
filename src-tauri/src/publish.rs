@@ -122,10 +122,11 @@ fn default_targets() -> Vec<Target> {
     vec![builtin("gist", "GitHub Gist", "gist"), protected_page()]
 }
 
-/// Password-protected pages (pages.rs) need no setup, so they're always
-/// offered, even with a config file that predates them.
+/// GitHub Pages (pages.rs: public or password-protected) needs no setup, so
+/// it's always offered, even with a config file that predates it. The id is
+/// from when every page had a password; records refer to it.
 fn protected_page() -> Target {
-    builtin("protected-page", "Password-protected page", "pages")
+    builtin("protected-page", "GitHub Pages", "pages")
 }
 
 fn load_config() -> Result<Config, String> {

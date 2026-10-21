@@ -81,18 +81,24 @@ img { max-width: 100%; border-radius: 6px; }
 @media print { .theme-toggle { display: none; } }
 `.trim();
 
-/** Build a complete standalone HTML document from markdown source. */
-export function buildExportHtml(source: string, title: string): string {
-  const body = renderDocumentHtml(source);
+/**
+ * A complete standalone page around rendered HTML: the shared stylesheet and
+ * theme toggle, plus `css` and `head` extras (the index page, publish markers).
+ */
+export function standalonePage(
+  body: string,
+  title: string,
+  extra: { css?: string; head?: string } = {},
+): string {
   return `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(title)}</title>
-<script>${THEME_INIT}</script>
+${extra.head ? `${extra.head}\n` : ""}<script>${THEME_INIT}</script>
 ${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
-${EXPORT_CSS}
+${EXPORT_CSS}${extra.css ? `\n${extra.css}` : ""}
 </style>
 </head>
 <body>
@@ -103,4 +109,9 @@ ${body}
 </body>
 </html>
 `;
+}
+
+/** Build a complete standalone HTML document from markdown source. */
+export function buildExportHtml(source: string, title: string, extra: { head?: string } = {}): string {
+  return standalonePage(renderDocumentHtml(source), title, extra);
 }

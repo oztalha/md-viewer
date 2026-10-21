@@ -8,7 +8,7 @@ again to open the page (or ⌘↩ to open an existing link without publishing).
 shows where a document is published, with clickable links.
 
 **Unpublish:** for a published document, the dialog's **Unpublish (delete
-it)…** deletes the gist or protected page (after a confirmation), so the link
+it)…** deletes the gist or GitHub Pages page (after a confirmation), so the link
 stops working; a protected page's saved password is forgotten too. For other
 targets md-viewer can't delete the copy, so **Forget this link…** only forgets
 it here. Linked documents published along with it stay published.
@@ -31,16 +31,34 @@ sync fails, the publish icon's dot turns red and its tooltip says why.
 Limits: nothing syncs while the app is closed, and relative images in a
 private repo won't load on the published page.
 
-**Password-protected page:** built in, nothing to set up beyond your `gh`
-login. md-viewer renders the document, **encrypts it in the app** with a
-password, and publishes the encrypted page to your own GitHub Pages. Readers
-open the link, type the password, and read the page; they need no account.
+**GitHub Pages:** built in, nothing to set up beyond your `gh` login.
+md-viewer renders the document and publishes it to your own GitHub Pages, with
+a password (**Require a password**, on by default) or without.
+
+*Without a password*, the page is plain HTML: anyone with the link can read
+it, search engines may find it, and so can anyone looking through the public
+repo `<you>/md-viewer-pages`, listed or not.
+
+*Your index page*, `https://<you>.github.io/md-viewer-pages/`, lists the pages
+you choose: **Show on my index page** is on by default for pages without a
+password and off for protected ones. A listed protected page shows its title
+with a lock; reading it still needs the password. Each publish updates the
+index from the copy in the repo, so it stays one list when you publish from
+more than one Mac; unpublishing a listed page takes it off. Linked documents
+published along with a page aren't added to the index. If the index can't be
+updated, the page is still published and the dialog says why.
+
+*With a password*, md-viewer **encrypts the page in the app** and publishes
+only the encrypted page. Readers open the link, type the password, and read
+the page; they need no account.
 - The password is filled in with a strong generated one (**Show**, **New**,
   copy). Send it to readers separately from the link.
 - The first publish creates a public repo `<you>/md-viewer-pages` and turns on
-  GitHub Pages. It's public because free GitHub Pages needs that; it only holds
-  encrypted pages with random names, and commit messages say nothing about the
-  document. A new page is live about a minute later.
+  GitHub Pages. It's public because free GitHub Pages needs that; pages get
+  random names, and commit messages say nothing about the document. A new page
+  is live about a minute later. (Repos created by md-viewer before public pages
+  existed keep the description "Encrypted pages…"; edit it on GitHub if you
+  publish public pages there.)
 - The password is kept in your macOS Keychain, so updating (or syncing a
   GitHub document) keeps the same link and password without asking. Typing a
   different password before **Update** changes it; send readers the new one.
@@ -159,7 +177,8 @@ Export as HTML) instead of the markdown.
 - Only commands and servers from this file ever run. Documents, links and
   remote files can't supply them.
 - Password-protected pages are encrypted before they leave the app; GitHub
-  only stores ciphertext, and the password stays in your Keychain.
+  only stores ciphertext, and the password stays in your Keychain. Their
+  titles reach GitHub only if you list them on your index page.
 - Saving a new or changed command or MCP server from Edit targets… asks first
   in a native macOS dialog that lists exactly what will run; the app's web
   view can't show or answer that dialog itself.

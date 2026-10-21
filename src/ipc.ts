@@ -268,7 +268,7 @@ export function publishConfigWrite(text: string): Promise<void> {
   return invoke<void>("publish_config_write", { text });
 }
 
-// --- password-protected pages (see src-tauri/src/pages.rs) ------------------
+// --- GitHub Pages, public or protected (see src-tauri/src/pages.rs) ---------
 
 /** The account's encrypted-pages repo, and whether it exists yet. */
 export function pagesStatus(account: string | null): Promise<{ repo: string; exists: boolean }> {
@@ -278,6 +278,16 @@ export function pagesStatus(account: string | null): Promise<{ repo: string; exi
 /** Upload an encrypted page as `<id>.html` (creating the repo on first use). */
 export function publishPages(file: string, id: string, account: string | null): Promise<{ id: string; url: string }> {
   return invoke("publish_pages", { file, id, account });
+}
+
+/** The account's index page link, and its current HTML in the repo (null: none yet). */
+export function pagesIndexGet(account: string | null): Promise<{ url: string; html: string | null }> {
+  return invoke("pages_index_get", { account });
+}
+
+/** Write the index page (creating the repo on first use); returns its link. */
+export function pagesIndexPut(file: string, account: string | null): Promise<string> {
+  return invoke("pages_index_put", { file, account });
 }
 
 /** Whether GitHub Pages serves the publish that put `marker` in the page. */

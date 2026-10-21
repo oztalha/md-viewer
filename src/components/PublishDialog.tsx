@@ -50,8 +50,12 @@ type Status =
       label: string;
       linked: number;
       skipped: string[];
-      /** Protected pages: proves the host serves this version (pagesLive). */
+      /** GitHub Pages: proves the host serves this version (pagesLive). */
       marker?: string;
+      /** GitHub Pages: published with a password. */
+      locked?: boolean;
+      indexUrl?: string;
+      indexError?: string;
     }
   | { kind: "removed"; label: string; deleted: boolean }
   | { kind: "error"; message: string };
@@ -184,9 +188,29 @@ function Publish() {
     }
   };
 
+  // GitHub Pages: with a password unless turned off; an update keeps the
+  // page's mode. Listing on the index starts on for public pages, off for
+  // protected ones, and follows the password choice until set by hand.
+  const pagesTarget = target?.kind === "pages";
+  const updatingPage = !!existing && !asNew;
+  const [requirePassword, setRequirePassword] = useState(true);
+  const [listed, setListed] = useState(false);
+  const [listedTouched, setListedTouched] = useState(false);
+  const existingId = existing?.id;
+  useEffect(() => {
+    const locked = updatingPage ? !existing?.open : true;
+    setRequirePassword(locked);
+    setListed(updatingPage ? !!existing?.listed : !locked);
+    setListedTouched(false);
+  }, [pagesTarget, existingId, updatingPage, docId]);
+  const changeRequirePassword = (on: boolean) => {
+    setRequirePassword(on);
+    if (!listedTouched && !updatingPage) setListed(!on);
+  };
+
   // Password-protected pages: a strong generated password for a new page, the
   // saved one (Keychain) for an existing page, so republishing changes nothing.
-  const protectedPage = target?.kind === "pages";
+  const protectedPage = pagesTarget && requirePassword;
   const [password, setPassword] = useState("");
   const [savedPassword, setSavedPassword] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
@@ -215,12 +239,11 @@ function Publish() {
     };
   }, [protectedPage, pageId, docId]);
   // Whether the first publish will create the repo (said in the dialog).
-  const updatingPage = !!existing && !asNew;
   const pagesAccount = updatingPage
     ? (existing?.account ?? null)
     : account || null;
   useEffect(() => {
-    if (!protectedPage || updatingPage) return setPagesRepo(null);
+    if (!pagesTarget || updatingPage) return setPagesRepo(null);
     let live = true;
     pagesStatus(pagesAccount)
       .then((st) => live && setPagesRepo(st))
@@ -228,7 +251,7 @@ function Publish() {
     return () => {
       live = false;
     };
-  }, [protectedPage, pagesAccount, updatingPage]);
+  }, [pagesTarget, pagesAccount, updatingPage]);
   const passwordTooShort = protectedPage && password.length < MIN_PASSWORD;
   // An unsaved document can't remember its page: each publish would make a new
   // page with a new password. Saving first keeps one page and one password.
@@ -247,11 +270,13 @@ function Publish() {
           target.kind === "gist" || target.kind === "pages"
             ? account || undefined
             : undefined,
-        password: target.kind === "pages" ? password : undefined,
+        password: protectedPage ? password : undefined,
+        open: pagesTarget ? !requirePassword : undefined,
+        listed: pagesTarget ? listed : undefined,
         onProgress: (detail) =>
           setStatus({ kind: "busy", label: target.label, detail }),
       });
-      setStatus({ kind: "done", ...out, label: target.label });
+      setStatus({ kind: "done", ...out, label: target.label, locked: protectedPage });
     } catch (err) {
       setStatus({ kind: "error", message: err instanceof Error ? err.message : String(err) });
     } finally {
@@ -293,12 +318,12 @@ function Publish() {
     if (!doc || !target || !existing || busy) return;
     const name = displayTitle(doc);
     const deletes = target.kind === "gist" || target.kind === "pages";
-    const what = target.kind === "gist" ? "gist" : "protected page";
+    const what = target.kind === "gist" ? "gist" : "page";
     const ok = await confirmUnpublish(
       deletes
         ? `Delete the ${what} for “${name}”? The link stops working for everyone.` +
             (target.kind === "pages"
-              ? " An encrypted copy stays in the repo's git history."
+              ? ` ${existing.open ? "A" : "An encrypted"} copy stays in the repo's git history.`
               : "") +
             (linked.length > 0
               ? " Linked documents published with it stay published."
@@ -429,6 +454,44 @@ function Publish() {
             </label>
           )}
 
+        {pagesTarget && (
+          <label className="publish-asnew">
+            <input
+              type="checkbox"
+              checked={requirePassword}
+              disabled={busy}
+              onChange={(event) => changeRequirePassword(event.target.checked)}
+            />
+            Require a password
+          </label>
+        )}
+        {pagesTarget && !requirePassword && (
+          <p className="publish-status">
+            Anyone with the link can read this page, and so can anyone looking
+            through your public repo md-viewer-pages.
+          </p>
+        )}
+        {pagesTarget && (
+          <label className="publish-asnew">
+            <input
+              type="checkbox"
+              checked={listed}
+              disabled={busy}
+              onChange={(event) => {
+                setListed(event.target.checked);
+                setListedTouched(true);
+              }}
+            />
+            Show on my index page
+          </label>
+        )}
+        {pagesTarget && listed && requirePassword && (
+          <p className="publish-status">
+            Its title shows on your index page, with a lock; the page itself
+            still needs the password.
+          </p>
+        )}
+
         {protectedPage && (
           <div className="publish-password">
             <span className="publish-password-label">Password</span>
@@ -489,11 +552,11 @@ function Publish() {
               Updating will change the password: send readers the new one.
             </p>
           )}
-        {protectedPage && pagesRepo && !pagesRepo.exists && (
+        {pagesTarget && pagesRepo && !pagesRepo.exists && (
           <p className="publish-status">
             First time: this creates the public repo <b>{pagesRepo.repo}</b> for
-            your encrypted pages. Pages get random names, and nobody can read
-            one without its password.
+            your pages. Pages get random names
+            {requirePassword ? ", and nobody can read one without its password" : ""}.
           </p>
         )}
 
@@ -623,8 +686,23 @@ function Publish() {
         )}
         {status.kind === "done" && live === "live" && (
           <p className="publish-status publish-done">
-            Live now. Send the password separately from the link (copy it
-            above).
+            {status.locked
+              ? "Live now. Send the password separately from the link (copy it above)."
+              : "Live now."}
+          </p>
+        )}
+        {status.kind === "done" && status.indexUrl && (
+          <div className="publish-current">
+            <span className="publish-when">Your index:</span>
+            <a href={status.indexUrl} onClick={link(status.indexUrl)} title={status.indexUrl}>
+              {status.indexUrl.replace(/^https?:\/\//, "")}
+            </a>
+            <CopyButton text={status.indexUrl} tip="Copy index link" />
+          </div>
+        )}
+        {status.kind === "done" && status.indexError && (
+          <p className="publish-status rb-error">
+            Published, but your index page couldn't be updated: {status.indexError}
           </p>
         )}
         {status.kind === "done" && live === "slow" && (

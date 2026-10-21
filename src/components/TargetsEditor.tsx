@@ -37,12 +37,12 @@ const EXAMPLES: Example[] = [
     target: { id: "gist", label: "GitHub Gist", kind: "gist", public: false },
   },
   {
-    name: "Password-protected page",
+    name: "GitHub Pages",
     about:
-      "Encrypted in md-viewer, hosted on your GitHub Pages; readers need the password. Nothing to set up.",
+      "Hosted on your GitHub Pages, with a password (encrypted in md-viewer) or without. Nothing to set up.",
     target: {
       id: "protected-page",
-      label: "Password-protected page",
+      label: "GitHub Pages",
       kind: "pages",
     },
   },
@@ -366,10 +366,11 @@ function Editor() {
 
                 {kind === "pages" && (
                   <p className="te-help">
-                    Publishes the rendered page, encrypted with a password you
-                    choose (or a generated one) in the Publish dialog. It lives
-                    in your public repo md-viewer-pages under a random name; the
-                    password is kept in your Keychain.
+                    Publishes the rendered page to your public repo
+                    md-viewer-pages under a random name, either encrypted with a
+                    password you choose (or a generated one; kept in your
+                    Keychain) or public. Pages you choose are listed on your
+                    index page.
                   </p>
                 )}
 
