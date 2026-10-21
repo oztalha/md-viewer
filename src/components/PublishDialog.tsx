@@ -66,14 +66,10 @@ function Publish() {
   const doc = useStore((s) => s.docs[s.activeId]);
   const [targets, setTargets] = useState<PublishTarget[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<string>(
-    localStorage.getItem(LAST_TARGET_KEY) ?? "",
-  );
+  const [selected, setSelected] = useState<string>(localStorage.getItem(LAST_TARGET_KEY) ?? "");
   const [asNew, setAsNew] = useState(false);
   // On unless turned off once: otherwise links to local files break once published.
-  const [withLinked, setWithLinked] = useState(
-    localStorage.getItem(LINKED_KEY) !== "0",
-  );
+  const [withLinked, setWithLinked] = useState(localStorage.getItem(LINKED_KEY) !== "0");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   // gh accounts for gists: the last one picked if still logged in, else gh's active one.
   const [accounts, setAccounts] = useState<{
@@ -86,11 +82,7 @@ function Publish() {
       .then((list) => {
         setAccounts(list);
         const last = localStorage.getItem(ACCOUNT_KEY) ?? "";
-        setAccount(
-          list.logins.includes(last)
-            ? last
-            : (list.active ?? list.logins[0] ?? ""),
-        );
+        setAccount(list.logins.includes(last) ? last : (list.active ?? list.logins[0] ?? ""));
       })
       .catch(() => setAccounts({ logins: [], active: null })); // no gh: publishing shows the real error
   }, []);
@@ -112,9 +104,7 @@ function Publish() {
       .then((list) => {
         setTargets(list);
         setLoadError(null);
-        setSelected((cur) =>
-          list.some((t) => t.id === cur) ? cur : (list[0]?.id ?? ""),
-        );
+        setSelected((cur) => (list.some((t) => t.id === cur) ? cur : (list[0]?.id ?? "")));
       })
       .catch((err) => setLoadError(String(err)));
 
@@ -164,9 +154,7 @@ function Publish() {
   const existing = target ? records[target.id] : undefined;
   const docKey = keyForDoc(doc);
   const syncError = useStore((s) =>
-    target && docKey
-      ? s.publishErrors[publishErrorKey(docKey, target.id)]
-      : undefined,
+    target && docKey ? s.publishErrors[publishErrorKey(docKey, target.id)] : undefined,
   );
   const busy = status.kind === "busy";
 
@@ -236,10 +224,7 @@ function Publish() {
       });
       setStatus({ kind: "done", ...out, label: target.label });
     } catch (err) {
-      setStatus({
-        kind: "error",
-        message: err instanceof Error ? err.message : String(err),
-      });
+      setStatus({ kind: "error", message: err instanceof Error ? err.message : String(err) });
     } finally {
       inFlight.current = false;
     }
@@ -349,10 +334,7 @@ function Publish() {
             {targets.map((t) => {
               const rec = records[t.id];
               return (
-                <label
-                  key={t.id}
-                  className={`publish-target${t.id === selected ? " selected" : ""}`}
-                >
+                <label key={t.id} className={`publish-target${t.id === selected ? " selected" : ""}`}>
                   <input
                     type="radio"
                     name="publish-target"
@@ -367,12 +349,7 @@ function Publish() {
                   />
                   <span className="publish-target-label">{t.label}</span>
                   {rec ? (
-                    <a
-                      className="publish-target-link"
-                      href={rec.url}
-                      onClick={link(rec.url)}
-                      title={rec.url}
-                    >
+                    <a className="publish-target-link" href={rec.url} onClick={link(rec.url)} title={rec.url}>
                       published ↗
                     </a>
                   ) : (
@@ -485,11 +462,7 @@ function Publish() {
 
         {existing && (
           <div className="publish-current">
-            <a
-              href={existing.url}
-              onClick={link(existing.url)}
-              title={existing.url}
-            >
+            <a href={existing.url} onClick={link(existing.url)} title={existing.url}>
               {existing.url.replace(/^https?:\/\//, "")}
             </a>
             <CopyButton text={existing.url} tip="Copy link" />
@@ -523,18 +496,13 @@ function Publish() {
               type="checkbox"
               checked={!!existing.sync}
               disabled={busy}
-              onChange={(event) =>
-                setSync(doc, target.id, event.target.checked)
-              }
+              onChange={(event) => setSync(doc, target.id, event.target.checked)}
             />
-            Keep in sync with GitHub (checked every few minutes while md-viewer
-            is open)
+            Keep in sync with GitHub (checked every few minutes while md-viewer is open)
           </label>
         )}
         {existing?.sync && syncError && (
-          <p className="publish-status rb-error">
-            Couldn't sync with GitHub: {syncError}
-          </p>
+          <p className="publish-status rb-error">Couldn't sync with GitHub: {syncError}</p>
         )}
 
         {linked.length > 0 && (
@@ -548,21 +516,17 @@ function Publish() {
               disabled={busy}
               onChange={(event) => {
                 setWithLinked(event.target.checked);
-                localStorage.setItem(
-                  LINKED_KEY,
-                  event.target.checked ? "1" : "0",
-                );
+                localStorage.setItem(LINKED_KEY, event.target.checked ? "1" : "0");
               }}
             />
-            Also publish {linked.length} linked document
-            {linked.length === 1 ? "" : "s"}, and link to them
+            Also publish {linked.length} linked document{linked.length === 1 ? "" : "s"}, and link to
+            them
           </label>
         )}
 
         {status.kind === "busy" && (
           <p className="publish-status">
-            Publishing to {status.label}…
-            {status.detail ? ` ${status.detail}` : ""}
+            Publishing to {status.label}…{status.detail ? ` ${status.detail}` : ""}
           </p>
         )}
         {status.kind === "removed" && (
@@ -578,9 +542,7 @@ function Publish() {
         {status.kind === "done" && (
           <p className="publish-status publish-done">
             {status.updated ? "Updated on" : "Published to"} {status.label}
-            {status.linked > 0
-              ? `, with ${status.linked} linked document${status.linked === 1 ? "" : "s"}`
-              : ""}
+            {status.linked > 0 ? `, with ${status.linked} linked document${status.linked === 1 ? "" : "s"}` : ""}
             . Link copied:{" "}
             <a href={status.url} onClick={link(status.url)}>
               {status.url}
@@ -620,11 +582,7 @@ function Publish() {
           >
             Edit targets…
           </button>
-          <button
-            className="remote-prompt-cancel"
-            onClick={close}
-            disabled={busy}
-          >
+          <button className="remote-prompt-cancel" onClick={close} disabled={busy}>
             {status.kind === "done" ? "Close" : "Cancel"}
           </button>
           {existing && status.kind !== "done" && (
