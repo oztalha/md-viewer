@@ -310,7 +310,7 @@ export function confirmUnpublish(text: string, okLabel: string): Promise<boolean
   return confirm(text, { title: "Unpublish", kind: "warning", okLabel, cancelLabel: "Cancel" });
 }
 
-/** The protected pages in the account's `md-viewer-pages` repo. */
+/** The pages (public or protected) in the account's `md-viewer-pages` repo. */
 export function pagesList(account: string | null): Promise<{ id: string; url: string }[]> {
   return invoke("pages_list", { account });
 }

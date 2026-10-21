@@ -78,7 +78,7 @@ pub struct PageListing {
     url: String,
 }
 
-/// The protected pages in the account's repo, so pages published from an
+/// The pages (public or protected) in the account's repo, so pages published from an
 /// unsaved document or another Mac still show up in Published Documents.
 /// No repo yet: none.
 #[tauri::command]
@@ -102,8 +102,8 @@ pub async fn pages_list(account: Option<String>) -> Result<Vec<PageListing>, Str
     .map_err(|e| e.to_string())?
 }
 
-/// Create the repo (public: free GitHub Pages needs that; the content is
-/// encrypted) and turn on Pages, if not done yet. Returns the default branch.
+/// Create the repo (public: free GitHub Pages needs that; names are random
+/// and protected pages encrypted) and turn on Pages, if not done yet. Returns the default branch.
 fn ensure_repo(token: &Option<String>, login: &str) -> Result<String, String> {
     let repo = format!("repos/{login}/{REPO}");
     let branch = match api(token, &[&repo, "--jq", ".default_branch"]) {

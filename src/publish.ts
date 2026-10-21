@@ -96,6 +96,8 @@ export interface PublishLogEntry {
   url: string;
   at: number;
   updated: boolean;
+  /** GitHub Pages: published without a password. */
+  open?: boolean;
 }
 
 const LOG_KEY = "publishLog";
@@ -487,6 +489,7 @@ async function publishText(
       url,
       at: Date.now(),
       updated: !!previous,
+      open: open || undefined,
     });
   }
   useStore.getState().bumpPublished();
