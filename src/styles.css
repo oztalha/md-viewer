@@ -2952,3 +2952,22 @@ html.no-caret-animation .editor .cm-cursor {
   padding: 5px 9px;
   font-size: 12.5px;
 }
+
+/* Protected page: waiting for the GitHub Pages build */
+.publish-waiting::before {
+  content: "";
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  margin-right: 7px;
+  vertical-align: -1px;
+  border: 1.5px solid var(--fg-faint);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

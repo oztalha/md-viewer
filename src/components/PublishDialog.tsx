@@ -3,6 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import {
   ghAccounts,
+  pagesLive,
   pagesPasswordGet,
   pagesStatus,
   publishTargets,
@@ -46,6 +47,8 @@ type Status =
       label: string;
       linked: number;
       skipped: string[];
+      /** Protected pages: proves the host serves this version (pagesLive). */
+      marker?: string;
     }
   | { kind: "error"; message: string };
 
@@ -244,8 +247,35 @@ function Publish() {
     close();
   };
 
+  // A protected page goes live after a GitHub Pages build: wait for this
+  // version before offering Open, so the link never looks broken.
+  const [live, setLive] = useState<"waiting" | "live" | "slow" | null>(null);
+  const doneUrl = status.kind === "done" ? status.url : null;
+  const doneMarker = status.kind === "done" ? status.marker : undefined;
+  useEffect(() => {
+    if (!doneUrl || !doneMarker) return setLive(null);
+    setLive("waiting");
+    let stopped = false;
+    const started = Date.now();
+    void (async () => {
+      while (!stopped) {
+        const ok = await pagesLive(doneUrl, doneMarker).catch(() => false);
+        if (stopped) return;
+        if (ok) return setLive("live");
+        if (Date.now() - started > 180_000) return setLive("slow");
+        await new Promise((r) => setTimeout(r, 4000));
+      }
+    })();
+    return () => {
+      stopped = true;
+    };
+  }, [doneUrl, doneMarker]);
+  const waitingForPages = live === "waiting";
+
   const primary = () =>
-    status.kind === "done" ? openAndClose(status.url) : void publish();
+    status.kind === "done"
+      ? !waitingForPages && openAndClose(status.url)
+      : void publish();
   publishRef.current = primary;
   openSavedRef.current = () => {
     if (existing && !busy) openAndClose(existing.url);
@@ -505,10 +535,22 @@ function Publish() {
             </a>
           </p>
         )}
-        {status.kind === "done" && protectedPage && (
+        {status.kind === "done" && live === "waiting" && (
+          <p className="publish-status publish-waiting">
+            Getting it ready on GitHub Pages, usually under a minute. The link
+            is copied and will work as soon as this says it's live.
+          </p>
+        )}
+        {status.kind === "done" && live === "live" && (
+          <p className="publish-status publish-done">
+            Live now. Send the password separately from the link (copy it
+            above).
+          </p>
+        )}
+        {status.kind === "done" && live === "slow" && (
           <p className="publish-status">
-            Live in about a minute. Send the password separately from the link
-            (copy it above).
+            GitHub Pages is taking longer than usual. The link will work once
+            its build finishes; you can close this.
           </p>
         )}
         {status.kind === "done" && status.skipped.length > 0 && (
@@ -548,7 +590,10 @@ function Publish() {
             className="remote-prompt-open"
             onClick={primary}
             disabled={
-              !target || busy || (status.kind !== "done" && passwordTooShort)
+              !target ||
+              busy ||
+              waitingForPages ||
+              (status.kind !== "done" && passwordTooShort)
             }
             data-tip={
               status.kind === "done"
@@ -560,13 +605,15 @@ function Publish() {
           >
             {busy
               ? "Publishing…"
-              : status.kind === "done"
-                ? "Open ↗"
-                : existing && !asNew
-                  ? "Update"
-                  : protectedPage && pagesRepo && !pagesRepo.exists
-                    ? "Create & publish"
-                    : "Publish"}
+              : waitingForPages
+                ? "Getting ready…"
+                : status.kind === "done"
+                  ? "Open ↗"
+                  : existing && !asNew
+                    ? "Update"
+                    : protectedPage && pagesRepo && !pagesRepo.exists
+                      ? "Create & publish"
+                      : "Publish"}
           </button>
         </div>
       </div>

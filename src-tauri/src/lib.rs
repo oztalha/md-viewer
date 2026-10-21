@@ -859,6 +859,7 @@ pub fn run() {
             publish::publish_gist,
             publish::gist_exists,
             pages::pages_status,
+            pages::pages_live,
             pages::publish_pages,
             pages::pages_password_get,
             pages::pages_password_set,

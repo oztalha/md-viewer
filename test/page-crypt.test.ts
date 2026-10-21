@@ -14,7 +14,8 @@ async function openPage(page: string, password: string): Promise<string> {
 test("the published page decrypts with the password, and only with it", async () => {
   const html = "<!doctype html><h1>Secret plan ünïcødé</h1>";
   const password = generatePassword();
-  const page = await encryptPage(html, password);
+  const { page, marker } = await encryptPage(html, password);
+  expect(page).toContain(marker);
   expect(page).not.toContain("Secret plan");
   expect(await openPage(page, password)).toBe(html);
   await expect(openPage(page, `${password}x`)).rejects.toThrow();

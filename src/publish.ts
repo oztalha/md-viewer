@@ -209,6 +209,8 @@ async function runSteps(
 
 export interface PublishOutcome {
   url: string;
+  /** Protected pages: in the page once the host serves this version (see pagesLive). */
+  marker?: string;
   updated: boolean;
   /** Linked documents published along with it. */
   linked: number;
@@ -273,19 +275,20 @@ async function publishText(
   target: PublishTarget,
   asNew: boolean,
   extra: { sha?: string; account?: string; password?: string } = {},
-): Promise<{ url: string; updated: boolean }> {
+): Promise<{ url: string; updated: boolean; marker?: string }> {
   const title = displayTitle(doc).replace(/\.(md|markdown|mdown|mkdn|mkd|txt)$/i, "");
   const html = target.format === "html";
   const contents = html ? buildExportHtml(markdown, title) : markdown;
   const previous = asNew ? undefined : publishedFor(doc)[target.id];
   let id = "";
   let url = "";
+  let marker: string | undefined;
   // An update must come from the owner (gist, pages repo); a new one uses the chosen account.
   const owned = target.kind === "gist" || target.kind === "pages";
   const account = owned ? (previous ? previous.account : extra.account) : undefined;
 
   if (target.kind === "pages") {
-    ({ id, url } = await publishProtected(doc, markdown, title, previous?.id, account, extra.password));
+    ({ id, url, marker } = await publishProtected(doc, markdown, title, previous?.id, account, extra.password));
   } else {
     const file = await writePublishTemp(`${title || "document"}.${html ? "html" : "md"}`, contents);
     ({ id, url } = await publishTo(doc, target, file, title, contents, previous, account));
@@ -300,7 +303,7 @@ async function publishText(
     account,
   });
   useStore.getState().bumpPublished();
-  return { url, updated: !!previous };
+  return { url, updated: !!previous, marker };
 }
 
 /**
@@ -315,16 +318,16 @@ async function publishProtected(
   existingId: string | undefined,
   account: string | undefined,
   given: string | undefined,
-): Promise<{ id: string; url: string }> {
+): Promise<{ id: string; url: string; marker: string }> {
   const password = given ?? (existingId ? await pagesPasswordGet(existingId) : null);
   if (!password) throw new Error(`No saved password for “${displayTitle(doc)}”. Publish it from the Publish dialog.`);
   if (password.length < MIN_PASSWORD) throw new Error(`Use a password of at least ${MIN_PASSWORD} characters.`);
   const pageId = existingId ?? newPageId();
-  const page = await encryptPage(buildExportHtml(markdown, title), password);
+  const { page, marker } = await encryptPage(buildExportHtml(markdown, title), password);
   const file = await writePublishTemp(`${pageId}.html`, page);
   const out = await publishPages(file, pageId, account ?? null);
   await pagesPasswordSet(out.id, password);
-  return out;
+  return { ...out, marker };
 }
 
 async function publishTo(

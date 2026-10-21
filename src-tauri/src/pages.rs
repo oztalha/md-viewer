@@ -176,6 +176,44 @@ pub async fn publish_pages(file: String, id: String, account: Option<String>) ->
     .map_err(|e| e.to_string())?
 }
 
+/// Only links this module makes: `https://<login>.github.io/md-viewer-pages/<id>.html`.
+fn valid_page_url(url: &str) -> bool {
+    let Some(rest) = url.strip_prefix("https://") else { return false };
+    let Some((host, path)) = rest.split_once('/') else { return false };
+    let Some(login) = host.strip_suffix(".github.io") else { return false };
+    let id = path.strip_prefix(&format!("{REPO}/")).and_then(|p| p.strip_suffix(".html"));
+    !login.is_empty()
+        && login.chars().all(|c| c.is_ascii_lowercase() || c.is_ascii_digit() || c == '-')
+        && id.is_some_and(valid_id)
+}
+
+/// Whether GitHub Pages serves this publish yet: the page contains its
+/// `marker` (the random salt), so an older version doesn't count. The query
+/// string skips the CDN's cache.
+#[tauri::command]
+pub async fn pages_live(url: String, marker: String) -> Result<bool, String> {
+    if !valid_page_url(&url) {
+        return Err(format!("Not a protected-page link: {url}"));
+    }
+    if marker.is_empty() || !marker.chars().all(|c| c.is_ascii_alphanumeric() || "+/=".contains(c)) {
+        return Err("Invalid marker".into());
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let nonce = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_millis())
+            .unwrap_or_default();
+        let out = Command::new("/usr/bin/curl")
+            .args(["-s", "--max-time", "10", "-H", "Cache-Control: no-cache", &format!("{url}?v={nonce}")])
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|e| format!("Could not run curl: {e}"))?;
+        Ok(out.status.success() && String::from_utf8_lossy(&out.stdout).contains(&marker))
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 fn security() -> Command {
     let mut cmd = Command::new("/usr/bin/security");
     cmd.stdin(Stdio::null());
@@ -241,6 +279,16 @@ mod tests {
         assert!(super::valid_id("0123456789abcdef0123456789abcdef"));
         for bad in ["", "0123456789ABCDEF0123456789abcdef", "../../etc/passwd", "0123456789abcdef0123456789abcde"] {
             assert!(!super::valid_id(bad), "{bad}");
+        }
+        let id = "0123456789abcdef0123456789abcdef";
+        assert!(super::valid_page_url(&super::page_url("SenaOz", id)));
+        for bad in [
+            "http://senaoz.github.io/md-viewer-pages/0123456789abcdef0123456789abcdef.html",
+            "https://evil.example/md-viewer-pages/0123456789abcdef0123456789abcdef.html",
+            "https://senaoz.github.io.evil.example/md-viewer-pages/0123456789abcdef0123456789abcdef.html",
+            "https://senaoz.github.io/other/0123456789abcdef0123456789abcdef.html",
+        ] {
+            assert!(!super::valid_page_url(bad), "{bad}");
         }
         assert_eq!(
             super::page_url("SenaOz", "ab"),

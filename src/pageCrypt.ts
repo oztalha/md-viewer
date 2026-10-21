@@ -124,15 +124,19 @@ export async function decryptPayload(
   return new TextDecoder().decode(plain);
 }
 
-/** The published page: a password prompt that decrypts and shows `html`. */
+/**
+ * The published page: a password prompt that decrypts and shows `html`.
+ * `marker` (this publish's random salt) appears in the page, so the app can
+ * tell when the host serves this version.
+ */
 export async function encryptPage(
   html: string,
   password: string,
-): Promise<string> {
+): Promise<{ page: string; marker: string }> {
   const payload = await encryptPayload(html, password);
   // Only base64 and numbers: safe inside <script>.
   const data = JSON.stringify(payload);
-  return `<!doctype html>
+  const page = `<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -186,4 +190,5 @@ document.getElementById("f").addEventListener("submit", async (event) => {
 </body>
 </html>
 `;
+  return { page, marker: payload.salt };
 }

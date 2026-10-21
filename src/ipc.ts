@@ -275,6 +275,11 @@ export function publishPages(file: string, id: string, account: string | null): 
   return invoke("publish_pages", { file, id, account });
 }
 
+/** Whether GitHub Pages serves the publish that put `marker` in the page. */
+export function pagesLive(url: string, marker: string): Promise<boolean> {
+  return invoke("pages_live", { url, marker });
+}
+
 export function pagesPasswordGet(id: string): Promise<string | null> {
   return invoke("pages_password_get", { id });
 }
