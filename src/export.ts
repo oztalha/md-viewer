@@ -2,6 +2,7 @@ import { renderDocumentHtml } from "./markdown";
 import katexPackage from "katex/package.json";
 import { THEME_INIT, THEME_TOGGLE } from "./pageTheme";
 import { OUTLINE_CSS, OUTLINE_SCRIPT } from "./pageOutline";
+import { FOOTER_CSS, FOOTER_HTML } from "./pageFooter";
 
 // Exported files are standalone, so math styling comes from the CDN build of
 // the same KaTeX version the app renders with (fonts load from there too).
@@ -84,12 +85,13 @@ img { max-width: 100%; border-radius: 6px; }
 
 /**
  * A complete standalone page around rendered HTML: the shared stylesheet,
- * theme toggle and outline, plus `css` and `head` extras (the index page, publish markers).
+ * theme toggle and outline, plus `css` and `head` extras (the index page,
+ * publish markers) and, for published pages, the md-viewer footer.
  */
 export function standalonePage(
   body: string,
   title: string,
-  extra: { css?: string; head?: string } = {},
+  extra: { css?: string; head?: string; footer?: boolean } = {},
 ): string {
   return `<!doctype html>
 <html lang="en">
@@ -100,14 +102,14 @@ export function standalonePage(
 ${extra.head ? `${extra.head}\n` : ""}<script>${THEME_INIT}</script>
 ${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
 ${EXPORT_CSS}
-${OUTLINE_CSS}${extra.css ? `\n${extra.css}` : ""}
+${OUTLINE_CSS}${extra.footer ? `\n${FOOTER_CSS}` : ""}${extra.css ? `\n${extra.css}` : ""}
 </style>
 </head>
 <body>
 <main>
 ${body}
 </main>
-<script>${THEME_TOGGLE}</script>
+${extra.footer ? `${FOOTER_HTML}\n` : ""}<script>${THEME_TOGGLE}</script>
 <script>${OUTLINE_SCRIPT}</script>
 </body>
 </html>
@@ -115,6 +117,10 @@ ${body}
 }
 
 /** Build a complete standalone HTML document from markdown source. */
-export function buildExportHtml(source: string, title: string, extra: { head?: string } = {}): string {
+export function buildExportHtml(
+  source: string,
+  title: string,
+  extra: { head?: string; footer?: boolean } = {},
+): string {
   return standalonePage(renderDocumentHtml(source), title, extra);
 }

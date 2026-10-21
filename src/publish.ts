@@ -425,7 +425,7 @@ async function publishText(
     "",
   );
   const html = target.format === "html";
-  const contents = html ? buildExportHtml(markdown, title) : markdown;
+  const contents = html ? buildExportHtml(markdown, title, { footer: true }) : markdown;
   const previous = asNew ? undefined : publishedFor(doc)[target.id];
   let id = "";
   let url = "";
@@ -510,6 +510,7 @@ async function publishOpen(
   const pageId = existingId ?? newPageId();
   const marker = newPageId();
   const page = buildExportHtml(markdown, title, {
+    footer: true,
     head: `<meta name="md-viewer-publish" content="${marker}">`,
   });
   const file = await writePublishTemp(`${pageId}.html`, page);
@@ -531,7 +532,7 @@ async function updateIndex(
   const next = change(entries);
   if (JSON.stringify(next) === JSON.stringify(entries)) return url;
   const owner = new URL(url).hostname.split(".")[0];
-  const page = standalonePage(renderIndexBody(next, owner), `Pages by ${owner}`, { css: INDEX_CSS });
+  const page = standalonePage(renderIndexBody(next, owner), `Pages by ${owner}`, { css: INDEX_CSS, footer: true });
   return pagesIndexPut(await writePublishTemp("index.html", page), account ?? null);
 }
 
@@ -563,7 +564,7 @@ async function publishProtected(
   if (password.length < MIN_PASSWORD)
     throw new Error(`Use a password of at least ${MIN_PASSWORD} characters.`);
   const pageId = existingId ?? newPageId();
-  const { page, marker } = await encryptPage(buildExportHtml(markdown, title), password, pageId);
+  const { page, marker } = await encryptPage(buildExportHtml(markdown, title, { footer: true }), password, pageId);
   const file = await writePublishTemp(`${pageId}.html`, page);
   const out = await publishPages(file, pageId, account ?? null);
   await pagesPasswordSet(out.id, password);
