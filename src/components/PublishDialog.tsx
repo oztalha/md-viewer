@@ -3,7 +3,8 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import { editPublishConfig, publishTargets } from "../ipc";
 import type { PublishTarget } from "../ipc";
-import { linkedDocs, publishDoc, publishedFor } from "../publish";
+import { isGithubDoc, linkedDocs, publishDoc, publishErrorKey, publishedFor, setSync } from "../publish";
+import { keyForDoc } from "../annotations";
 import { displayTitle } from "../types";
 import { CopyButton } from "./CopyButton";
 
@@ -99,6 +100,10 @@ function Publish() {
 
   const target = targets?.find((t) => t.id === selected);
   const existing = target ? records[target.id] : undefined;
+  const docKey = keyForDoc(doc);
+  const syncError = useStore((s) =>
+    target && docKey ? s.publishErrors[publishErrorKey(docKey, target.id)] : undefined,
+  );
   const busy = status.kind === "busy";
 
   const publish = async () => {
@@ -209,6 +214,21 @@ function Publish() {
             />
             Publish as a new copy instead of updating
           </label>
+        )}
+
+        {existing && target && doc && isGithubDoc(doc) && (
+          <label className="publish-asnew">
+            <input
+              type="checkbox"
+              checked={!!existing.sync}
+              disabled={busy}
+              onChange={(event) => setSync(doc, target.id, event.target.checked)}
+            />
+            Keep in sync with GitHub (checked every few minutes while md-viewer is open)
+          </label>
+        )}
+        {existing?.sync && syncError && (
+          <p className="publish-status rb-error">Couldn't sync with GitHub: {syncError}</p>
         )}
 
         {linked.length > 0 && (

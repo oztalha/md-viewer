@@ -276,7 +276,7 @@ fn resolve_command(cmd: &str) -> String {
     cmd
 }
 
-fn base_command(cmd: &str) -> Command {
+pub(crate) fn base_command(cmd: &str) -> Command {
     let mut c = Command::new(resolve_command(cmd));
     c.env("PATH", login_path());
     c

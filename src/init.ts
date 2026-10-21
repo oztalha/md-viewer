@@ -13,7 +13,7 @@ import { useStore } from "./store";
 import { displayTitle } from "./types";
 import { getEditorView } from "./editor/registry";
 import { REPO_URL } from "./links";
-import { latestPublished } from "./publish";
+import { initGithubSync, latestPublished } from "./publish";
 
 const IMAGE_EXT = /\.(png|jpe?g|gif|webp|svg|avif|heic|heif|bmp|tiff?)$/i;
 
@@ -382,6 +382,7 @@ export function initApp(): void {
     applySettings(useSettings.getState().settings);
     initRecents();
     initAutoReload();
+    initGithubSync();
   });
 
   // Native window title follows the active document.

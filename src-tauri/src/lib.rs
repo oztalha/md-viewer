@@ -1,5 +1,6 @@
 use std::sync::Mutex;
 
+mod github;
 mod publish;
 mod watch;
 
@@ -88,6 +89,9 @@ fn ssh_base() -> std::process::Command {
 /// GNU `stat -c` first, BSD `stat -f` as the fallback (macOS remotes).
 #[tauri::command]
 async fn remote_stat(host: String, path: String) -> Result<String, String> {
+    if github::is_github(&host) {
+        return github::blocking(move || github::stat(&host, &path)).await;
+    }
     validate_host(&host)?;
     tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
         let q = shell_quote(&path);
@@ -115,6 +119,10 @@ const REMOTE_IMAGE_LIMIT: usize = 25 * 1024 * 1024;
 #[tauri::command]
 async fn read_remote_bytes(host: String, path: String) -> Result<String, String> {
     use base64::Engine;
+    if github::is_github(&host) {
+        let bytes = github::blocking(move || github::read_bytes(&host, &path, REMOTE_IMAGE_LIMIT)).await?;
+        return Ok(base64::engine::general_purpose::STANDARD.encode(bytes));
+    }
     validate_host(&host)?;
     tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
         let output = ssh_base()
@@ -138,6 +146,9 @@ async fn read_remote_bytes(host: String, path: String) -> Result<String, String>
 /// Read a file from a remote host over SSH (`ssh HOST cat -- PATH`).
 #[tauri::command]
 async fn read_remote(host: String, path: String) -> Result<String, String> {
+    if github::is_github(&host) {
+        return github::blocking(move || github::read(&host, &path)).await;
+    }
     validate_host(&host)?;
     tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
         let output = ssh_base()
@@ -179,6 +190,11 @@ struct RemoteListing {
 /// a trailing `/` and `-L` follows symlinks so linked folders browse as folders.
 #[tauri::command]
 async fn list_remote(host: String, path: String) -> Result<RemoteListing, String> {
+    if github::is_github(&host) {
+        let (dir, entries) = github::blocking(move || github::list(&host, &path)).await?;
+        let entries = entries.into_iter().map(|(name, is_dir)| RemoteEntry { name, is_dir }).collect();
+        return Ok(RemoteListing { dir, entries });
+    }
     validate_host(&host)?;
     tauri::async_runtime::spawn_blocking(move || -> Result<RemoteListing, String> {
         let q = shell_quote(if path.is_empty() { "~" } else { &path });
@@ -214,6 +230,9 @@ async fn list_remote(host: String, path: String) -> Result<RemoteListing, String
 /// ProxyCommand) applies, and binary files are fine.
 #[tauri::command]
 async fn upload_remote(host: String, local_paths: Vec<String>, dir: String) -> Result<(), String> {
+    if github::is_github(&host) {
+        return Err(github::READ_ONLY.into());
+    }
     validate_host(&host)?;
     if local_paths.is_empty() {
         return Ok(());
@@ -240,6 +259,9 @@ async fn upload_remote(host: String, local_paths: Vec<String>, dir: String) -> R
 /// dialog (so macOS grants access without a privacy prompt). `scp -r`.
 #[tauri::command]
 async fn download_remote(host: String, remote_path: String, local_path: String) -> Result<(), String> {
+    if github::is_github(&host) {
+        return Err(github::READ_ONLY.into());
+    }
     validate_host(&host)?;
     tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
         let source = format!("{host}:{remote_path}");
@@ -265,6 +287,9 @@ async fn write_remote(host: String, path: String, contents: String) -> Result<()
     use std::io::Write;
     use std::process::Stdio;
 
+    if github::is_github(&host) {
+        return Err(github::READ_ONLY.into());
+    }
     validate_host(&host)?;
     tauri::async_runtime::spawn_blocking(move || -> Result<(), String> {
         let q = shell_quote(&path);
@@ -831,6 +856,7 @@ pub fn run() {
             publish::publish_gist,
             publish::publish_command,
             publish::publish_step_command,
+            github::github_resolve_url,
             write_remote,
             allow_asset,
             path_exists,

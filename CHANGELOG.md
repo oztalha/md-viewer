@@ -5,6 +5,17 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **GitHub repos as a remote source:** paste a github.com link (repo, folder
+  or file) into Open Remote… (⇧⌘O), pass it to `mdv`, or type
+  `github:owner/repo@branch` as the host. Folders browse like an SSH host and
+  files open read-only, with images. Uses your `gh` login; if the active
+  account can't see a private repo, your other `gh` accounts are tried.
+- **Keep a published copy in sync with GitHub:** for a document opened from
+  GitHub, Publish… offers *Keep in sync with GitHub*. While md-viewer is open
+  it checks every few minutes and republishes when the file changed on GitHub,
+  so the shared link follows the repo no matter who pushes.
+
 ## [0.14.1] — 2026-10-20
 
 ### Changed

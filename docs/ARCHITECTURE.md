@@ -19,6 +19,7 @@ src/                     frontend (React, zustand)
 src-tauri/src/
   lib.rs                 native menu, file + SSH commands, app setup
   publish.rs             publish backend: MCP client, gist, command targets
+  github.rs              GitHub repos as a read-only remote host (via `gh api`)
 src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
 ```
 
@@ -70,6 +71,15 @@ src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
 webview only ever passes a **target id**; `publish.rs` resolves servers and
 commands from the file, and a target may only call the MCP tools named in its
 own steps. Nothing service-specific lives in this repo (a test enforces it).
+
+## GitHub remotes
+
+A GitHub location is an ordinary `RemoteRef` whose host is
+`github:OWNER/REPO@REF` and whose path is inside the repo. The remote commands
+in lib.rs hand such hosts to `github.rs` (`gh api`) instead of ssh, so tabs,
+the remote browser, images, polling and publishing need no special cases.
+Writes are refused (read-only). `isGithubHost` (remote.ts) and `parse_host`
+(github.rs) must accept the same hosts; a test checks the shared cases.
 
 ## Traps we hit (read before changing these areas)
 

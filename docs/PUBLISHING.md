@@ -15,6 +15,16 @@ the published document links to their pages instead of the local paths. Only
 one hop: links inside the linked files are left as they are. Your file isn't
 changed; only the published copy is.
 
+**Keeping a GitHub document in sync:** for a document opened from a GitHub
+repo (see *Remote files* in the README), the dialog offers *Keep in sync with
+GitHub*. While md-viewer is open, it checks on launch and every five minutes,
+and republishes the document when its file changed on GitHub, so the link
+follows the repo whoever pushes. Linked documents aren't republished by sync;
+links to ones already published to the same place point at their pages. If a
+sync fails, the publish icon's dot turns red and its tooltip says why.
+Limits: nothing syncs while the app is closed, and relative images in a
+private repo won't load on the published page.
+
 Out of the box you can publish to a **GitHub Gist** (secret by default). It uses
 your logged-in [`gh`](https://cli.github.com) CLI, so install it and run
 `gh auth login` once.

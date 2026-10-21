@@ -66,6 +66,11 @@ export function listRemoteDir(host: string, path: string): Promise<RemoteListing
   return invoke<RemoteListing>("list_remote", { host, path });
 }
 
+/** A github.com link as a GitHub location (`github:owner/repo@ref` + path). */
+export function githubResolveUrl(url: string): Promise<{ host: string; path: string; isDir: boolean }> {
+  return invoke("github_resolve_url", { url });
+}
+
 /** Write a remote file over SSH (atomic on the remote side). */
 export function writeRemoteFile(host: string, path: string, contents: string): Promise<void> {
   return invoke<void>("write_remote", { host, path, contents });

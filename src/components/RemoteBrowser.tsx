@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useStore } from "../store";
+import { remoteBrowserStartAt, useStore } from "../store";
 import { useSettings } from "../settings";
-import { confirmOverwrite, confirmReplaceRemote, copyToClipboard, downloadRemote, listRemoteDir, pickDownloadPath, uploadRemote } from "../ipc";
+import { confirmOverwrite, confirmReplaceRemote, copyToClipboard, downloadRemote, githubResolveUrl, listRemoteDir, pickDownloadPath, uploadRemote } from "../ipc";
 import { Menu, MenuItem } from "@tauri-apps/api/menu";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { CopyButton } from "./CopyButton";
 import type { RemoteListing } from "../ipc";
-import { isValidHost, splitLineSuffix } from "../remote";
+import { isGithubHost, isGithubUrl, isValidHost, splitGithubSpec, splitLineSuffix } from "../remote";
 import { basename, displayTitle, isCodePath } from "../types";
 
 const HOST_KEY = "remoteBrowserHost";
@@ -71,6 +71,9 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     const s = useStore.getState();
     const doc = s.docs[s.activeId];
     const defaultHost = useSettings.getState().settings.defaultRemoteHost;
+    // Opened for a GitHub folder link.
+    const start = remoteBrowserStartAt();
+    if (start) return { host: start.host, dir: start.path, name: "" };
     // Start next to the active remote document (open or save), like most
     // apps' Open dialogs; otherwise the last host/folder used.
     if (doc?.remote) {
@@ -99,7 +102,11 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     if (!fromTyping) pathEdited.current = false;
     if (!isValidHost(h)) {
       setListing(null);
-      setError(h ? `Invalid SSH host: ${h}` : "Enter an SSH host (an alias from ~/.ssh/config works).");
+      setError(
+        h
+          ? `Invalid host: ${h}`
+          : "Enter an SSH host (an alias from ~/.ssh/config works), github:owner/repo@branch, or paste a GitHub link.",
+      );
       return;
     }
     // Ignore responses from superseded requests (fast clicking through folders).
@@ -146,7 +153,25 @@ function Browser({ mode }: { mode: "open" | "save" }) {
     return () => window.removeEventListener("keydown", onKeyDown, true);
   }, []);
 
+  // A pasted github.com link: browse its folder, or open the file it points at.
+  const goToGithubUrl = async (url: string) => {
+    try {
+      const { host: h, path, isDir } = await githubResolveUrl(url);
+      setHost(h);
+      setHostDraft(h);
+      if (isDir) void load(h, path);
+      else if (mode === "open") openFile(h, path);
+      else {
+        setFileName(basename(path));
+        void load(h, parentOf(path));
+      }
+    } catch (err) {
+      setError(String(err));
+    }
+  };
+
   const switchHost = (next: string) => {
+    if (isGithubUrl(next)) return void goToGithubUrl(next.trim());
     const h = next.trim();
     setHost(h);
     setHostDraft(h);
@@ -198,7 +223,9 @@ function Browser({ mode }: { mode: "open" | "save" }) {
   const submitPath = () => {
     let h = host;
     let p = pathDraft.trim() || "~";
-    const spec = SPEC_RE.exec(p);
+    if (isGithubUrl(p)) return void goToGithubUrl(p);
+    const github = splitGithubSpec(p);
+    const spec = github ? [p, github.host, github.path] : SPEC_RE.exec(p);
     if (spec && isValidHost(spec[1])) {
       h = spec[1];
       p = spec[2];
@@ -285,8 +312,8 @@ function Browser({ mode }: { mode: "open" | "save" }) {
 
         <div className="rb-location">
           <input
-            className="remote-prompt-input rb-host"
-            placeholder="host"
+            className={`remote-prompt-input rb-host${isGithubHost(hostDraft.trim()) ? " rb-host-github" : ""}`}
+            placeholder="host or github:owner/repo@branch"
             value={hostDraft}
             spellCheck={false}
             autoCapitalize="off"
@@ -303,7 +330,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
           <span className="rb-colon">:</span>
           <input
             className="remote-prompt-input rb-path"
-            placeholder="~ for home, /abs/path, or paste host:/path"
+            placeholder="~ for home, /abs/path, or paste host:/path or a GitHub link"
             title={pathDraft}
             value={pathDraft}
             spellCheck={false}

@@ -2,10 +2,13 @@ import { listen } from "@tauri-apps/api/event";
 import { readRemoteFile, readTextFile, remoteStat, watchFiles } from "./ipc";
 import { useSettings } from "./settings";
 import { useStore } from "./store";
+import { isGithubHost } from "./remote";
 import { getEditorView } from "./editor/registry";
 
 /** How often the visible remote tab is checked for changes (ms). */
 const REMOTE_POLL_MS = 4000;
+/** GitHub tabs: each check is an API call, and the API is rate-limited. */
+const GITHUB_POLL_MS = 30000;
 
 /**
  * Reload open files when they change outside the app (an agent rewriting a
@@ -53,12 +56,16 @@ export function initAutoReload(): void {
 
   // Remote: poll the visible tab only.
   const signatures = new Map<string, string>();
+  const polledAt = new Map<string, number>();
   let polling = false;
   const pollRemote = async () => {
     if (polling || !useSettings.getState().settings.autoReload || !document.hasFocus()) return;
     const { activeId, docs } = useStore.getState();
     const doc = docs[activeId];
     if (!doc?.remote) return;
+    const every = isGithubHost(doc.remote.host) ? GITHUB_POLL_MS : REMOTE_POLL_MS;
+    if (Date.now() - (polledAt.get(doc.id) ?? 0) < every - 500) return;
+    polledAt.set(doc.id, Date.now());
     polling = true;
     try {
       const sig = await remoteStat(doc.remote.host, doc.remote.path);

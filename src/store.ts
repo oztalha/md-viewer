@@ -6,6 +6,7 @@ import {
   askToSave,
   confirmReloadDiscard,
   copyToClipboard,
+  githubResolveUrl,
   pathExists,
   allowAsset,
   pickFilesToOpen,
@@ -19,13 +20,25 @@ import {
 } from "./ipc";
 import { allEditorViews, getEditorView } from "./editor/registry";
 import { useSettings } from "./settings";
-import { isValidHost, parseOpenSpec, remoteUrl, splitLineSuffix } from "./remote";
+import { isGithubUrl, isValidHost, parseOpenSpec, remoteUrl, splitLineSuffix } from "./remote";
 import { addRecent, getRecents, removeRecent } from "./recent";
 import { revealLine } from "./reveal";
 import { formatMarkdown } from "./format";
 import { buildExportHtml } from "./export";
 import { resolveLink } from "./docLinks";
 import type { RemoteRef } from "./types";
+
+/** Where the next Open Remote browser starts, when set (a GitHub folder link). */
+let remoteBrowserStart: RemoteRef | null = null;
+
+export function browseRemoteAt(host: string, dir: string): void {
+  remoteBrowserStart = { host, path: dir };
+  useStore.getState().setRemoteBrowser("open");
+}
+
+export function remoteBrowserStartAt(): RemoteRef | null {
+  return remoteBrowserStart;
+}
 
 function makeDoc(partial: Partial<Doc> = {}): Doc {
   return {
@@ -85,6 +98,8 @@ interface AppState {
   publishOpen: boolean;
   /** Bumped after each publish so views re-read saved links. */
   publishTick: number;
+  /** Failed GitHub syncs, by `publishErrorKey(doc key, target id)`. */
+  publishErrors: Record<string, string>;
   /** Preview find bar (⌘F outside the editor). */
   findOpen: boolean;
   /** Bumped by ⌘F while the bar is open, to refocus its field. */
@@ -115,6 +130,7 @@ interface AppState {
   setRemoteDrop(paths: string[] | null): void;
   setPublishOpen(open: boolean): void;
   bumpPublished(): void;
+  setPublishError(key: string, message: string | null): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
   setSidebarTab(tab: "files" | "outline"): void;
@@ -199,6 +215,7 @@ export const useStore = create<AppState>()((set, get) => ({
   remoteDrop: null,
   publishOpen: false,
   publishTick: 0,
+  publishErrors: {},
   changedOnDisk: {},
   findOpen: false,
   findFocusTick: 0,
@@ -285,6 +302,15 @@ export const useStore = create<AppState>()((set, get) => ({
     set((s) => ({ publishTick: s.publishTick + 1 }));
   },
 
+  setPublishError(key, message) {
+    const errors = get().publishErrors;
+    if ((errors[key] ?? null) === message) return;
+    const next = { ...errors };
+    if (message === null) delete next[key];
+    else next[key] = message;
+    set({ publishErrors: next });
+  },
+
   setPublishOpen(open) {
     if (get().publishOpen !== open) set({ publishOpen: open });
   },
@@ -298,6 +324,7 @@ export const useStore = create<AppState>()((set, get) => ({
   },
 
   setRemoteBrowser(mode) {
+    if (!mode) remoteBrowserStart = null;
     if (get().remoteBrowser !== mode) set({ remoteBrowser: mode });
   },
 
@@ -443,6 +470,18 @@ export const useStore = create<AppState>()((set, get) => ({
   async openPaths(specs) {
     const defaultHost = useSettings.getState().settings.defaultRemoteHost ?? "";
     for (const spec of specs) {
+      // A github.com link: a file opens as a read-only GitHub document, a
+      // folder opens in the remote browser.
+      if (isGithubUrl(spec)) {
+        try {
+          const { host, path, isDir } = await githubResolveUrl(spec);
+          if (isDir) browseRemoteAt(host, path);
+          else await get().openRemote(host, path);
+        } catch (err) {
+          await showError(String(err));
+        }
+        continue;
+      }
       const parsed = parseOpenSpec(spec, defaultHost);
       if (parsed.kind === "remote") {
         await get().openRemote(parsed.ref.host, parsed.ref.path, parsed.line);

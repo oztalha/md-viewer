@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { isValidHost, parseOpenSpec } from "../src/remote";
+import { isGithubHost, isValidHost, parseOpenSpec } from "../src/remote";
 
 test("local paths stay local", () => {
   expect(parseOpenSpec("/Users/me/notes.md", "")).toEqual({ kind: "local", path: "/Users/me/notes.md" });
@@ -24,4 +24,13 @@ test("path:LINE[:COL] suffixes become a line to jump to", () => {
   expect(parseOpenSpec("/Users/me/n.md:12:5", "")).toEqual({ kind: "local", path: "/Users/me/n.md", line: 12 });
   expect(parseOpenSpec("mdviewer://open?host=box&path=/a.md&line=7", "")).toMatchObject({ line: 7 });
   expect(parseOpenSpec("box:/tmp/plain.md", "")).toEqual({ kind: "remote", ref: { host: "box", path: "/tmp/plain.md" } });
+});
+
+// Same cases as `parses_hosts` in src-tauri/src/github.rs: the two gates must agree.
+test("github:owner/repo@ref hosts", () => {
+  expect(parseOpenSpec("github:o/r@feat/x:/docs/a.md", "")).toEqual({ kind: "remote", ref: { host: "github:o/r@feat/x", path: "/docs/a.md" } });
+  expect(isGithubHost("github:oztalha/md-viewer@feat/x")).toBe(true);
+  for (const bad of ["github:-o/r@main", "github:o/r", "github:o@main", "github:o/r@-x", "github:o/r@a..b", "github:o/r@a b", "github:o/..@main", "github:o/r@main?x=1"]) {
+    expect(isGithubHost(bad)).toBe(false);
+  }
 });

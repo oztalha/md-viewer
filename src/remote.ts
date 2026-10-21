@@ -25,7 +25,37 @@ export function splitLineSuffix(path: string): { path: string; line?: number } {
  * Rust command is the authoritative gate.
  */
 export function isValidHost(host: string): boolean {
+  if (isGithubHost(host)) return true;
   return host.length > 0 && !host.startsWith("-") && /^[A-Za-z0-9._@:[\]-]+$/.test(host);
+}
+
+/**
+ * A GitHub repo as a read-only remote host: `github:OWNER/REPO@REF`, with paths
+ * inside the repo. Mirrors `parse_host` in src-tauri/src/github.rs, which is
+ * the authoritative gate.
+ */
+export function isGithubHost(host: string): boolean {
+  const m = /^github:([A-Za-z0-9-]+)\/([A-Za-z0-9._-]+)@(.+)$/.exec(host);
+  if (!m) return false;
+  const [, owner, repo, ref] = m;
+  return (
+    !owner.startsWith("-") &&
+    !repo.startsWith("-") &&
+    repo !== "." &&
+    repo !== ".." &&
+    !/^[-/]|\/$|\.\.|\/\/|[\s~^:?*[\\%#]/.test(ref)
+  );
+}
+
+/** `github:OWNER/REPO@REF:/path` (a ref never contains ":"). */
+export function splitGithubSpec(spec: string): RemoteRef | null {
+  const m = /^(github:[^:\s]+):(\/.*)?$/.exec(spec.trim());
+  return m && isGithubHost(m[1]) ? { host: m[1], path: m[2] || "/" } : null;
+}
+
+/** A github.com link (repo, folder or file); resolved by the backend. */
+export function isGithubUrl(spec: string): boolean {
+  return /^(?:https?:\/\/)?(?:www\.)?github\.com\/[^/\s]+\/[^/\s]+/i.test(spec.trim());
 }
 
 /**
@@ -70,6 +100,9 @@ function parseOpenSpecRaw(spec: string, defaultHost: string): OpenSpec {
     }
     return { kind: "local", path: trimmed };
   }
+
+  const github = splitGithubSpec(trimmed);
+  if (github) return { kind: "remote", ref: github };
 
   // HOST:/path or :/path — a colon that is not part of a "scheme://" and comes
   // before any slash. Local absolute paths (/Users/…) never match.

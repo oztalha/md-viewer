@@ -1,5 +1,5 @@
 import type { Doc } from "./types";
-import { displayTitle } from "./types";
+import { basename, displayTitle } from "./types";
 import { keyForDoc } from "./annotations";
 import { useStore } from "./store";
 import { buildExportHtml } from "./export";
@@ -12,10 +12,13 @@ import {
   publishCommand,
   publishGist,
   publishStepCommand,
+  publishTargets,
   readRemoteFile,
   readTextFile,
+  remoteStat,
   writePublishTemp,
 } from "./ipc";
+import { isGithubHost, splitGithubSpec } from "./remote";
 import { localDocLinks, resolveLink, rewriteLinks } from "./docLinks";
 import type { McpResult, PublishStep, PublishTarget } from "./ipc";
 
@@ -29,6 +32,10 @@ export interface PublishRecord {
   id: string;
   url: string;
   at: number;
+  /** GitHub documents: republish when the file changes on GitHub. */
+  sync?: boolean;
+  /** GitHub documents: the blob sha last published by sync. */
+  sha?: string;
 }
 
 const STORAGE_KEY = "published";
@@ -64,6 +71,23 @@ function saveRecord(doc: Doc, targetId: string, record: PublishRecord): void {
   const records = loadRecords();
   records[key] = { ...(records[key] ?? {}), [targetId]: record };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+/** Turn "keep in sync with GitHub" on or off for one published copy. */
+export function setSync(doc: Doc, targetId: string, on: boolean): void {
+  const rec = publishedFor(doc)[targetId];
+  if (!rec) return;
+  // No sha when turning on: the first sync then republishes from GitHub, so
+  // the published copy matches GitHub even if it was published with local edits.
+  saveRecord(doc, targetId, { ...rec, sync: on || undefined, sha: undefined });
+  const key = keyForDoc(doc);
+  if (key) useStore.getState().setPublishError(publishErrorKey(key, targetId), null);
+  useStore.getState().bumpPublished();
+  if (on) void syncGithubPublished();
+}
+
+export function isGithubDoc(doc: Doc | undefined): boolean {
+  return !!doc?.remote && isGithubHost(doc.remote.host);
 }
 
 /** Fill `{name}` placeholders in every string inside `value`. Unknown names stay as-is. */
@@ -202,6 +226,7 @@ async function publishText(
   markdown: string,
   target: PublishTarget,
   asNew: boolean,
+  sha?: string,
 ): Promise<{ url: string; updated: boolean }> {
   const title = displayTitle(doc).replace(/\.(md|markdown|mdown|mkdn|mkd|txt)$/i, "");
   const html = target.format === "html";
@@ -232,7 +257,13 @@ async function publishText(
     if (!url) throw new Error(`${target.label}: no link in the reply and no "urlTemplate" set`);
   }
 
-  saveRecord(doc, target.id, { id, url, at: Date.now() });
+  saveRecord(doc, target.id, {
+    id,
+    url,
+    at: Date.now(),
+    sync: previous?.sync,
+    sha: sha ?? previous?.sha,
+  });
   useStore.getState().bumpPublished();
   return { url, updated: !!previous };
 }
@@ -272,4 +303,68 @@ export async function publishDoc(
   const out = await publishText(doc, markdown, target, !!options.asNew);
   await copyToClipboard(out.url);
   return { ...out, linked: linkedCount, skipped };
+}
+
+/** How often published GitHub documents are checked for changes (ms). */
+const GITHUB_SYNC_MS = 5 * 60 * 1000;
+
+/** A document's links to files already published to `targetId`, mapped to their pages. */
+function publishedLinks(doc: Doc, targetId: string): Map<string, string> {
+  const urls = new Map<string, string>();
+  for (const { doc: linked, hrefs } of linkedDocs(doc)) {
+    const url = publishedFor(linked)[targetId]?.url;
+    if (url) for (const href of hrefs) urls.set(href, url);
+  }
+  return urls;
+}
+
+let syncing = false;
+
+/**
+ * Republish GitHub documents marked "keep in sync" whose file changed on
+ * GitHub since their last publish. Linked documents aren't republished; links
+ * to ones already published to the same target point at their pages.
+ */
+export async function syncGithubPublished(): Promise<void> {
+  if (syncing) return;
+  const due = Object.entries(loadRecords()).filter(
+    ([key, byTarget]) => splitGithubSpec(key) && Object.values(byTarget).some((r) => r.sync),
+  );
+  if (due.length === 0) return;
+  syncing = true;
+  try {
+    const targets = await publishTargets();
+    for (const [key, byTarget] of due) {
+      const remote = splitGithubSpec(key)!;
+      for (const [targetId, rec] of Object.entries(byTarget)) {
+        if (!rec.sync) continue;
+        const errorKey = publishErrorKey(key, targetId);
+        try {
+          const target = targets.find((t) => t.id === targetId);
+          if (!target) throw new Error(`The publish target "${targetId}" is no longer in publish.json`);
+          const sha = await remoteStat(remote.host, remote.path);
+          if (sha !== rec.sha) {
+            const content = await readRemoteFile(remote.host, remote.path);
+            const doc: Doc = { id: "", path: null, remote, title: basename(remote.path), content, saved: content };
+            await publishText(doc, rewriteLinks(content, publishedLinks(doc, targetId)), target, false, sha);
+          }
+          useStore.getState().setPublishError(errorKey, null);
+        } catch (err) {
+          useStore.getState().setPublishError(errorKey, err instanceof Error ? err.message : String(err));
+        }
+      }
+    }
+  } finally {
+    syncing = false;
+  }
+}
+
+export function publishErrorKey(docKey: string, targetId: string): string {
+  return `${docKey}\n${targetId}`;
+}
+
+/** Sync now and every few minutes while the app runs. */
+export function initGithubSync(): void {
+  void syncGithubPublished();
+  setInterval(() => void syncGithubPublished(), GITHUB_SYNC_MS);
 }

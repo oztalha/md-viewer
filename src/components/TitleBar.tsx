@@ -8,7 +8,8 @@ import type { ViewMode } from "../types";
 import { getEditorView } from "../editor/registry";
 import { insertTable } from "../editor/commands";
 import { showTileContextMenu } from "../contextMenu";
-import { latestPublished, publishedFor } from "../publish";
+import { latestPublished, publishErrorKey, publishedFor } from "../publish";
+import { keyForDoc } from "../annotations";
 
 const MODES: { mode: ViewMode; label: string }[] = [
   { mode: "editor", label: "Editor only" },
@@ -118,7 +119,13 @@ function OpenLinkIcon() {
 function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: boolean; keyFor: (id: string) => string }) {
   const doc = useStore((s) => s.docs[docId]);
   const tick = useStore((s) => s.publishTick); // re-read saved links after a publish
-  const published = Object.keys(publishedFor(doc, tick)).length > 0;
+  const records = publishedFor(doc, tick);
+  const published = Object.keys(records).length > 0;
+  const docKey = keyForDoc(doc);
+  const errors = useStore((s) => s.publishErrors);
+  const syncError = docKey
+    ? Object.keys(records).map((t) => errors[publishErrorKey(docKey, t)]).find(Boolean)
+    : undefined;
   const latest = latestPublished(doc, tick);
   return (
     <>
@@ -134,11 +141,15 @@ function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: bo
       )}
       <button
         className="titlebar-btn publish-btn"
-        data-tip={`${published ? "Published" : "Publish"} · ${keyFor("publish")}`}
+        data-tip={
+          syncError
+            ? `Couldn't sync with GitHub: ${syncError}`
+            : `${published ? "Published" : "Publish"} · ${keyFor("publish")}`
+        }
         onClick={() => useStore.getState().setPublishOpen(true)}
       >
         <PublishIcon />
-        {published && <span className="publish-dot" />}
+        {published && <span className={`publish-dot${syncError ? " publish-dot-error" : ""}`} />}
         <Keycap show={modHeld} label={keyFor("publish")} />
       </button>
     </>

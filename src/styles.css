@@ -1824,6 +1824,10 @@ html.no-caret-animation .editor .cm-cursor {
   width: 9em;
   min-width: 0;
 }
+/* github:owner/repo@branch is long; give it room. */
+.rb-location .rb-host.rb-host-github {
+  width: 45%;
+}
 .rb-location .rb-path {
   flex: 1;
   min-width: 0;
@@ -2472,6 +2476,9 @@ html.no-caret-animation .editor .cm-cursor {
   height: 6px;
   border-radius: 50%;
   background: var(--accent);
+}
+.publish-dot-error {
+  background: #e5534b;
 }
 
 /* ⌘-held shortcut badges under title-bar buttons */

@@ -83,6 +83,7 @@ for what's new in each version.
 **Publishing**
 - **Publish…** (⇧⌘P) shares a document as a GitHub Gist, or to any place you add
   through a local MCP server or a command; republishing updates the same link.
+  Documents opened from GitHub can stay in sync with the repo.
   See [docs/PUBLISHING.md](docs/PUBLISHING.md).
 
 ![Publishing a document: pick a target, and the link is copied](docs/publish.png)
@@ -127,6 +128,14 @@ mdv <your-ssh-alias>:/abs/path/to/file.md
 ```
 
 Append `:LINE` (or `&line=33` to the link) to open at a line.
+
+**GitHub repos** work as a read-only remote too. Paste a github.com link to a
+repo, folder or file into Open Remote… (or pass it to `mdv`), or type
+`github:owner/repo@branch` as the host. Private repos work through your
+[`gh`](https://cli.github.com) login; if the active account can't see a repo,
+md-viewer tries your other logged-in `gh` accounts. To share a file with
+people who can't see the repo, publish it and turn on *Keep in sync with
+GitHub* (see [docs/PUBLISHING.md](docs/PUBLISHING.md)).
 
 ## Keyboard shortcuts
 
