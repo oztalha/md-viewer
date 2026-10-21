@@ -501,6 +501,52 @@ fn run(mut cmd: Command, what: &str) -> Result<String, String> {
     Ok(stdout)
 }
 
+/// A chosen account's token; `None` means gh's active account.
+fn account_token(account: &Option<String>) -> Result<Option<String>, String> {
+    match account {
+        Some(login) => crate::github::account_token(login)
+            .map(Some)
+            .ok_or_else(|| format!("gh has no login for {login}; run `gh auth login`")),
+        None => Ok(None),
+    }
+}
+
+fn gh_as(token: &Option<String>) -> Command {
+    let mut cmd = base_command("gh");
+    if let Some(token) = token {
+        cmd.env("GH_TOKEN", token);
+    }
+    cmd
+}
+
+/// Whether a gist still exists (it may have been deleted on github.com).
+/// Only a definite "not found" is `false`; other failures are errors, so a
+/// network hiccup never makes the app forget a published link.
+#[tauri::command]
+pub async fn gist_exists(id: String, account: Option<String>) -> Result<bool, String> {
+    if id.is_empty() || !id.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return Err(format!("Invalid gist id: {id:?}"));
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = account_token(&account)?;
+        let out = gh_as(&token)
+            .args(["api", &format!("gists/{id}"), "--jq", ".id"])
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|e| format!("Could not run gh: {e}"))?;
+        if out.status.success() {
+            return Ok(true);
+        }
+        let err = String::from_utf8_lossy(&out.stderr);
+        if err.contains("HTTP 404") {
+            return Ok(false);
+        }
+        Err(err.trim().to_string())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Create or update a gist with the file (uses the `gh` CLI's login).
 #[tauri::command]
 pub async fn publish_gist(
@@ -508,17 +554,20 @@ pub async fn publish_gist(
     file: String,
     title: String,
     existing: Option<String>,
+    account: Option<String>,
 ) -> Result<Published, String> {
     let target = find_target(&load_config()?, &target_id)?;
     tauri::async_runtime::spawn_blocking(move || {
         let name = PathBuf::from(&file).file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default();
+        let token = account_token(&account)?;
+        let gh = || gh_as(&token);
         if let Some(id) = existing {
-            let mut cmd = base_command("gh");
+            let mut cmd = gh();
             cmd.args(["gist", "edit", &id, "--filename", &name, &file]);
             run(cmd, "gh gist edit")?;
             return Ok(Published { url: format!("https://gist.github.com/{id}"), id });
         }
-        let mut cmd = base_command("gh");
+        let mut cmd = gh();
         cmd.args(["gist", "create", "--desc", &title]);
         if target.public {
             cmd.arg("--public");

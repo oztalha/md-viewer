@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useStore } from "../store";
 import { formatKeybind, keybindFor, useSettings } from "../settings";
 import { useModHeld } from "../keybindings/useModHeld";
@@ -8,7 +8,7 @@ import type { ViewMode } from "../types";
 import { getEditorView } from "../editor/registry";
 import { insertTable } from "../editor/commands";
 import { showTileContextMenu } from "../contextMenu";
-import { latestPublished, publishErrorKey, publishedFor } from "../publish";
+import { latestPublished, publishErrorKey, publishedFor, verifyPublished } from "../publish";
 import { keyForDoc } from "../annotations";
 
 const MODES: { mode: ViewMode; label: string }[] = [
@@ -122,6 +122,10 @@ function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: bo
   const records = publishedFor(doc, tick);
   const published = Object.keys(records).length > 0;
   const docKey = keyForDoc(doc);
+  // Drop links to gists deleted on github.com (once per document per session).
+  useEffect(() => {
+    void verifyPublished(useStore.getState().docs[docId]);
+  }, [docId, docKey]);
   const errors = useStore((s) => s.publishErrors);
   const syncError = docKey
     ? Object.keys(records).map((t) => errors[publishErrorKey(docKey, t)]).find(Boolean)

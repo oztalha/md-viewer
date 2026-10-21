@@ -6,6 +6,7 @@ import { buildExportHtml } from "./export";
 import { getEditorView } from "./editor/registry";
 import {
   copyToClipboard,
+  gistExists,
   mcpCall,
   mcpClose,
   mcpOpen,
@@ -36,6 +37,8 @@ export interface PublishRecord {
   sync?: boolean;
   /** GitHub documents: the blob sha last published by sync. */
   sha?: string;
+  /** Gists: the gh account that owns it (only it can update it); unset = gh's active one. */
+  account?: string;
 }
 
 const STORAGE_KEY = "published";
@@ -71,6 +74,45 @@ function saveRecord(doc: Doc, targetId: string, record: PublishRecord): void {
   const records = loadRecords();
   records[key] = { ...(records[key] ?? {}), [targetId]: record };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+function removeRecord(key: string, targetId: string): void {
+  const records = loadRecords();
+  if (!records[key]?.[targetId]) return;
+  delete records[key][targetId];
+  if (Object.keys(records[key]).length === 0) delete records[key];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+  useStore.getState().setPublishError(publishErrorKey(key, targetId), null);
+  useStore.getState().bumpPublished();
+}
+
+const verified = new Set<string>();
+
+/**
+ * Forget gists that were deleted on github.com, so the document no longer
+ * shows as published and Publish creates a new one. Once per document per
+ * session unless `force`; if GitHub can't be reached, the links are kept.
+ */
+export async function verifyPublished(doc: Doc | undefined, force = false): Promise<void> {
+  const key = keyForDoc(doc);
+  if (!key || (!force && verified.has(key))) return;
+  verified.add(key);
+  const records = Object.entries(publishedFor(doc));
+  if (records.length === 0) return;
+  let targets: PublishTarget[];
+  try {
+    targets = await publishTargets();
+  } catch {
+    return; // a broken publish.json shows its error in the dialog
+  }
+  for (const [targetId, rec] of records) {
+    if (targets.find((t) => t.id === targetId)?.kind !== "gist") continue;
+    try {
+      if (!(await gistExists(rec.id, rec.account ?? null))) removeRecord(key, targetId);
+    } catch {
+      // offline or gh trouble: keep the link
+    }
+  }
 }
 
 /** Turn "keep in sync with GitHub" on or off for one published copy. */
@@ -226,7 +268,7 @@ async function publishText(
   markdown: string,
   target: PublishTarget,
   asNew: boolean,
-  sha?: string,
+  extra: { sha?: string; account?: string } = {},
 ): Promise<{ url: string; updated: boolean }> {
   const title = displayTitle(doc).replace(/\.(md|markdown|mdown|mkdn|mkd|txt)$/i, "");
   const html = target.format === "html";
@@ -236,11 +278,23 @@ async function publishText(
   const previous = asNew ? undefined : publishedFor(doc)[target.id];
   let id = "";
   let url = "";
+  // An update must come from the gist's owner; a new gist uses the chosen account.
+  const account = target.kind === "gist" ? (previous ? previous.account : extra.account) : undefined;
 
-  if (target.kind === "gist" || target.kind === "command") {
-    const run = target.kind === "gist" ? publishGist : publishCommand;
-    const res = await run(target.id, file, title, previous?.id ?? null);
-    ({ id, url } = res);
+  if (target.kind === "gist") {
+    try {
+      ({ id, url } = await publishGist(target.id, file, title, previous?.id ?? null, account ?? null));
+    } catch (err) {
+      // Deleted on github.com: forget it, so the next publish makes a new gist.
+      const key = keyForDoc(doc);
+      if (previous && key && !(await gistExists(previous.id, account ?? null).catch(() => true))) {
+        removeRecord(key, target.id);
+        throw new Error("This gist was deleted on GitHub. Publish again to create a new one.");
+      }
+      throw err;
+    }
+  } else if (target.kind === "command") {
+    ({ id, url } = await publishCommand(target.id, file, title, previous?.id ?? null));
   } else {
     const updating = !!previous && target.update.length > 0;
     const vars: Record<string, string> = { file, title, content: contents };
@@ -262,7 +316,8 @@ async function publishText(
     url,
     at: Date.now(),
     sync: previous?.sync,
-    sha: sha ?? previous?.sha,
+    sha: extra.sha ?? previous?.sha,
+    account,
   });
   useStore.getState().bumpPublished();
   return { url, updated: !!previous };
@@ -277,7 +332,7 @@ async function publishText(
 export async function publishDoc(
   doc: Doc,
   target: PublishTarget,
-  options: { asNew?: boolean; linked?: boolean; onProgress?: (text: string) => void } = {},
+  options: { asNew?: boolean; linked?: boolean; account?: string; onProgress?: (text: string) => void } = {},
 ): Promise<PublishOutcome> {
   let markdown = liveMarkdown(doc);
   const skipped: string[] = [];
@@ -289,7 +344,9 @@ export async function publishDoc(
     for (const [i, { doc: linked, hrefs }] of links.entries()) {
       options.onProgress?.(`linked document ${i + 1} of ${links.length}: ${linked.title}`);
       try {
-        const { url } = await publishText(linked, await readLinked(linked), target, false);
+        const { url } = await publishText(linked, await readLinked(linked), target, false, {
+          account: options.account,
+        });
         for (const href of hrefs) urls.set(href, url);
         linkedCount++;
       } catch (err) {
@@ -300,7 +357,7 @@ export async function publishDoc(
     options.onProgress?.(displayTitle(doc));
   }
 
-  const out = await publishText(doc, markdown, target, !!options.asNew);
+  const out = await publishText(doc, markdown, target, !!options.asNew, { account: options.account });
   await copyToClipboard(out.url);
   return { ...out, linked: linkedCount, skipped };
 }
@@ -346,7 +403,7 @@ export async function syncGithubPublished(): Promise<void> {
           if (sha !== rec.sha) {
             const content = await readRemoteFile(remote.host, remote.path);
             const doc: Doc = { id: "", path: null, remote, title: basename(remote.path), content, saved: content };
-            await publishText(doc, rewriteLinks(content, publishedLinks(doc, targetId)), target, false, sha);
+            await publishText(doc, rewriteLinks(content, publishedLinks(doc, targetId)), target, false, { sha });
           }
           useStore.getState().setPublishError(errorKey, null);
         } catch (err) {

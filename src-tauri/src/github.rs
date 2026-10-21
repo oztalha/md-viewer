@@ -135,25 +135,46 @@ fn gh_run(args: &[&str], token: Option<&str>) -> Result<Vec<u8>, String> {
     Ok(output.stdout)
 }
 
-/// Logged-in gh accounts other than the active one.
-fn other_accounts() -> Vec<String> {
+/// Logged-in gh accounts on github.com, as (login, active).
+fn accounts() -> Vec<(String, bool)> {
     let Ok(out) = base_command("gh").args(["auth", "status", "--json", "hosts"]).stdin(Stdio::null()).output() else {
         return vec![];
     };
     let value: serde_json::Value = serde_json::from_slice(&out.stdout).unwrap_or_default();
     value["hosts"]["github.com"]
         .as_array()
-        .map(|accounts| {
-            accounts
-                .iter()
-                .filter(|a| a["active"] != true && a["state"] == "success")
-                .filter_map(|a| a["login"].as_str().map(String::from))
+        .map(|list| {
+            list.iter()
+                .filter(|a| a["state"] == "success")
+                .filter_map(|a| Some((a["login"].as_str()?.to_string(), a["active"] == true)))
                 .collect()
         })
         .unwrap_or_default()
 }
 
-fn account_token(login: &str) -> Option<String> {
+/// Logged-in gh accounts other than the active one.
+fn other_accounts() -> Vec<String> {
+    accounts().into_iter().filter(|(_, active)| !active).map(|(login, _)| login).collect()
+}
+
+#[derive(serde::Serialize)]
+pub struct Accounts {
+    logins: Vec<String>,
+    active: Option<String>,
+}
+
+/// The gh accounts to offer for publishing (e.g. which one owns a gist).
+#[tauri::command]
+pub async fn gh_accounts() -> Result<Accounts, String> {
+    blocking(|| {
+        let list = accounts();
+        let active = list.iter().find(|(_, a)| *a).map(|(l, _)| l.clone());
+        Ok(Accounts { logins: list.into_iter().map(|(l, _)| l).collect(), active })
+    })
+    .await
+}
+
+pub(crate) fn account_token(login: &str) -> Option<String> {
     static TOKENS: OnceLock<Mutex<HashMap<String, String>>> = OnceLock::new();
     let tokens = TOKENS.get_or_init(Default::default);
     if let Some(token) = tokens.lock().ok()?.get(login) {

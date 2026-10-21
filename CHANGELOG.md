@@ -12,6 +12,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   files open read-only, with images. Uses your `gh` login; if the active
   account can't see a private repo, your other `gh` accounts are tried.
   **Open from GitHub…** in the remote browser takes a link or `owner/repo`.
+- **Choose the gist account:** with several `gh` accounts logged in, the
+  Publish dialog's Account menu picks which one owns a new gist. Updates and
+  syncs keep using the account that created it.
 - **Open all .md files:** the remote browser can open every markdown file in
   the folder it shows, each in its own tab.
 - **Keep a published copy in sync with GitHub:** for a document opened from

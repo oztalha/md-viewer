@@ -1,15 +1,16 @@
 import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
-import { editPublishConfig, publishTargets } from "../ipc";
+import { editPublishConfig, ghAccounts, publishTargets } from "../ipc";
 import type { PublishTarget } from "../ipc";
-import { isGithubDoc, linkedDocs, publishDoc, publishErrorKey, publishedFor, setSync } from "../publish";
+import { isGithubDoc, linkedDocs, publishDoc, publishErrorKey, publishedFor, setSync, verifyPublished } from "../publish";
 import { keyForDoc } from "../annotations";
 import { displayTitle } from "../types";
 import { CopyButton } from "./CopyButton";
 
 const LAST_TARGET_KEY = "publishLastTarget";
 const LINKED_KEY = "publishLinked";
+const ACCOUNT_KEY = "publishGistAccount";
 
 function timeAgo(at: number): string {
   const min = Math.round((Date.now() - at) / 60000);
@@ -42,6 +43,18 @@ function Publish() {
   // On unless turned off once: otherwise links to local files break once published.
   const [withLinked, setWithLinked] = useState(localStorage.getItem(LINKED_KEY) !== "0");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
+  // gh accounts for gists: the last one picked if still logged in, else gh's active one.
+  const [accounts, setAccounts] = useState<{ logins: string[]; active: string | null } | null>(null);
+  const [account, setAccount] = useState("");
+  useEffect(() => {
+    ghAccounts()
+      .then((list) => {
+        setAccounts(list);
+        const last = localStorage.getItem(ACCOUNT_KEY) ?? "";
+        setAccount(list.logins.includes(last) ? last : (list.active ?? list.logins[0] ?? ""));
+      })
+      .catch(() => setAccounts({ logins: [], active: null })); // no gh: publishing shows the real error
+  }, []);
   const tick = useStore((s) => s.publishTick);
   const records = publishedFor(doc, tick);
   const linked = linkedDocs(doc);
@@ -52,6 +65,7 @@ function Publish() {
   useEffect(() => {
     setStatus((cur) => (cur.kind === "busy" ? cur : { kind: "idle" }));
     setAsNew(false);
+    void verifyPublished(useStore.getState().docs[docId ?? ""], true);
   }, [docId]);
 
   const load = () =>
@@ -115,6 +129,7 @@ function Publish() {
       const out = await publishDoc(doc, target, {
         asNew,
         linked: withLinked && linked.length > 0,
+        account: target.kind === "gist" ? account || undefined : undefined,
         onProgress: (detail) => setStatus({ kind: "busy", label: target.label, detail }),
       });
       setStatus({ kind: "done", ...out, label: target.label });
@@ -192,6 +207,42 @@ function Publish() {
               );
             })}
           </div>
+        )}
+
+        {target?.kind === "gist" && accounts && accounts.logins.length > 0 && (
+          <label className="publish-asnew publish-account">
+            Account
+            <span className="publish-select">
+              {existing && !asNew ? (
+                // Only the account that created a gist can update it.
+                <select
+                  value={existing.account ?? ""}
+                  disabled
+                  title="A gist can only be updated by the account that created it"
+                >
+                  <option value={existing.account ?? ""}>
+                    {existing.account ?? "gh's active account (when it was published)"}
+                  </option>
+                </select>
+              ) : (
+                <select
+                  value={account}
+                  disabled={busy}
+                  onChange={(event) => {
+                    setAccount(event.target.value);
+                    localStorage.setItem(ACCOUNT_KEY, event.target.value);
+                  }}
+                >
+                  {accounts.logins.map((login) => (
+                    <option key={login} value={login}>
+                      {login}
+                      {login === accounts.active ? " (active)" : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </span>
+          </label>
         )}
 
         {existing && (

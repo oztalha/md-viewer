@@ -2410,6 +2410,42 @@ html.no-caret-animation .editor .cm-cursor {
   font-size: 12px;
   color: var(--fg-muted);
 }
+/* Drawn in theme colors: the native control stays light in dark mode. */
+.publish-select {
+  position: relative;
+  display: inline-flex;
+}
+.publish-select select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 4px 26px 4px 9px;
+  font: inherit;
+  font-size: 12.5px;
+  color: var(--fg);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 7px;
+}
+.publish-select select:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.publish-select select:disabled {
+  color: var(--fg-muted);
+}
+.publish-select::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  margin-top: -4px;
+  border-right: 1.5px solid var(--fg-muted);
+  border-bottom: 1.5px solid var(--fg-muted);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
 .publish-status {
   margin: 0;
   font-size: 12.5px;

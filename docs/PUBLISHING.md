@@ -27,7 +27,10 @@ private repo won't load on the published page.
 
 Out of the box you can publish to a **GitHub Gist** (secret by default). It uses
 your logged-in [`gh`](https://cli.github.com) CLI, so install it and run
-`gh auth login` once.
+`gh auth login` once. If you're logged in to several GitHub accounts, the
+dialog's **Account** menu picks which one owns a new gist (default: the one
+you used last, else gh's active account). Updates always use the account that
+created the gist, since only it can change it.
 
 Other places are added in a config file, `~/.config/md-viewer/publish.json`.
 **Edit targets…** in the Publish dialog creates and opens it.

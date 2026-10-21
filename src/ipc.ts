@@ -243,8 +243,19 @@ export function publishGist(
   file: string,
   title: string,
   existing: string | null,
+  account: string | null,
 ): Promise<{ id: string; url: string }> {
-  return invoke("publish_gist", { targetId, file, title, existing });
+  return invoke("publish_gist", { targetId, file, title, existing, account });
+}
+
+/** Whether a gist still exists; rejects when GitHub can't be asked. */
+export function gistExists(id: string, account: string | null): Promise<boolean> {
+  return invoke("gist_exists", { id, account });
+}
+
+/** Logged-in gh accounts (for choosing which one owns a gist). */
+export function ghAccounts(): Promise<{ logins: string[]; active: string | null }> {
+  return invoke("gh_accounts");
 }
 
 export function publishCommand(
