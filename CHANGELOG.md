@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.16.3] — 2026-10-21
+
 ### Changed
 - **Published Documents…** is now ⌘P (was ⌥⇧⌘P).
 - Published Documents also lists the password-protected pages in your GitHub
@@ -452,6 +454,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.16.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.3
 [0.16.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.2
 [0.16.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.1
 [0.16.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.0
