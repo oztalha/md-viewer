@@ -49,7 +49,7 @@ ul, ol { padding-left: 1.5em; } li { margin: .25em 0; }
 /* Tables fill the text column and may grow past it up to 90rem (centered);
    beyond the window they scroll inside themselves, never widening the page. */
 table { border-collapse: collapse; margin: 1em 0; display: block; overflow-x: auto; width: max-content; min-width: 100%; max-width: min(90rem, calc(100vw - 32px)); position: relative; left: 50%; transform: translateX(-50%); }
-th, td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; overflow-wrap: anywhere; min-width: 6em; }
+th, td { border: 1px solid var(--border); padding: 6px 12px; text-align: left; overflow-wrap: break-word; }
 th { background: var(--bg-secondary); font-weight: 600; }
 hr { border: none; border-top: 1px solid var(--border); margin: 2em 0; }
 img { max-width: 100%; border-radius: 6px; }
