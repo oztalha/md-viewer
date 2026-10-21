@@ -20,6 +20,13 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   light, or dark, remembered in the reader's browser. The password prompt uses
   the same choice.
 
+- Pages md-viewer publishes (GitHub Pages, the index page, HTML gists) end
+  with a small "Published with md-viewer" footer. Export as HTML doesn't add it.
+
+### Changed
+- The password prompt of a protected page uses md-viewer's colors (yellow
+  button, warm accents) instead of blue.
+
 ### Fixed
 - Code blocks in published and exported HTML pages had no syntax colors; they
   are highlighted now, in light and dark.

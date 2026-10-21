@@ -9,6 +9,7 @@
  */
 
 import { THEME_INIT } from "./pageTheme";
+import { FOOTER_CSS, FOOTER_HTML } from "./pageFooter";
 
 export const ITERATIONS = 600_000;
 export const MIN_PASSWORD = 12;
@@ -107,7 +108,9 @@ export async function decryptPayload(
   return { html: new TextDecoder().decode(plain), key: btoa(raw) };
 }
 
-const PROMPT_DARK = "--bg: #1e1e20; --fg: #f5f5f7; --muted: #a1a1a6; --line: #3a3a3c; --accent: #4c9bff;";
+// The app's palette: neutral grays, amber text accent, yellow fills with dark text.
+const PROMPT_DARK =
+  "--bg: #1e1e20; --bg-secondary: #29292c; --fg: #e8e8ea; --fg-muted: #98989f; --border: rgba(255,255,255,.12); --accent: #ffd23f; --fill: #ffc800; --error: #ff6b5e;";
 
 /**
  * The published page: a password prompt that decrypts and shows `html`, and
@@ -133,22 +136,26 @@ export async function encryptPage(
 <title>Protected page</title>
 <script>${THEME_INIT}</script>
 <style>
-:root { color-scheme: light dark; --bg: #fff; --fg: #1d1d1f; --muted: #6e6e73; --line: #d2d2d7; --accent: #0a66d8; }
+:root { color-scheme: light dark; --bg: #fff; --bg-secondary: #f5f5f6; --fg: #1d1d1f; --fg-muted: #73737a; --border: rgba(0,0,0,.12); --accent: #8a6500; --fill: #f5c518; --on-fill: #1d1d1f; --error: #d93025; }
 :root[data-theme="light"] { color-scheme: light; }
 :root[data-theme="dark"] { color-scheme: dark; ${PROMPT_DARK} }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { ${PROMPT_DARK} } }
-html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
-body { display: grid; place-items: center; padding: 16px; box-sizing: border-box; }
+html, body { height: 100%; margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; -webkit-font-smoothing: antialiased; }
+body { display: grid; place-items: center; padding: 16px 16px 72px; box-sizing: border-box; }
 form { width: min(360px, 100%); display: grid; gap: 10px; }
 form[hidden] { display: none; }
 h1 { margin: 0; font-size: 19px; }
-p { margin: 0; color: var(--muted); font-size: 13.5px; }
-input, button { font: inherit; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--line); background: transparent; color: var(--fg); }
-button { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; cursor: pointer; }
+p { margin: 0; color: var(--fg-muted); font-size: 13.5px; }
+input, button { font: inherit; padding: 9px 12px; border-radius: 9px; border: 1px solid var(--border); background: var(--bg-secondary); color: var(--fg); }
+input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fill) 30%, transparent); }
+button { background: var(--fill); border-color: var(--fill); color: var(--on-fill); font-weight: 600; cursor: pointer; }
+button:hover { filter: brightness(1.05); }
 button:disabled { opacity: .6; cursor: default; }
-label { display: flex; gap: 8px; align-items: center; color: var(--muted); font-size: 13.5px; }
-label input { padding: 0; }
-#e { color: #d93025; min-height: 1.5em; }
+label { display: flex; gap: 8px; align-items: center; color: var(--fg-muted); font-size: 13.5px; }
+label input { padding: 0; accent-color: var(--fill); }
+#e { color: var(--error); min-height: 1.5em; }
+${FOOTER_CSS}
+.page-footer { position: fixed; left: 0; right: 0; bottom: 0; max-width: none; border-top: 0; }
 </style>
 </head>
 <body>
@@ -160,6 +167,7 @@ label input { padding: 0; }
 <button id="b">Open</button>
 <p id="e" role="alert"></p>
 </form>
+${FOOTER_HTML}
 <script type="application/json" id="d">${data}</script>
 <script>
 const decryptPayload = ${decryptPayload.toString()};
