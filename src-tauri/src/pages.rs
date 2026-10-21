@@ -66,6 +66,36 @@ pub async fn pages_status(account: Option<String>) -> Result<PagesStatus, String
     .map_err(|e| e.to_string())?
 }
 
+#[derive(serde::Serialize)]
+pub struct PageListing {
+    id: String,
+    url: String,
+}
+
+/// The protected pages in the account's repo, so pages published from an
+/// unsaved document or another Mac still show up in Published Documents.
+/// No repo yet: none.
+#[tauri::command]
+pub async fn pages_list(account: Option<String>) -> Result<Vec<PageListing>, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = account_token(&account)?;
+        let login = login(&token)?;
+        let names = match api(&token, &[&format!("repos/{login}/{REPO}/contents"), "--jq", ".[].name"]) {
+            Ok(names) => names,
+            Err((true, _)) => return Ok(vec![]),
+            Err((false, e)) => return Err(e),
+        };
+        Ok(names
+            .lines()
+            .filter_map(|name| name.strip_suffix(".html"))
+            .filter(|id| valid_id(id))
+            .map(|id| PageListing { id: id.to_string(), url: page_url(&login, id) })
+            .collect())
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Create the repo (public: free GitHub Pages needs that; the content is
 /// encrypted) and turn on Pages, if not done yet. Returns the default branch.
 fn ensure_repo(token: &Option<String>, login: &str) -> Result<String, String> {

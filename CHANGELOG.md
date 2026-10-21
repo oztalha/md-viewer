@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- **Published Documents…** is now ⌘P (was ⌥⇧⌘P).
+- Published Documents also lists the password-protected pages in your GitHub
+  Pages repo that this Mac's history doesn't know about (published from an
+  unsaved document or another Mac), each with **Copy password**.
+
 ## [0.16.2] — 2026-10-21
 
 ### Fixed

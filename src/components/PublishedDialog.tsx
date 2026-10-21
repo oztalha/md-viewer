@@ -3,7 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import { publishedPages } from "../publish";
 import { pageMatches, protectedPageId } from "../publishSearch";
-import { copyToClipboard, pagesPasswordGet } from "../ipc";
+import { copyToClipboard, pagesList, pagesPasswordGet } from "../ipc";
 import { basename } from "../types";
 import { CopyButton } from "./CopyButton";
 
@@ -39,7 +39,7 @@ function when(at: number): string {
 }
 
 /**
- * File → Published Documents… (⌥⇧⌘P): everything published from this Mac,
+ * File → Published Documents… (⌘P): everything published from this Mac,
  * newest first, searchable by title, file or link. Pasting a page's link
  * finds the file it was published from.
  */
@@ -52,12 +52,34 @@ function Published() {
   const close = () => useStore.getState().setPublishedOpen(false);
   const tick = useStore((s) => s.publishTick);
   const [query, setQuery] = useState("");
+  // Protected pages on GitHub that this Mac's history doesn't know about.
+  const [repoPages, setRepoPages] = useState<{ id: string; url: string }[]>([]);
+  useEffect(() => {
+    let live = true;
+    pagesList(null)
+      .then((list) => live && setRepoPages(list))
+      .catch(() => {}); // no gh login or offline: just the history
+    return () => {
+      live = false;
+    };
+  }, []);
   const pages = publishedPages(tick);
   const shown = pages.filter((p) => pageMatches({ ...p, title: p.title || basename(p.path) }, query));
-  // A pasted protected-page link that isn't in the history (an unsaved doc, or
+  const known = new Set(pages.map((p) => protectedPageId(p.url)).filter(Boolean));
+  const extra = repoPages
+    .filter((r) => !known.has(r.id))
+    .filter((r) =>
+      pageMatches({ title: "Password-protected page", key: r.url, url: r.url, id: r.id, targetLabel: "" }, query),
+    );
+  // A pasted protected-page link that isn't listed (an unsaved doc, or
   // published from another Mac): still offer its password if it's saved here.
   const pastedPage = protectedPageId(query);
-  const unlisted = pastedPage && !shown.some((p) => protectedPageId(p.url) === pastedPage) ? pastedPage : null;
+  const unlisted =
+    pastedPage &&
+    !shown.some((p) => protectedPageId(p.url) === pastedPage) &&
+    !extra.some((r) => r.id === pastedPage)
+      ? pastedPage
+      : null;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -108,11 +130,25 @@ function Published() {
               </div>
             </div>
           )}
-          {unlisted ? null : pages.length === 0 ? (
+          {extra.map((r) => (
+            <div key={r.id} className="pub-row">
+              <div className="pub-title">Password-protected page</div>
+              <div className="pub-meta">On your GitHub Pages; not in this Mac's publish history.</div>
+              <div className="pub-link">
+                <a href={r.url} onClick={link(r.url)} title={r.url}>
+                  {r.url.replace(/^https?:\/\//, "")}
+                </a>
+                <CopyButton text={r.url} tip="Copy link" />
+                <CopyPassword id={r.id} />
+              </div>
+            </div>
+          ))}
+          {unlisted || extra.length > 0 || shown.length > 0 ? null : pages.length === 0 ? (
             <p className="rb-status">Nothing published yet. Publish a document with ⇧⌘P.</p>
-          ) : shown.length === 0 ? (
-            <p className="rb-status">No published document matches “{query.trim()}”.</p>
           ) : (
+            <p className="rb-status">No published document matches “{query.trim()}”.</p>
+          )}
+          {(
             shown.map((p) => (
               <div key={p.url} className="pub-row">
                 <div className="pub-title">{p.title || basename(p.path).replace(/\.\w+$/, "")}</div>
@@ -146,7 +182,8 @@ function Published() {
 
         <div className="remote-prompt-actions">
           <span className="rb-where">
-            {pages.length > 0 && `${shown.length} of ${pages.length}`}
+            {pages.length + repoPages.length > 0 &&
+              `${shown.length + extra.length} of ${pages.length + repoPages.filter((r) => !known.has(r.id)).length}`}
           </span>
           <button className="remote-prompt-cancel" onClick={close}>
             Close
