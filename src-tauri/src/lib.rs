@@ -860,6 +860,8 @@ pub fn run() {
             publish::gist_exists,
             pages::pages_status,
             pages::pages_live,
+            pages::pages_delete,
+            publish::gist_delete,
             pages::publish_pages,
             pages::pages_password_get,
             pages::pages_password_set,

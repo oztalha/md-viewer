@@ -214,6 +214,54 @@ pub async fn pages_live(url: String, marker: String) -> Result<bool, String> {
     .map_err(|e| e.to_string())?
 }
 
+/// Delete a page (Unpublish) and forget its password. Already gone counts as
+/// done. Git history keeps older encrypted versions; the docs say so.
+#[tauri::command]
+pub async fn pages_delete(id: String, account: Option<String>) -> Result<(), String> {
+    if !valid_id(&id) {
+        return Err(format!("Invalid page id: {id:?}"));
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = account_token(&account)?;
+        let login = login(&token)?;
+        let repo = format!("repos/{login}/{REPO}");
+        let branch = match api(&token, &[&repo, "--jq", ".default_branch"]) {
+            Ok(branch) => branch,
+            Err((true, _)) => return forget_password(&id),
+            Err((false, e)) => return Err(e),
+        };
+        let path = format!("{repo}/contents/{id}.html");
+        match api(&token, &[&path, "-f", &format!("ref={branch}"), "-X", "GET", "--jq", ".sha"]) {
+            Ok(sha) => {
+                api_ok(
+                    &token,
+                    &[
+                        "-X", "DELETE", &path,
+                        "-f", "message=Remove page",
+                        "-f", &format!("sha={sha}"),
+                        "-f", &format!("branch={branch}"),
+                        "--jq", ".commit.sha",
+                    ],
+                )?;
+            }
+            Err((true, _)) => {}
+            Err((false, e)) => return Err(e),
+        }
+        forget_password(&id)
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+fn forget_password(id: &str) -> Result<(), String> {
+    // Not found is fine: nothing to forget.
+    let _ = security()
+        .args(["delete-generic-password", "-s", KEYCHAIN_SERVICE, "-a", id])
+        .output()
+        .map_err(|e| format!("Could not update the Keychain: {e}"))?;
+    Ok(())
+}
+
 fn security() -> Command {
     let mut cmd = Command::new("/usr/bin/security");
     cmd.stdin(Stdio::null());

@@ -280,6 +280,21 @@ export function pagesLive(url: string, marker: string): Promise<boolean> {
   return invoke("pages_live", { url, marker });
 }
 
+/** Delete a protected page and forget its password (Unpublish). */
+export function pagesDelete(id: string, account: string | null): Promise<void> {
+  return invoke("pages_delete", { id, account });
+}
+
+/** Delete a gist (Unpublish). */
+export function gistDelete(id: string, account: string | null): Promise<void> {
+  return invoke("gist_delete", { id, account });
+}
+
+/** Confirm Unpublish: deleting where possible, else forgetting the link. */
+export function confirmUnpublish(text: string, okLabel: string): Promise<boolean> {
+  return confirm(text, { title: "Unpublish", kind: "warning", okLabel, cancelLabel: "Cancel" });
+}
+
 export function pagesPasswordGet(id: string): Promise<string | null> {
   return invoke("pages_password_get", { id });
 }

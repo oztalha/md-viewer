@@ -638,6 +638,30 @@ pub async fn gist_exists(id: String, account: Option<String>) -> Result<bool, St
     .map_err(|e| e.to_string())?
 }
 
+/// Delete a gist (Unpublish). Already gone counts as done.
+#[tauri::command]
+pub async fn gist_delete(id: String, account: Option<String>) -> Result<(), String> {
+    if id.is_empty() || !id.chars().all(|c| c.is_ascii_alphanumeric()) {
+        return Err(format!("Invalid gist id: {id:?}"));
+    }
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = account_token(&account)?;
+        let out = gh_as(&token)
+            .args(["api", "-X", "DELETE", &format!("gists/{id}")])
+            .stdin(Stdio::null())
+            .output()
+            .map_err(|e| format!("Could not run gh: {e}"))?;
+        let err = String::from_utf8_lossy(&out.stderr);
+        if out.status.success() || err.contains("HTTP 404") {
+            Ok(())
+        } else {
+            Err(err.trim().to_string())
+        }
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// Create or update a gist with the file (uses the `gh` CLI's login).
 #[tauri::command]
 pub async fn publish_gist(

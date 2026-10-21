@@ -7,6 +7,12 @@ again to open the page (or ⌘↩ to open an existing link without publishing).
 **updates** it, so the link stays the same. The publish icon in the title bar
 shows where a document is published, with clickable links.
 
+**Unpublish:** for a published document, the dialog's **Unpublish (delete
+it)…** deletes the gist or protected page (after a confirmation), so the link
+stops working; a protected page's saved password is forgotten too. For other
+targets md-viewer can't delete the copy, so **Forget this link…** only forgets
+it here. Linked documents published along with it stay published.
+
 **Linked documents:** when a document links to other local markdown files
 (`[findings](FINDINGS.md)`, relative or absolute, on the same machine or the
 same ssh host), the dialog offers to publish those too. They go first, each to

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import {
+  confirmUnpublish,
   ghAccounts,
   pagesLive,
   pagesPasswordGet,
@@ -17,6 +18,7 @@ import {
   publishErrorKey,
   publishedFor,
   setSync,
+  unpublish,
   verifyPublished,
 } from "../publish";
 import { keyForDoc } from "../annotations";
@@ -50,6 +52,7 @@ type Status =
       /** Protected pages: proves the host serves this version (pagesLive). */
       marker?: string;
     }
+  | { kind: "removed"; label: string; deleted: boolean }
   | { kind: "error"; message: string };
 
 /** File → Publish… (⇧⌘P): pick a target; the link is copied when done. */
@@ -272,6 +275,40 @@ function Publish() {
   }, [doneUrl, doneMarker]);
   const waitingForPages = live === "waiting";
 
+  const takeDown = async () => {
+    if (!doc || !target || !existing || busy) return;
+    const name = displayTitle(doc);
+    const deletes = target.kind === "gist" || target.kind === "pages";
+    const what = target.kind === "gist" ? "gist" : "protected page";
+    const ok = await confirmUnpublish(
+      deletes
+        ? `Delete the ${what} for “${name}”? The link stops working for everyone.` +
+            (target.kind === "pages"
+              ? " An encrypted copy stays in the repo's git history."
+              : "") +
+            (linked.length > 0
+              ? " Linked documents published with it stay published."
+              : "")
+        : `md-viewer can't delete “${name}” from ${target.label}; remove it there yourself. Forget the link here?`,
+      deletes ? "Delete" : "Forget",
+    );
+    if (!ok) return;
+    setStatus({ kind: "busy", label: target.label, detail: "removing" });
+    try {
+      const result = await unpublish(doc, target);
+      setStatus({
+        kind: "removed",
+        label: target.label,
+        deleted: result === "deleted",
+      });
+    } catch (err) {
+      setStatus({
+        kind: "error",
+        message: err instanceof Error ? err.message : String(err),
+      });
+    }
+  };
+
   const primary = () =>
     status.kind === "done"
       ? !waitingForPages && openAndClose(status.url)
@@ -460,6 +497,14 @@ function Publish() {
           </div>
         )}
 
+        {existing && status.kind !== "busy" && (
+          <button className="publish-unpublish" onClick={() => void takeDown()}>
+            {target?.kind === "gist" || target?.kind === "pages"
+              ? "Unpublish (delete it)…"
+              : "Forget this link…"}
+          </button>
+        )}
+
         {existing && (
           <label className="publish-asnew">
             <input
@@ -518,6 +563,13 @@ function Publish() {
           <p className="publish-status">
             Publishing to {status.label}…
             {status.detail ? ` ${status.detail}` : ""}
+          </p>
+        )}
+        {status.kind === "removed" && (
+          <p className="publish-status publish-done">
+            {status.deleted
+              ? `Deleted from ${status.label}. The link no longer works.`
+              : `Forgot the link to ${status.label}.`}
           </p>
         )}
         {status.kind === "error" && (
