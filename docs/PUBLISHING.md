@@ -7,6 +7,14 @@ again to open the page (or ⌘↩ to open an existing link without publishing).
 **updates** it, so the link stays the same. The publish icon in the title bar
 shows where a document is published, with clickable links.
 
+**Linked documents:** when a document links to other local markdown files
+(`[findings](FINDINGS.md)`, relative or absolute, on the same machine or the
+same ssh host), the dialog offers to publish those too. They go first, each to
+the same place (updating its earlier copy, so its link stays the same), and
+the published document links to their pages instead of the local paths. Only
+one hop: links inside the linked files are left as they are. Your file isn't
+changed; only the published copy is.
+
 Out of the box you can publish to a **GitHub Gist** (secret by default). It uses
 your logged-in [`gh`](https://cli.github.com) CLI, so install it and run
 `gh auth login` once.

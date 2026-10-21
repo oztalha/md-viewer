@@ -3,11 +3,12 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import { editPublishConfig, publishTargets } from "../ipc";
 import type { PublishTarget } from "../ipc";
-import { publishDoc, publishedFor } from "../publish";
+import { linkedDocs, publishDoc, publishedFor } from "../publish";
 import { displayTitle } from "../types";
 import { CopyButton } from "./CopyButton";
 
 const LAST_TARGET_KEY = "publishLastTarget";
+const LINKED_KEY = "publishLinked";
 
 function timeAgo(at: number): string {
   const min = Math.round((Date.now() - at) / 60000);
@@ -20,8 +21,8 @@ function timeAgo(at: number): string {
 
 type Status =
   | { kind: "idle" }
-  | { kind: "busy"; label: string }
-  | { kind: "done"; url: string; updated: boolean; label: string }
+  | { kind: "busy"; label: string; detail?: string }
+  | { kind: "done"; url: string; updated: boolean; label: string; linked: number; skipped: string[] }
   | { kind: "error"; message: string };
 
 /** File → Publish… (⇧⌘P): pick a target; the link is copied when done. */
@@ -37,9 +38,12 @@ function Publish() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [selected, setSelected] = useState<string>(localStorage.getItem(LAST_TARGET_KEY) ?? "");
   const [asNew, setAsNew] = useState(false);
+  // On unless turned off once: otherwise links to local files break once published.
+  const [withLinked, setWithLinked] = useState(localStorage.getItem(LINKED_KEY) !== "0");
   const [status, setStatus] = useState<Status>({ kind: "idle" });
   const tick = useStore((s) => s.publishTick);
   const records = publishedFor(doc, tick);
+  const linked = linkedDocs(doc);
 
   // Switching documents while the dialog is open starts fresh; a previous
   // document's result would otherwise show as if it were this one's.
@@ -103,8 +107,12 @@ function Publish() {
     localStorage.setItem(LAST_TARGET_KEY, target.id);
     setStatus({ kind: "busy", label: target.label });
     try {
-      const out = await publishDoc(doc, target, { asNew });
-      setStatus({ kind: "done", url: out.url, updated: out.updated, label: target.label });
+      const out = await publishDoc(doc, target, {
+        asNew,
+        linked: withLinked && linked.length > 0,
+        onProgress: (detail) => setStatus({ kind: "busy", label: target.label, detail }),
+      });
+      setStatus({ kind: "done", ...out, label: target.label });
     } catch (err) {
       setStatus({ kind: "error", message: err instanceof Error ? err.message : String(err) });
     } finally {
@@ -203,14 +211,45 @@ function Publish() {
           </label>
         )}
 
-        {status.kind === "busy" && <p className="publish-status">Publishing to {status.label}…</p>}
+        {linked.length > 0 && (
+          <label
+            className="publish-asnew"
+            title={linked.map((l) => l.doc.title).join("\n")}
+          >
+            <input
+              type="checkbox"
+              checked={withLinked}
+              disabled={busy}
+              onChange={(event) => {
+                setWithLinked(event.target.checked);
+                localStorage.setItem(LINKED_KEY, event.target.checked ? "1" : "0");
+              }}
+            />
+            Also publish {linked.length} linked document{linked.length === 1 ? "" : "s"}, and link to
+            them
+          </label>
+        )}
+
+        {status.kind === "busy" && (
+          <p className="publish-status">
+            Publishing to {status.label}…{status.detail ? ` ${status.detail}` : ""}
+          </p>
+        )}
         {status.kind === "error" && <p className="publish-status rb-error">{status.message}</p>}
         {status.kind === "done" && (
           <p className="publish-status publish-done">
-            {status.updated ? "Updated on" : "Published to"} {status.label}. Link copied:{" "}
+            {status.updated ? "Updated on" : "Published to"} {status.label}
+            {status.linked > 0 ? `, with ${status.linked} linked document${status.linked === 1 ? "" : "s"}` : ""}
+            . Link copied:{" "}
             <a href={status.url} onClick={link(status.url)}>
               {status.url}
             </a>
+          </p>
+        )}
+        {status.kind === "done" && status.skipped.length > 0 && (
+          <p className="publish-status rb-error">
+            Couldn't publish (links to these stay as they were):{"\n"}
+            {status.skipped.join("\n")}
           </p>
         )}
 

@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Publish linked documents:** if a document links to other local markdown
+  files, **Publish…** can publish them too and point the links at their
+  published pages, so links in the shared copy work. Republishing updates
+  them in place. One hop: links inside the linked files stay as they are.
+
 ## [0.13.1] — 2026-10-20
 
 ### Fixed

@@ -24,16 +24,8 @@ import { addRecent, getRecents, removeRecent } from "./recent";
 import { revealLine } from "./reveal";
 import { formatMarkdown } from "./format";
 import { buildExportHtml } from "./export";
+import { resolveLink } from "./docLinks";
 import type { RemoteRef } from "./types";
-
-/** Resolve a relative/absolute link target against a base directory. */
-function resolveLink(baseDir: string | null, href: string): string | null {
-  const clean = decodeURI(href.split("#")[0].split("?")[0]);
-  if (!clean) return null;
-  if (clean.startsWith("/")) return clean;
-  if (!baseDir) return null;
-  return `${baseDir}/${clean}`;
-}
 
 function makeDoc(partial: Partial<Doc> = {}): Doc {
   return {

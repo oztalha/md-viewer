@@ -12,8 +12,11 @@ import {
   publishCommand,
   publishGist,
   publishStepCommand,
+  readRemoteFile,
+  readTextFile,
   writePublishTemp,
 } from "./ipc";
+import { localDocLinks, resolveLink, rewriteLinks } from "./docLinks";
 import type { McpResult, PublishStep, PublishTarget } from "./ipc";
 
 /**
@@ -137,22 +140,75 @@ async function runSteps(
 export interface PublishOutcome {
   url: string;
   updated: boolean;
+  /** Linked documents published along with it. */
+  linked: number;
+  /** Linked documents that couldn't be published, with why. */
+  skipped: string[];
 }
 
-/** Publish (or republish) a document to a target and copy the link. */
-export async function publishDoc(
-  doc: Doc,
-  target: PublishTarget,
-  options: { asNew?: boolean } = {},
-): Promise<PublishOutcome> {
+/** The text to publish: the live editor (unsaved edits included), else the doc. */
+function liveMarkdown(doc: Doc): string {
   const view = getEditorView(doc.id);
-  const markdown = view ? view.state.doc.toString() : doc.content;
+  return view ? view.state.doc.toString() : doc.content;
+}
+
+/** A local markdown file a document links to, and the hrefs that point at it. */
+export interface LinkedDoc {
+  doc: Doc;
+  hrefs: string[];
+}
+
+/**
+ * The other local markdown files a document links to (one hop), resolved like
+ * a click in the preview. A remote document's links stay on its host.
+ */
+export function linkedDocs(doc: Doc | undefined): LinkedDoc[] {
+  if (!doc || doc.image) return [];
+  const where = doc.remote?.path ?? doc.path;
+  const baseDir = where ? where.slice(0, where.lastIndexOf("/")) : null;
+  const self = keyForDoc(doc);
+  const byKey = new Map<string, LinkedDoc>();
+  for (const href of localDocLinks(liveMarkdown(doc))) {
+    const path = resolveLink(baseDir, href);
+    if (!path) continue;
+    const linked: Doc = {
+      id: "",
+      path: doc.remote ? null : path,
+      remote: doc.remote ? { ...doc.remote, path } : null,
+      title: path.slice(path.lastIndexOf("/") + 1),
+      content: "",
+      saved: "",
+    };
+    const key = keyForDoc(linked);
+    if (!key || key === self) continue;
+    const entry = byKey.get(key);
+    if (entry) entry.hrefs.push(href);
+    else byKey.set(key, { doc: linked, hrefs: [href] });
+  }
+  return [...byKey.values()];
+}
+
+/** A linked file's text: from its open tab if it has one (unsaved edits too). */
+async function readLinked(linked: Doc): Promise<string> {
+  const key = keyForDoc(linked);
+  const open = Object.values(useStore.getState().docs).find((d) => keyForDoc(d) === key);
+  if (open) return liveMarkdown(open);
+  return linked.remote ? readRemoteFile(linked.remote.host, linked.remote.path) : readTextFile(linked.path!);
+}
+
+/** Publish (or republish) one document's text to a target and record the link. */
+async function publishText(
+  doc: Doc,
+  markdown: string,
+  target: PublishTarget,
+  asNew: boolean,
+): Promise<{ url: string; updated: boolean }> {
   const title = displayTitle(doc).replace(/\.(md|markdown|mdown|mkdn|mkd|txt)$/i, "");
   const html = target.format === "html";
   const contents = html ? buildExportHtml(markdown, title) : markdown;
   const file = await writePublishTemp(`${title || "document"}.${html ? "html" : "md"}`, contents);
 
-  const previous = options.asNew ? undefined : publishedFor(doc)[target.id];
+  const previous = asNew ? undefined : publishedFor(doc)[target.id];
   let id = "";
   let url = "";
 
@@ -178,6 +234,42 @@ export async function publishDoc(
 
   saveRecord(doc, target.id, { id, url, at: Date.now() });
   useStore.getState().bumpPublished();
-  await copyToClipboard(url);
   return { url, updated: !!previous };
+}
+
+/**
+ * Publish (or republish) a document to a target and copy the link. With
+ * `linked`, the local markdown files it links to are published first (updated
+ * in place if they were before, so their links stay put), and the published
+ * copy links to them instead of to the local paths. One hop only.
+ */
+export async function publishDoc(
+  doc: Doc,
+  target: PublishTarget,
+  options: { asNew?: boolean; linked?: boolean; onProgress?: (text: string) => void } = {},
+): Promise<PublishOutcome> {
+  let markdown = liveMarkdown(doc);
+  const skipped: string[] = [];
+  let linkedCount = 0;
+
+  if (options.linked) {
+    const links = linkedDocs(doc);
+    const urls = new Map<string, string>();
+    for (const [i, { doc: linked, hrefs }] of links.entries()) {
+      options.onProgress?.(`linked document ${i + 1} of ${links.length}: ${linked.title}`);
+      try {
+        const { url } = await publishText(linked, await readLinked(linked), target, false);
+        for (const href of hrefs) urls.set(href, url);
+        linkedCount++;
+      } catch (err) {
+        skipped.push(`${linked.title}: ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+    markdown = rewriteLinks(markdown, urls);
+    options.onProgress?.(displayTitle(doc));
+  }
+
+  const out = await publishText(doc, markdown, target, !!options.asNew);
+  await copyToClipboard(out.url);
+  return { ...out, linked: linkedCount, skipped };
 }
