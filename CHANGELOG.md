@@ -10,6 +10,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   published; publishing again creates a new gist.
 
 ### Added
+- **Unpublish:** the Publish dialog can delete a published gist or protected
+  page (after a confirmation), or forget the link for other targets.
 - **Password-protected pages:** Publish… → *Password-protected page* encrypts
   the rendered document in the app (AES-256-GCM, key from the password) and
   publishes it to your own GitHub Pages; readers type the password to read it.
