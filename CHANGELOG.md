@@ -12,6 +12,9 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   listing the pages you choose with **Show on my index page** (on by default
   for public pages, off for protected ones, which show with a lock). It stays
   one list across Macs, and unpublishing takes a page off it.
+- Published and exported HTML pages have an outline: a rail of dashes at the
+  left, one per heading, that opens into the list of headings on hover and
+  marks the section you're reading. Hidden on narrow screens and in print.
 - Published and exported HTML pages (password-protected pages, HTML gists,
   **Export as HTML**) have a light/dark toggle in the corner: match the system,
   light, or dark, remembered in the reader's browser. The password prompt uses

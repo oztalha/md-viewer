@@ -1,6 +1,7 @@
 import { renderDocumentHtml } from "./markdown";
 import katexPackage from "katex/package.json";
 import { THEME_INIT, THEME_TOGGLE } from "./pageTheme";
+import { OUTLINE_CSS, OUTLINE_SCRIPT } from "./pageOutline";
 
 // Exported files are standalone, so math styling comes from the CDN build of
 // the same KaTeX version the app renders with (fonts load from there too).
@@ -82,8 +83,8 @@ img { max-width: 100%; border-radius: 6px; }
 `.trim();
 
 /**
- * A complete standalone page around rendered HTML: the shared stylesheet and
- * theme toggle, plus `css` and `head` extras (the index page, publish markers).
+ * A complete standalone page around rendered HTML: the shared stylesheet,
+ * theme toggle and outline, plus `css` and `head` extras (the index page, publish markers).
  */
 export function standalonePage(
   body: string,
@@ -98,7 +99,8 @@ export function standalonePage(
 <title>${escapeHtml(title)}</title>
 ${extra.head ? `${extra.head}\n` : ""}<script>${THEME_INIT}</script>
 ${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
-${EXPORT_CSS}${extra.css ? `\n${extra.css}` : ""}
+${EXPORT_CSS}
+${OUTLINE_CSS}${extra.css ? `\n${extra.css}` : ""}
 </style>
 </head>
 <body>
@@ -106,6 +108,7 @@ ${EXPORT_CSS}${extra.css ? `\n${extra.css}` : ""}
 ${body}
 </main>
 <script>${THEME_TOGGLE}</script>
+<script>${OUTLINE_SCRIPT}</script>
 </body>
 </html>
 `;

@@ -93,7 +93,8 @@ for what's new in each version.
 - **Published Documents…** (⌘P) lists everything you've published, with
   dates; search by title, file or link (paste a link to find the file behind it).
 - Published and exported pages follow the reader's light or dark mode, and a
-  toggle in the corner lets them pick one.
+  toggle in the corner lets them pick one. An outline at the side jumps to
+  any heading.
 
 ![Publishing a document: pick a target, and the link is copied](docs/publish.png)
 
