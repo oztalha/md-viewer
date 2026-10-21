@@ -13,6 +13,7 @@ import { generatePassword, MIN_PASSWORD } from "../pageCrypt";
 import type { PublishTarget } from "../ipc";
 import {
   isGithubDoc,
+  isListed,
   linkExistingPage,
   linkedDocs,
   publishDoc,
@@ -195,17 +196,27 @@ function Publish() {
   const updatingPage = !!existing && !asNew;
   const [requirePassword, setRequirePassword] = useState(true);
   const [listed, setListed] = useState(false);
-  const [listedTouched, setListedTouched] = useState(false);
+  // Set by hand: the password choice and the index read stop changing it.
+  const listedTouched = useRef(false);
   const existingId = existing?.id;
   useEffect(() => {
     const locked = updatingPage ? !existing?.open : true;
     setRequirePassword(locked);
     setListed(updatingPage ? !!existing?.listed : !locked);
-    setListedTouched(false);
+    listedTouched.current = false;
+    if (!pagesTarget || !updatingPage || !existingId) return;
+    // The index in the repo decides: it may have been listed from another Mac.
+    let live = true;
+    isListed(existingId, existing?.account)
+      .then((on) => live && setListed((cur) => (listedTouched.current ? cur : on)))
+      .catch(() => {}); // offline: keep this Mac's record
+    return () => {
+      live = false;
+    };
   }, [pagesTarget, existingId, updatingPage, docId]);
   const changeRequirePassword = (on: boolean) => {
     setRequirePassword(on);
-    if (!listedTouched && !updatingPage) setListed(!on);
+    if (!listedTouched.current && !updatingPage) setListed(!on);
   };
 
   // Password-protected pages: a strong generated password for a new page, the
@@ -479,7 +490,7 @@ function Publish() {
               disabled={busy}
               onChange={(event) => {
                 setListed(event.target.checked);
-                setListedTouched(true);
+                listedTouched.current = true;
               }}
             />
             Show on my index page

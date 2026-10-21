@@ -224,7 +224,8 @@ export async function unpublish(
     result = "deleted";
   }
   removeRecord(key, target.id);
-  if (target.kind === "pages" && rec.listed) {
+  // Even if this Mac didn't list it: another Mac may have.
+  if (target.kind === "pages") {
     try {
       await updateIndex(rec.account, (entries) => withoutEntry(entries, rec.id));
     } catch (err) {
@@ -518,18 +519,26 @@ async function publishOpen(
 
 /**
  * Change the account's index page: read it from the repo (so every Mac edits
- * the same list), apply `change`, write it back. Returns its link.
+ * the same list), apply `change`, write it back if that changed anything.
+ * Returns its link.
  */
 async function updateIndex(
   account: string | undefined,
   change: (entries: IndexEntry[]) => IndexEntry[],
 ): Promise<string> {
   const { url, html } = await pagesIndexGet(account ?? null);
+  const entries = parseIndex(html);
+  const next = change(entries);
+  if (JSON.stringify(next) === JSON.stringify(entries)) return url;
   const owner = new URL(url).hostname.split(".")[0];
-  const page = standalonePage(renderIndexBody(change(parseIndex(html)), owner), `Pages by ${owner}`, {
-    css: INDEX_CSS,
-  });
+  const page = standalonePage(renderIndexBody(next, owner), `Pages by ${owner}`, { css: INDEX_CSS });
   return pagesIndexPut(await writePublishTemp("index.html", page), account ?? null);
+}
+
+/** Whether a page is on the account's index page now (the repo's copy). */
+export async function isListed(id: string, account: string | undefined): Promise<boolean> {
+  const { html } = await pagesIndexGet(account ?? null);
+  return parseIndex(html).some((e) => e.id === id);
 }
 
 /**
@@ -680,7 +689,6 @@ export async function publishDoc(
     options.onProgress?.(displayTitle(doc));
   }
 
-  const before = options.asNew ? undefined : publishedFor(doc)[target.id];
   const out = await publishText(doc, markdown, target, !!options.asNew, {
     account: options.account,
     password: options.password,
@@ -691,9 +699,11 @@ export async function publishDoc(
   const result: PublishOutcome = { ...out, linked: linkedCount, skipped };
 
   // The page is up either way; an index that couldn't be updated is reported.
-  const listed = options.listed ?? before?.listed ?? false;
-  if (target.kind === "pages" && (listed || before?.listed)) {
+  // Checked every time (not just when this Mac listed it): the page may have
+  // been listed from another Mac.
+  if (target.kind === "pages") {
     const rec = publishedFor(doc)[target.id];
+    const listed = !!rec?.listed;
     const entry: IndexEntry = {
       id: out.id,
       title: out.title,
