@@ -189,7 +189,8 @@ fn valid_page_url(url: &str) -> bool {
 
 /// Whether GitHub Pages serves this publish yet: the page contains its
 /// `marker` (the random salt), so an older version doesn't count. The query
-/// string skips the CDN's cache.
+/// string skips the CDN's cache. Redirects are followed (HTTPS only): with a
+/// custom domain on the account, `<login>.github.io/...` answers with a 301.
 #[tauri::command]
 pub async fn pages_live(url: String, marker: String) -> Result<bool, String> {
     if !valid_page_url(&url) {
@@ -204,7 +205,8 @@ pub async fn pages_live(url: String, marker: String) -> Result<bool, String> {
             .map(|d| d.as_millis())
             .unwrap_or_default();
         let out = Command::new("/usr/bin/curl")
-            .args(["-s", "--max-time", "10", "-H", "Cache-Control: no-cache", &format!("{url}?v={nonce}")])
+            .args(["-s", "-L", "--max-redirs", "3", "--proto-redir", "=https", "--max-time", "10"])
+            .args(["-H", "Cache-Control: no-cache", &format!("{url}?v={nonce}")])
             .stdin(Stdio::null())
             .output()
             .map_err(|e| format!("Could not run curl: {e}"))?;

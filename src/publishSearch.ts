@@ -23,6 +23,15 @@ export function pageMatches(page: Searchable, query: string): boolean {
 }
 
 /**
+ * The id of a password-protected page from its link: the GitHub Pages address
+ * (`https://<login>.github.io/md-viewer-pages/<id>.html`) or the same path on
+ * the account's custom domain, which GitHub redirects to.
+ */
+export function protectedPageId(link: string): string | null {
+  return /^https:\/\/[\w.-]+\/md-viewer-pages\/([0-9a-f]{32})\.html(?:[?#]\S*)?$/.exec(link.trim())?.[1] ?? null;
+}
+
+/**
  * The id of a page from its link, for linking a document to a page published
  * before (e.g. from another Mac). Uses the target's `urlTemplate` (`{id}` is
  * the id; extra path after it, like a title slug, is fine), or the gist
@@ -33,6 +42,7 @@ export function idFromLink(
   target: { kind: string; urlTemplate?: string },
 ): string | null {
   const url = link.trim();
+  if (target.kind === "pages") return protectedPageId(url);
   if (target.kind === "gist") {
     return /^https:\/\/gist\.github\.com\/(?:[\w-]+\/)?([0-9a-f]{6,})\b/i.exec(url)?.[1] ?? null;
   }

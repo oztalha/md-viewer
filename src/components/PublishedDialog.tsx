@@ -2,9 +2,37 @@ import { useEffect, useState } from "react";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { useStore } from "../store";
 import { publishedPages } from "../publish";
-import { pageMatches } from "../publishSearch";
+import { pageMatches, protectedPageId } from "../publishSearch";
+import { copyToClipboard, pagesPasswordGet } from "../ipc";
 import { basename } from "../types";
 import { CopyButton } from "./CopyButton";
+
+/** Copies a protected page's password from this Mac's Keychain. */
+function CopyPassword({ id }: { id: string }) {
+  const [note, setNote] = useState<string | null>(null);
+  const copy = async () => {
+    try {
+      const saved = await pagesPasswordGet(id);
+      if (saved) {
+        await copyToClipboard(saved);
+        setNote("Password copied");
+      } else {
+        setNote("Its password isn't saved on this Mac");
+      }
+    } catch (err) {
+      setNote(String(err));
+    }
+    setTimeout(() => setNote(null), 2500);
+  };
+  return (
+    <span className="pub-password">
+      <button className="publish-edit" onClick={() => void copy()}>
+        Copy password
+      </button>
+      {note && <span className="pub-note">{note}</span>}
+    </span>
+  );
+}
 
 function when(at: number): string {
   return new Date(at).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
@@ -26,6 +54,10 @@ function Published() {
   const [query, setQuery] = useState("");
   const pages = publishedPages(tick);
   const shown = pages.filter((p) => pageMatches({ ...p, title: p.title || basename(p.path) }, query));
+  // A pasted protected-page link that isn't in the history (an unsaved doc, or
+  // published from another Mac): still offer its password if it's saved here.
+  const pastedPage = protectedPageId(query);
+  const unlisted = pastedPage && !shown.some((p) => protectedPageId(p.url) === pastedPage) ? pastedPage : null;
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -64,7 +96,19 @@ function Published() {
         />
 
         <div className="pub-list">
-          {pages.length === 0 ? (
+          {unlisted && (
+            <div className="pub-row">
+              <div className="pub-title">Password-protected page</div>
+              <div className="pub-meta">Not in this Mac's publish history.</div>
+              <div className="pub-link">
+                <a href={query.trim()} onClick={link(query.trim())} title={query.trim()}>
+                  {query.trim().replace(/^https?:\/\//, "")}
+                </a>
+                <CopyPassword id={unlisted} />
+              </div>
+            </div>
+          )}
+          {unlisted ? null : pages.length === 0 ? (
             <p className="rb-status">Nothing published yet. Publish a document with ⇧⌘P.</p>
           ) : shown.length === 0 ? (
             <p className="rb-status">No published document matches “{query.trim()}”.</p>
@@ -93,6 +137,7 @@ function Published() {
                     {p.url.replace(/^https?:\/\//, "")}
                   </a>
                   <CopyButton text={p.url} tip="Copy link" />
+                  {protectedPageId(p.url) && <CopyPassword id={protectedPageId(p.url)!} />}
                 </div>
               </div>
             ))

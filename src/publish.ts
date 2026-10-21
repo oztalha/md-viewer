@@ -329,7 +329,9 @@ export function linkExistingPage(doc: Doc, target: PublishTarget, link: string):
       ? `https://gist.github.com/${id}`
       : target.kind === "command"
         ? id
-        : String(fill(target.urlTemplate ?? "", { id }));
+        : target.kind === "pages"
+          ? link.trim().replace(/[?#].*$/, "")
+          : String(fill(target.urlTemplate ?? "", { id }));
   const record = { id, url, at: Date.now() };
   saveRecord(doc, target.id, record);
   useStore.getState().bumpPublished();

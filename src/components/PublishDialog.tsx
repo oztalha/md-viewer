@@ -164,8 +164,11 @@ function Publish() {
   );
   const busy = status.kind === "busy";
   // Targets whose links carry the page id (so a pasted link can be linked).
+  // Linking needs somewhere to keep the record: a saved file.
   const canLink =
-    !!target && (target.kind !== "mcp" || !!target.urlTemplate?.includes("{id}"));
+    !!target &&
+    !!keyForDoc(doc) &&
+    (target.kind !== "mcp" || !!target.urlTemplate?.includes("{id}"));
 
   const linkPage = () => {
     if (!doc || !target) return;
@@ -227,9 +230,12 @@ function Publish() {
     };
   }, [protectedPage, pagesAccount, updatingPage]);
   const passwordTooShort = protectedPage && password.length < MIN_PASSWORD;
+  // An unsaved document can't remember its page: each publish would make a new
+  // page with a new password. Saving first keeps one page and one password.
+  const needsSaveFirst = protectedPage && !keyForDoc(doc);
 
   const publish = async () => {
-    if (!doc || !target || busy || inFlight.current || passwordTooShort) return;
+    if (!doc || !target || busy || inFlight.current || passwordTooShort || needsSaveFirst) return;
     inFlight.current = true;
     localStorage.setItem(LAST_TARGET_KEY, target.id);
     setStatus({ kind: "busy", label: target.label });
@@ -456,6 +462,13 @@ function Publish() {
             <CopyButton text={password} tip="Copy password" />
           </div>
         )}
+        {needsSaveFirst && status.kind !== "done" && (
+          <p className="publish-status rb-error">
+            Save this document first (⌘S). A protected page is tied to its file,
+            so updates keep the same link and password; an unsaved document
+            would get a new page and a new password every time.
+          </p>
+        )}
         {protectedPage && passwordTooShort && password && (
           <p className="publish-status rb-error">
             Use at least {MIN_PASSWORD} characters: the page is public, only the
@@ -656,7 +669,7 @@ function Publish() {
               !target ||
               busy ||
               waitingForPages ||
-              (status.kind !== "done" && passwordTooShort)
+              (status.kind !== "done" && (passwordTooShort || needsSaveFirst))
             }
             data-tip={
               status.kind === "done"
