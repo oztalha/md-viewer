@@ -5,6 +5,16 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- A bare file name like `methods.md` in the text linked to the website
+  `http://methods.md` (`.md` is a real web domain). It now opens the file,
+  like `[methods.md](methods.md)`.
+
+### Added
+- Bare markdown paths in the text (`notes/plan.md`, `../summary.md`,
+  `/abs/path/a.md`) are links to those files too, and **Publish…** treats them
+  as linked documents. Web addresses and code are left alone.
+
 ## [0.16.0] — 2026-10-21
 
 ### Fixed
