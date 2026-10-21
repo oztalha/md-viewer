@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.16.0] — 2026-10-21
+
 ### Fixed
 - A document whose gist was deleted on github.com no longer shows as
   published; publishing again creates a new gist.
@@ -414,6 +416,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.16.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.0
 [0.15.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.15.0
 [0.14.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.1
 [0.14.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.0
