@@ -44,13 +44,19 @@ open the link, type the password, and read the page; they need no account.
 - The password is kept in your macOS Keychain, so updating (or syncing a
   GitHub document) keeps the same link and password without asking. Typing a
   different password before **Update** changes it; send readers the new one.
-- Encryption: PBKDF2-SHA256 (600,000 iterations) and AES-256-GCM, fresh salt
-  and IV every publish, decrypted in the reader's browser with no external
+- Readers are asked once per device: *Remember on this device* (on by
+  default) keeps the page's key, not the password, in that browser, so later
+  visits open straight away, also after you update the page. Changing the
+  password locks out every remembered device.
+- Encryption: PBKDF2-SHA256 (600,000 iterations) and AES-256-GCM, a salt fixed
+  per page (from its random id) and a fresh IV every publish, decrypted in the reader's browser with no external
   scripts. Passwords need at least 12 characters, since anyone can download
   the encrypted page and try passwords offline.
 - Limits: anyone with the link and the password can read the page, and you
   can't shut out one person (change the password instead). Older encrypted
-  versions stay in the repo's git history.
+  versions stay in the repo's git history. Browsers treat all of
+  `<you>.github.io` as one site, so another GitHub Pages site of yours that
+  runs scripts could read keys remembered for these pages.
 
 Out of the box you can publish to a **GitHub Gist** (secret by default). It uses
 your logged-in [`gh`](https://cli.github.com) CLI, so install it and run

@@ -379,10 +379,7 @@ async function publishProtected(
   if (password.length < MIN_PASSWORD)
     throw new Error(`Use a password of at least ${MIN_PASSWORD} characters.`);
   const pageId = existingId ?? newPageId();
-  const { page, marker } = await encryptPage(
-    buildExportHtml(markdown, title),
-    password,
-  );
+  const { page, marker } = await encryptPage(buildExportHtml(markdown, title), password, pageId);
   const file = await writePublishTemp(`${pageId}.html`, page);
   const out = await publishPages(file, pageId, account ?? null);
   await pagesPasswordSet(out.id, password);
