@@ -543,10 +543,7 @@ function Publish() {
           <p className="publish-status publish-done">
             {status.updated ? "Updated on" : "Published to"} {status.label}
             {status.linked > 0 ? `, with ${status.linked} linked document${status.linked === 1 ? "" : "s"}` : ""}
-            . Link copied:{" "}
-            <a href={status.url} onClick={link(status.url)}>
-              {status.url}
-            </a>
+            . Link copied.
           </p>
         )}
         {status.kind === "done" && live === "waiting" && (
