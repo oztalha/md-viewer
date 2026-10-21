@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.14.1] — 2026-10-20
+
 ### Changed
 - The About window links to the license instead of a credit line, and the
   app now includes the full MIT license text (`Contents/Resources/LICENSE`).
@@ -360,6 +362,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.14.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.1
 [0.14.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.0
 [0.13.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.13.1
 [0.13.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.13.0
