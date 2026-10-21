@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.15.0] — 2026-10-21
+
 ### Added
 - **Save into a new remote folder:** in **Save to Remote…**, typing a folder
   that doesn't exist yet (e.g. `~/docs/`) offers **Create Folder** instead of
@@ -369,6 +371,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.15.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.15.0
 [0.14.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.1
 [0.14.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.14.0
 [0.13.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.13.1
