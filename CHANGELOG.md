@@ -9,6 +9,24 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - Checkboxes and radio buttons use the theme's colors (yellow accent, theme
   background, dark mode) instead of the system blue, matching the dropdowns.
 
+## [0.16.2] — 2026-10-21
+
+### Fixed
+- Publishing a password-protected page stayed on "Getting ready…" forever
+  when the GitHub account has a custom domain for its Pages (GitHub then
+  redirects `<login>.github.io` there). The page was live; the check didn't
+  follow the redirect.
+- An unsaved (Untitled) document published as a password-protected page got a
+  new page and a new password each time, so the password shown didn't match
+  the published page. Publish… now asks you to save the document first.
+- **Update an existing page instead…** accepts password-protected page links,
+  including the account's custom-domain form.
+
+### Added
+- **Copy password** in **Published Documents…** (⌥⇧⌘P) for password-protected
+  pages. Paste any protected-page link into its search to get its password,
+  even for a page that isn't in the list, if the password is saved on this Mac.
+
 ## [0.16.1] — 2026-10-21
 
 ### Fixed
@@ -432,6 +450,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.16.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.2
 [0.16.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.1
 [0.16.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.0
 [0.15.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.15.0
