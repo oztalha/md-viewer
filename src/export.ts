@@ -4,6 +4,7 @@ import { THEME_INIT, THEME_TOGGLE } from "./pageTheme";
 import { OUTLINE_CSS, OUTLINE_SCRIPT } from "./pageOutline";
 import { FOOTER_CSS, FOOTER_HTML } from "./pageFooter";
 import { MERMAID_CSS, MERMAID_SCRIPT } from "./pageMermaid";
+import { TITLE_BAR_CSS, TITLE_BAR_SCRIPT } from "./pageTitleBar";
 
 // Exported files are standalone, so math styling comes from the CDN build of
 // the same KaTeX version the app renders with (fonts load from there too).
@@ -86,7 +87,7 @@ img { max-width: 100%; border-radius: 6px; }
 
 /**
  * A complete standalone page around rendered HTML: the shared stylesheet,
- * theme toggle and outline, plus `css` and `head` extras (the index page,
+ * theme toggle, outline and title bar, plus `css` and `head` extras (the index page,
  * publish markers) and, for published pages, the md-viewer footer.
  */
 export function standalonePage(
@@ -104,7 +105,8 @@ export function standalonePage(
 ${extra.head ? `${extra.head}\n` : ""}<script>${THEME_INIT}</script>
 ${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
 ${EXPORT_CSS}
-${OUTLINE_CSS}${mermaid ? `\n${MERMAID_CSS}` : ""}${extra.footer ? `\n${FOOTER_CSS}` : ""}${extra.css ? `\n${extra.css}` : ""}
+${OUTLINE_CSS}
+${TITLE_BAR_CSS}${mermaid ? `\n${MERMAID_CSS}` : ""}${extra.footer ? `\n${FOOTER_CSS}` : ""}${extra.css ? `\n${extra.css}` : ""}
 </style>
 </head>
 <body>
@@ -113,6 +115,7 @@ ${body}
 </main>
 ${extra.footer ? `${FOOTER_HTML}\n` : ""}<script>${THEME_TOGGLE}</script>
 <script>${OUTLINE_SCRIPT}</script>
+<script>${TITLE_BAR_SCRIPT}</script>
 ${mermaid ? `<script type="module">${MERMAID_SCRIPT}</script>\n` : ""}</body>
 </html>
 `;
