@@ -439,15 +439,22 @@ async function publishText(
     : undefined;
 
   // Sync and linked documents without a choice keep the page as it was.
-  const open = target.kind === "pages" && (extra.open ?? previous?.open ?? false);
+  const wasOpen = !!previous?.open;
+  const open = target.kind === "pages" && (extra.open ?? wasOpen);
+  // Protection never changes in place: a link shared as password-protected
+  // must never start showing the page in plain text (and the reverse would
+  // leave the plain text in the repo's history). Switching makes a new page
+  // with a new link; the old one stays until it's unpublished.
+  const samePage = target.kind !== "pages" || open === wasOpen;
+  const pageId = samePage ? previous?.id : undefined;
   if (target.kind === "pages" && open) {
-    ({ id, url, marker } = await publishOpen(markdown, title, previous?.id, account));
+    ({ id, url, marker } = await publishOpen(markdown, title, pageId, account));
   } else if (target.kind === "pages") {
     ({ id, url, marker } = await publishProtected(
       doc,
       markdown,
       title,
-      previous?.id,
+      pageId,
       account,
       extra.password,
     ));
@@ -489,12 +496,12 @@ async function publishText(
       id,
       url,
       at: Date.now(),
-      updated: !!previous,
+      updated: !!previous && samePage,
       open: open || undefined,
     });
   }
   useStore.getState().bumpPublished();
-  return { id, url, title, updated: !!previous, marker };
+  return { id, url, title, updated: !!previous && samePage, marker };
 }
 
 /**
@@ -669,6 +676,9 @@ export async function publishDoc(
     for (const [i, { doc: linked, hrefs }] of links.entries()) {
       options.onProgress?.(`linked document ${i + 1} of ${links.length}: ${linked.title}`);
       try {
+        // A linked document published before keeps its own protection and
+        // password; only new ones take this publish's choices.
+        const prior = publishedFor(linked)[target.id];
         const { url } = await publishText(
           linked,
           await readLinked(linked),
@@ -676,8 +686,8 @@ export async function publishDoc(
           false,
           {
             account: options.account,
-            password: options.password,
-            open: options.open,
+            password: prior ? undefined : options.password,
+            open: prior ? undefined : options.open,
           },
         );
         for (const href of hrefs) urls.set(href, url);

@@ -482,6 +482,13 @@ function Publish() {
             through your public repo md-viewer-pages.
           </p>
         )}
+        {pagesTarget && updatingPage && requirePassword === !!existing?.open && (
+          <p className="publish-status rb-error">
+            {requirePassword
+              ? "This publishes a new, password-protected page with a new link. The current public page stays up at its old link until you unpublish it."
+              : "This publishes a new public page with a new link. The protected page stays up at its old link, still protected, until you unpublish it."}
+          </p>
+        )}
         {pagesTarget && (
           <label className="publish-asnew">
             <input

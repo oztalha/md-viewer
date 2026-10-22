@@ -8,6 +8,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Added
 - **GitHub Pages** (was *Password-protected page*) can publish without a
   password: uncheck **Require a password** for a plain public page.
+  Switching an existing page between protected and public publishes a new
+  page with a new link (the dialog says so first), so a link shared as
+  protected never starts showing the page in plain text. Linked documents
+  published before keep their own protection and password.
 - An index page for your GitHub Pages, `<you>.github.io/md-viewer-pages/`,
   listing the pages you choose with **Show on my index page** (on by default
   for public pages, off for protected ones, which show with a lock). It stays
