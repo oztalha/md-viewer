@@ -5,9 +5,15 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- Published and exported pages that open with a title keep it in a slim
+  bar at the top once you scroll past it; click it to go back to the top.
+
 ### Changed
 - The outline on published and exported pages slides open and closed on
   hover instead of snapping.
+- On phones and narrow windows, published and exported pages get the outline
+  as a menu behind a button at the top left (it was hidden there).
 
 ### Fixed
 - Mermaid diagrams now draw in published pages and exported HTML (they

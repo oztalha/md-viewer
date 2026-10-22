@@ -22,7 +22,20 @@ export const OUTLINE_CSS = `
 :root[data-theme="dark"] { --outline-active: #6b9cf0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --outline-active: #6b9cf0; } }
 @media (prefers-reduced-motion: reduce) { .page-outline ol, .po-text { transition: none; } }
-@media (max-width: 1180px), print { .page-outline { display: none; } }
+.page-outline .po-toggle { display: none; }
+/* Narrow screens (phones): a list button at the top left opens the headings
+   as a menu; dashes and hover don't work there. */
+@media (max-width: 1180px) {
+  .page-outline { top: 12px; left: 12px; max-height: calc(100vh - 24px); flex-direction: column; align-items: flex-start; }
+  .page-outline .po-toggle { display: grid; place-items: center; width: 32px; height: 32px; padding: 0; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--fg-muted); }
+  .page-outline .po-toggle:hover { color: var(--fg); background: var(--bg-secondary); }
+  .page-outline ol { display: none; margin-top: 6px; max-width: calc(100vw - 24px); background: var(--bg); border-color: var(--border); box-shadow: 0 6px 24px rgba(0,0,0,.12); transition: none; }
+  .page-outline.open ol { display: block; }
+  .po-dash { display: none; }
+  .po-text, .page-outline:hover .po-text, .page-outline:focus-within .po-text { max-width: none; margin-left: 0; padding-left: var(--po-indent); opacity: 1; transition: none; }
+  .page-outline ~ .page-title-bar { padding-left: 56px; }
+}
+@media print { .page-outline { display: none; } }
 `.trim();
 
 export const OUTLINE_SCRIPT = `(() => {
@@ -53,7 +66,19 @@ export const OUTLINE_SCRIPT = `(() => {
     list.append(item);
     return button;
   });
-  nav.append(list);
+  const toggle = document.createElement("button");
+  toggle.className = "po-toggle";
+  toggle.setAttribute("aria-label", "Outline");
+  toggle.setAttribute("aria-expanded", "false");
+  toggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M3 4h10M3 8h10M3 12h6"/></svg>';
+  const setOpen = (open) => {
+    nav.classList.toggle("open", open);
+    toggle.setAttribute("aria-expanded", String(open));
+  };
+  toggle.addEventListener("click", () => setOpen(!nav.classList.contains("open")));
+  list.addEventListener("click", () => setOpen(false));
+  document.addEventListener("click", (e) => { if (!nav.contains(e.target)) setOpen(false); });
+  nav.append(toggle, list);
   document.body.append(nav);
   // The current section: the last heading scrolled past the top (the first
   // before any), or the last one once the page is scrolled to the end.
