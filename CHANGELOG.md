@@ -9,6 +9,19 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 - Checkboxes and radio buttons use the theme's colors (yellow accent, theme
   background, dark mode) instead of the system blue, matching the dropdowns.
 
+## [0.16.4] — 2026-10-21
+
+### Added
+- A **Published documents** button in the title bar, next to Publish (⌘P).
+
+## [0.16.3] — 2026-10-21
+
+### Changed
+- **Published Documents…** is now ⌘P (was ⌥⇧⌘P).
+- Published Documents also lists the password-protected pages in your GitHub
+  Pages repo that this Mac's history doesn't know about (published from an
+  unsaved document or another Mac), each with **Copy password**.
+
 ## [0.16.2] — 2026-10-21
 
 ### Fixed
@@ -450,6 +463,8 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.16.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.4
+[0.16.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.3
 [0.16.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.2
 [0.16.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.1
 [0.16.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.0

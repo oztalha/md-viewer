@@ -611,7 +611,7 @@ fn build_menu(app: &AppHandle) -> tauri::Result<()> {
         )
         .item(
             &MenuItemBuilder::with_id("published-list", "Published Documents…")
-                .accelerator("Shift+Alt+CmdOrCtrl+P")
+                .accelerator("CmdOrCtrl+P")
                 .build(app)?,
         )
         .item(
@@ -886,6 +886,7 @@ pub fn run() {
             publish::publish_gist,
             publish::gist_exists,
             pages::pages_status,
+            pages::pages_list,
             pages::pages_live,
             pages::pages_delete,
             publish::gist_delete,
