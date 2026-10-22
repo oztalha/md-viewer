@@ -5,6 +5,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- Mermaid diagrams now draw in published pages and exported HTML (they
+  showed as code). Like math, they load from a CDN when the page opens; if it
+  can't load, the diagram's source is shown.
+
 ## [0.17.0] — 2026-10-21
 
 ### Added

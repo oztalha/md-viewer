@@ -3,6 +3,7 @@ import katexPackage from "katex/package.json";
 import { THEME_INIT, THEME_TOGGLE } from "./pageTheme";
 import { OUTLINE_CSS, OUTLINE_SCRIPT } from "./pageOutline";
 import { FOOTER_CSS, FOOTER_HTML } from "./pageFooter";
+import { MERMAID_CSS, MERMAID_SCRIPT } from "./pageMermaid";
 
 // Exported files are standalone, so math styling comes from the CDN build of
 // the same KaTeX version the app renders with (fonts load from there too).
@@ -93,6 +94,7 @@ export function standalonePage(
   title: string,
   extra: { css?: string; head?: string; footer?: boolean } = {},
 ): string {
+  const mermaid = body.includes('class="mermaid-block"');
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -102,7 +104,7 @@ export function standalonePage(
 ${extra.head ? `${extra.head}\n` : ""}<script>${THEME_INIT}</script>
 ${body.includes('class="katex') ? `<link rel="stylesheet" href="${KATEX_CSS}">\n` : ""}<style>
 ${EXPORT_CSS}
-${OUTLINE_CSS}${extra.footer ? `\n${FOOTER_CSS}` : ""}${extra.css ? `\n${extra.css}` : ""}
+${OUTLINE_CSS}${mermaid ? `\n${MERMAID_CSS}` : ""}${extra.footer ? `\n${FOOTER_CSS}` : ""}${extra.css ? `\n${extra.css}` : ""}
 </style>
 </head>
 <body>
@@ -111,7 +113,7 @@ ${body}
 </main>
 ${extra.footer ? `${FOOTER_HTML}\n` : ""}<script>${THEME_TOGGLE}</script>
 <script>${OUTLINE_SCRIPT}</script>
-</body>
+${mermaid ? `<script type="module">${MERMAID_SCRIPT}</script>\n` : ""}</body>
 </html>
 `;
 }
