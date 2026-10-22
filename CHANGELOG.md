@@ -5,6 +5,15 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- A file reached through a symlinked folder (say `/home/me/x.md` and
+  `/local/home/me/x.md`) counted as two files for publishing, so publishing it
+  (or a document linking to it) through the other path made a second page.
+  Publish records now follow the file's real path; existing records still
+  match.
+- A rare editor error ("scanTile …") when switching from the preview back to
+  the editor (⇧⌘V): the editor looked up a line that wasn't laid out yet.
+
 ## [0.17.0] — 2026-10-21
 
 ### Added

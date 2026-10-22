@@ -86,6 +86,34 @@ fn ssh_base() -> std::process::Command {
     cmd
 }
 
+/// A file's real path (symlinks resolved), so one file has one identity
+/// however it was opened (`/home/me` vs `/local/home/me`). Remote: `readlink
+/// -f` over ssh. Anything that can't be resolved comes back as given.
+#[tauri::command]
+async fn real_path(host: Option<String>, path: String) -> Result<String, String> {
+    let Some(host) = host else {
+        return Ok(std::fs::canonicalize(&path)
+            .map(|p| p.display().to_string())
+            .unwrap_or(path));
+    };
+    if github::is_github(&host) {
+        return Ok(path);
+    }
+    validate_host(&host)?;
+    tauri::async_runtime::spawn_blocking(move || -> Result<String, String> {
+        let output = ssh_base()
+            .arg("--")
+            .arg(&host)
+            .arg(format!("readlink -f -- {} 2>/dev/null", shell_quote(&path)))
+            .output()
+            .map_err(|e| format!("Could not run ssh: {e}"))?;
+        let real = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        Ok(if output.status.success() && real.starts_with('/') { real } else { path })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
 /// A cheap change signature for a remote file: modification time and size.
 /// GNU `stat -c` first, BSD `stat -f` as the fallback (macOS remotes).
 #[tauri::command]
@@ -900,6 +928,7 @@ pub fn run() {
             github::github_resolve_url,
             github::gh_accounts,
             write_remote,
+            real_path,
             make_remote_dir,
             allow_asset,
             path_exists,

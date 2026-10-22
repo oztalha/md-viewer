@@ -76,6 +76,11 @@ export function makeRemoteDir(host: string, path: string): Promise<void> {
   return invoke<void>("make_remote_dir", { host, path });
 }
 
+/** A file's real path (symlinks resolved); the path as given if unresolvable. */
+export function realPath(host: string | null, path: string): Promise<string> {
+  return invoke<string>("real_path", { host, path });
+}
+
 /** Write a remote file over SSH (atomic on the remote side). */
 export function writeRemoteFile(host: string, path: string, contents: string): Promise<void> {
   return invoke<void>("write_remote", { host, path, contents });

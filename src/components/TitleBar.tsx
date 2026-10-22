@@ -8,7 +8,7 @@ import type { ViewMode } from "../types";
 import { getEditorView } from "../editor/registry";
 import { insertTable } from "../editor/commands";
 import { showTileContextMenu } from "../contextMenu";
-import { latestPublished, publishErrorKey, publishedFor, verifyPublished } from "../publish";
+import { latestPublished, publishErrorKey, publishedFor, resolveRealKey, verifyPublished } from "../publish";
 import { keyForDoc } from "../annotations";
 
 const MODES: { mode: ViewMode; label: string }[] = [
@@ -141,7 +141,9 @@ function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: bo
   const docKey = keyForDoc(doc);
   // Drop links to gists deleted on github.com (once per document per session).
   useEffect(() => {
-    void verifyPublished(useStore.getState().docs[docId]);
+    const current = useStore.getState().docs[docId];
+    // Records follow the file's real path, so a symlinked path still matches.
+    void resolveRealKey(current).then(() => verifyPublished(current));
   }, [docId, docKey]);
   const errors = useStore((s) => s.publishErrors);
   const syncError = docKey

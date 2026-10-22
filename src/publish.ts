@@ -23,6 +23,7 @@ import {
   publishTargets,
   readRemoteFile,
   readTextFile,
+  realPath,
   remoteStat,
   writePublishTemp,
 } from "./ipc";
@@ -74,8 +75,53 @@ function loadRecords(): Records {
  * `publishTick` as `version` so the React Compiler doesn't reuse a stale result.
  */
 export function publishedFor(doc: Doc | undefined, _version = 0): Record<string, PublishRecord> {
+  const records = loadRecords();
+  // The real-path record wins over one saved under another path to the file.
+  return recordKeys(doc).reduceRight<Record<string, PublishRecord>>(
+    (acc, key) => ({ ...acc, ...(records[key] ?? {}) }),
+    {},
+  );
+}
+
+/**
+ * Real paths, by document key: a file reached through a symlinked folder
+ * (`/home/me/x.md` and `/local/home/me/x.md`) is one file, so it has one
+ * publish record and one link. Filled in by `resolveRealKey`.
+ */
+const realKeys = new Map<string, string>();
+
+/** The keys a document's records may be under: its real path first. */
+function recordKeys(doc: Doc | undefined): string[] {
   const key = keyForDoc(doc);
-  return key ? (loadRecords()[key] ?? {}) : {};
+  if (!key) return [];
+  const real = realKeys.get(key);
+  return real && real !== key ? [real, key] : [key];
+}
+
+/** Where a document's records are saved: its real path once known. */
+function recordKey(doc: Doc): string | null {
+  return recordKeys(doc)[0] ?? null;
+}
+
+/**
+ * Look up a document's real path (once per key), so its records match
+ * however the file was opened. Re-renders views when it differs.
+ */
+export async function resolveRealKey(doc: Doc | undefined): Promise<void> {
+  const key = keyForDoc(doc);
+  if (!doc || !key || realKeys.has(key) || splitGithubSpec(key)) return;
+  const path = doc.remote?.path ?? doc.path;
+  if (!path) return;
+  let real = path;
+  try {
+    real = await realPath(doc.remote?.host ?? null, path);
+  } catch {
+    // offline: match by the path as opened, try again next time
+    return;
+  }
+  const realKey = doc.remote ? `${doc.remote.host}:${real}` : real;
+  realKeys.set(key, realKey);
+  if (realKey !== key) useStore.getState().bumpPublished();
 }
 
 /** The most recently published link for a document, if any. */
@@ -157,11 +203,23 @@ export function publishedPages(
 }
 
 function saveRecord(doc: Doc, targetId: string, record: PublishRecord): void {
-  const key = keyForDoc(doc);
+  const key = recordKey(doc);
   if (!key) return; // unsaved scratch docs have no stable identity
   const records = loadRecords();
+  // Saved under the real path; an older record under another path moves there.
+  for (const other of recordKeys(doc).slice(1)) {
+    if (records[other]?.[targetId]) {
+      delete records[other][targetId];
+      if (Object.keys(records[other]).length === 0) delete records[other];
+    }
+  }
   records[key] = { ...(records[key] ?? {}), [targetId]: record };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+}
+
+/** Forget a document's record for a target, under every key it may be saved. */
+function forgetRecord(doc: Doc, targetId: string): void {
+  for (const key of recordKeys(doc)) removeRecord(key, targetId);
 }
 
 function removeRecord(key: string, targetId: string): void {
@@ -196,7 +254,7 @@ export async function verifyPublished(doc: Doc | undefined, force = false): Prom
   for (const [targetId, rec] of records) {
     if (targets.find((t) => t.id === targetId)?.kind !== "gist") continue;
     try {
-      if (!(await gistExists(rec.id, rec.account ?? null))) removeRecord(key, targetId);
+      if (!(await gistExists(rec.id, rec.account ?? null))) forgetRecord(doc!, targetId);
     } catch {
       // offline or gh trouble: keep the link
     }
@@ -223,7 +281,7 @@ export async function unpublish(
     await pagesDelete(rec.id, rec.account ?? null);
     result = "deleted";
   }
-  removeRecord(key, target.id);
+  forgetRecord(doc, target.id);
   // Even if this Mac didn't list it: another Mac may have.
   if (target.kind === "pages") {
     try {
@@ -420,6 +478,7 @@ async function publishText(
   asNew: boolean,
   extra: { sha?: string; account?: string; password?: string; open?: boolean; listed?: boolean } = {},
 ): Promise<{ id: string; url: string; title: string; updated: boolean; marker?: string }> {
+  await resolveRealKey(doc); // match records however the file was opened
   const title = displayTitle(doc).replace(
     /\.(md|markdown|mdown|mkdn|mkd|txt)$/i,
     "",
@@ -484,7 +543,7 @@ async function publishText(
     open: open || undefined,
     listed: (extra.listed ?? previous?.listed) || undefined,
   });
-  const key = keyForDoc(doc);
+  const key = recordKey(doc);
   if (key) {
     appendLog({
       key,
@@ -606,7 +665,7 @@ async function publishTo(
         key &&
         !(await gistExists(previous.id, account ?? null).catch(() => true))
       ) {
-        removeRecord(key, target.id);
+        forgetRecord(doc, target.id);
         throw new Error(
           "This gist was deleted on GitHub. Publish again to create a new one.",
         );
@@ -671,7 +730,16 @@ export async function publishDoc(
   let linkedCount = 0;
 
   if (options.linked) {
-    const links = linkedDocs(doc);
+    // Two links to one file through different paths publish it once.
+    const byReal = new Map<string, LinkedDoc>();
+    for (const entry of linkedDocs(doc)) {
+      await resolveRealKey(entry.doc);
+      const real = recordKey(entry.doc) ?? keyForDoc(entry.doc) ?? "";
+      const seen = byReal.get(real);
+      if (seen) seen.hrefs.push(...entry.hrefs);
+      else byReal.set(real, entry);
+    }
+    const links = [...byReal.values()];
     const urls = new Map<string, string>();
     for (const [i, { doc: linked, hrefs }] of links.entries()) {
       options.onProgress?.(`linked document ${i + 1} of ${links.length}: ${linked.title}`);

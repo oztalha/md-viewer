@@ -19,6 +19,7 @@ import {
   publishDoc,
   publishErrorKey,
   publishedFor,
+  resolveRealKey,
   setSync,
   unpublish,
   verifyPublished,
@@ -104,6 +105,7 @@ function Publish() {
   // document's result would otherwise show as if it were this one's.
   const docId = doc?.id;
   useEffect(() => {
+    void resolveRealKey(useStore.getState().docs[docId ?? ""]);
     setStatus((cur) => (cur.kind === "busy" ? cur : { kind: "idle" }));
     setAsNew(false);
     void verifyPublished(useStore.getState().docs[docId ?? ""], true);

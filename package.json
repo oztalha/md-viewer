@@ -61,5 +61,8 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
+  },
+  "patchedDependencies": {
+    "@codemirror/view@6.43.1": "patches/@codemirror%2Fview@6.43.1.patch"
   }
 }
