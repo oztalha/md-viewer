@@ -5,6 +5,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- Checkboxes and radio buttons use the theme's colors (yellow accent, theme
+  background, dark mode) instead of the system blue, matching the dropdowns.
+
 ## [0.16.4] — 2026-10-21
 
 ### Added

@@ -2478,7 +2478,6 @@ html.no-caret-animation .editor .cm-cursor {
   background: var(--code-bg);
 }
 .publish-target input {
-  accent-color: var(--accent);
   margin: 0;
 }
 .publish-target-label {
@@ -3091,4 +3090,46 @@ html.no-caret-animation .editor .cm-cursor {
 }
 .publish-unpublish:hover {
   text-decoration: underline;
+}
+
+/* Checkboxes and radio buttons in theme colors, like the dropdown (the native
+   ones stay macOS blue). The preview's task-list boxes have their own rule. */
+input[type="checkbox"],
+input[type="radio"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  border: 1.5px solid var(--fg-faint);
+  border-radius: 4px;
+  background: var(--bg-secondary);
+  transition: border-color 120ms ease, background-color 120ms ease;
+}
+input[type="radio"] {
+  border-radius: 50%;
+}
+input[type="checkbox"]:hover:not(:disabled),
+input[type="radio"]:hover:not(:disabled) {
+  border-color: var(--fg-muted);
+}
+input[type="checkbox"]:checked {
+  border-color: var(--button-primary);
+  background: var(--button-primary)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.5l3 3 6-7' fill='none' stroke='%231d1d1f' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    center / 85% no-repeat;
+}
+input[type="radio"]:checked {
+  border-color: var(--button-primary);
+  background: radial-gradient(var(--button-primary) 0 42%, transparent 48%) var(--bg-secondary);
+}
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent);
+}
+input[type="checkbox"]:disabled,
+input[type="radio"]:disabled {
+  opacity: 0.5;
 }
