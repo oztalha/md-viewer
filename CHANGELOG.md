@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.17.0] — 2026-10-21
+
 ### Added
 - **GitHub Pages** (was *Password-protected page*) can publish without a
   password: uncheck **Require a password** for a plain public page.
@@ -490,6 +492,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.17.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.0
 [0.16.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.4
 [0.16.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.3
 [0.16.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.2
