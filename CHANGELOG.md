@@ -19,7 +19,6 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   **Export as HTML**) have a light/dark toggle in the corner: match the system,
   light, or dark, remembered in the reader's browser. The password prompt uses
   the same choice.
-
 - Pages md-viewer publishes (GitHub Pages, the index page, HTML gists) end
   with a small "Published with md-viewer" footer. Export as HTML doesn't add it.
 
@@ -30,6 +29,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Fixed
 - Code blocks in published and exported HTML pages had no syntax colors; they
   are highlighted now, in light and dark.
+
+## [0.16.4] — 2026-10-21
+
+### Added
+- A **Published documents** button in the title bar, next to Publish (⌘P).
 
 ## [0.16.3] — 2026-10-21
 
@@ -480,6 +484,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.16.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.4
 [0.16.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.3
 [0.16.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.2
 [0.16.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.1

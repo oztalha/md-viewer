@@ -92,6 +92,22 @@ function PublishIcon() {
   );
 }
 
+/** A stack of pages: everything published (Published Documents). */
+function PublishedListIcon() {
+  return (
+    <svg width="15" height="14" viewBox="0 0 16 16" aria-hidden="true">
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.3"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M6 4h6.5c.6 0 1 .4 1 1v7.5c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1V5c0-.6.4-1 1-1ZM7.5 7.5h3.5M7.5 10h3.5M2.5 11V3.5c0-.6.4-1 1-1H10"
+      />
+    </svg>
+  );
+}
+
 /** Shortcut badge shown under a title-bar button while ⌘ is held. */
 function Keycap({ show, label }: { show: boolean; label: string }) {
   return show && label ? <span className="btn-keycap">{label}</span> : null;
@@ -113,8 +129,9 @@ function OpenLinkIcon() {
 }
 
 /**
- * Publish (opens the dialog; a dot shows it's published somewhere) and, once
- * published, Open published page (most recent link, straight to the browser).
+ * Publish (opens the dialog; a dot shows it's published somewhere), once
+ * published Open published page (most recent link, straight to the browser),
+ * and Published documents (everything published, ⌘P).
  */
 function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: boolean; keyFor: (id: string) => string }) {
   const doc = useStore((s) => s.docs[docId]);
@@ -155,6 +172,14 @@ function PublishButtons({ docId, modHeld, keyFor }: { docId: string; modHeld: bo
         <PublishIcon />
         {published && <span className={`publish-dot${syncError ? " publish-dot-error" : ""}`} />}
         <Keycap show={modHeld} label={keyFor("publish")} />
+      </button>
+      <button
+        className="titlebar-btn"
+        data-tip={`Published documents · ${keyFor("published-list")}`}
+        onClick={() => useStore.getState().setPublishedOpen(true)}
+      >
+        <PublishedListIcon />
+        <Keycap show={modHeld} label={keyFor("published-list")} />
       </button>
     </>
   );
