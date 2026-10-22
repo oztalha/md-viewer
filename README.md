@@ -138,9 +138,9 @@ along with it, so the links in the shared copy work too.
 - **Anywhere else:** **Edit targets…** adds places through a command or a
   local MCP server, starting from examples (your web server, cloud storage, a
   notes service). New commands need your OK in a native dialog.
-- **Keep track:** **Published Documents…** (⌘P) lists everything you've
-  published, newest first; paste a link to find the file behind it, or copy
-  a protected page's password.
+- **Keep track:** **Published Documents…** (⌘P, or the button next to Publish
+  in the title bar) lists everything you've published, newest first; paste a
+  link to find the file behind it, or copy a protected page's password.
   **Update an existing page instead…** links a document to a page you
   published from another Mac, and **Unpublish** deletes a gist or protected
   page when you're done.
