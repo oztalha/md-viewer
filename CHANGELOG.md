@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.17.1] — 2026-10-22
+
 ### Fixed
 - A file reached through a symlinked folder (say `/home/me/x.md` and
   `/local/home/me/x.md`) counted as two files for publishing, so publishing it
@@ -501,6 +503,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.17.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.1
 [0.17.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.0
 [0.16.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.4
 [0.16.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.3
