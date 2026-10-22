@@ -7,19 +7,21 @@
 
 export const OUTLINE_CSS = `
 .page-outline { position: fixed; left: 16px; top: 96px; z-index: 5; max-height: calc(100vh - 128px); display: flex; }
-.page-outline ol { list-style: none; margin: 0; padding: 8px; border-radius: 12px; border: 1px solid transparent; overflow: hidden auto; scrollbar-width: none; }
+.page-outline ol { list-style: none; margin: 0; padding: 8px; border-radius: 12px; border: 1px solid transparent; overflow: hidden auto; scrollbar-width: none; transition: background-color .2s ease, border-color .2s ease, box-shadow .2s ease; }
 .page-outline li { margin: 0; }
-.page-outline button { display: flex; align-items: center; gap: 14px; width: 100%; padding: 4px 6px; border: 0; border-radius: 7px; background: none; color: var(--fg-muted); font: inherit; font-size: 14.5px; line-height: 1.45; text-align: left; cursor: pointer; }
+.page-outline button { display: flex; align-items: center; width: 100%; padding: 4px 6px; border: 0; border-radius: 7px; background: none; color: var(--fg-muted); font: inherit; font-size: 14.5px; line-height: 1.45; text-align: left; cursor: pointer; }
 .po-dash { flex: none; height: 3px; border-radius: 2px; background: currentColor; opacity: .55; }
-.po-text { display: none; max-width: 300px; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* The titles slide open: width, gap and indent grow from 0 (display can't animate). */
+.po-text { max-width: 0; margin-left: 0; padding-left: 0; opacity: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; transition: max-width .22s ease, margin-left .22s ease, padding-left .22s ease, opacity .15s ease; }
 .page-outline button[aria-current="true"] { color: var(--fg); }
 .page-outline button[aria-current="true"] .po-dash { background: var(--outline-active); opacity: 1; }
 .page-outline:hover ol, .page-outline:focus-within ol { background: var(--bg); border-color: var(--border); box-shadow: 0 6px 24px rgba(0,0,0,.12); }
-.page-outline:hover .po-text, .page-outline:focus-within .po-text { display: block; }
+.page-outline:hover .po-text, .page-outline:focus-within .po-text { max-width: 300px; margin-left: 14px; padding-left: var(--po-indent); opacity: 1; }
 .page-outline:hover button:hover, .page-outline button:focus-visible { background: var(--bg-secondary); color: var(--fg); outline: none; }
 :root { --outline-active: #2f5fb3; }
 :root[data-theme="dark"] { --outline-active: #6b9cf0; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --outline-active: #6b9cf0; } }
+@media (prefers-reduced-motion: reduce) { .page-outline ol, .po-text { transition: none; } }
 @media (max-width: 1180px), print { .page-outline { display: none; } }
 `.trim();
 
@@ -43,7 +45,7 @@ export const OUTLINE_SCRIPT = `(() => {
     const text = document.createElement("span");
     text.className = "po-text";
     text.textContent = h.textContent.trim();
-    text.style.paddingLeft = depth * 16 + "px";
+    text.style.setProperty("--po-indent", depth * 16 + "px");
     button.title = text.textContent;
     button.append(dash, text);
     button.addEventListener("click", () => h.scrollIntoView({ behavior: "smooth", block: "start" }));

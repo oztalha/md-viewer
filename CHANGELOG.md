@@ -5,6 +5,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- The outline on published and exported pages slides open and closed on
+  hover instead of snapping.
+
 ### Fixed
 - Mermaid diagrams now draw in published pages and exported HTML (they
   showed as code). Like math, they load from a CDN when the page opens; if it
