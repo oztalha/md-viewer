@@ -891,6 +891,8 @@ pub fn run() {
             pages::pages_delete,
             publish::gist_delete,
             pages::publish_pages,
+            pages::pages_index_get,
+            pages::pages_index_put,
             pages::pages_password_get,
             pages::pages_password_set,
             publish::publish_command,

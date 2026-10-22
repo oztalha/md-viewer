@@ -2,7 +2,7 @@ import type { Doc } from "./types";
 import { basename, displayTitle } from "./types";
 import { keyForDoc } from "./annotations";
 import { useStore } from "./store";
-import { buildExportHtml } from "./export";
+import { buildExportHtml, standalonePage } from "./export";
 import { getEditorView } from "./editor/registry";
 import {
   copyToClipboard,
@@ -10,6 +10,8 @@ import {
   gistExists,
   mcpCall,
   pagesDelete,
+  pagesIndexGet,
+  pagesIndexPut,
   pagesPasswordGet,
   pagesPasswordSet,
   publishPages,
@@ -26,6 +28,8 @@ import {
 } from "./ipc";
 import { isGithubHost, splitGithubSpec } from "./remote";
 import { encryptPage, MIN_PASSWORD, newPageId } from "./pageCrypt";
+import { INDEX_CSS, parseIndex, renderIndexBody, withEntry, withoutEntry } from "./pageIndex";
+import type { IndexEntry } from "./pageIndex";
 import { localDocLinks, resolveLink, rewriteLinks } from "./docLinks";
 import { idFromLink } from "./publishSearch";
 import type { McpResult, PublishStep, PublishTarget } from "./ipc";
@@ -46,6 +50,10 @@ export interface PublishRecord {
   sha?: string;
   /** Gists: the gh account that owns it (only it can update it); unset = gh's active one. */
   account?: string;
+  /** GitHub Pages: published without a password. */
+  open?: boolean;
+  /** GitHub Pages: listed on the account's index page. */
+  listed?: boolean;
 }
 
 const STORAGE_KEY = "published";
@@ -88,6 +96,8 @@ export interface PublishLogEntry {
   url: string;
   at: number;
   updated: boolean;
+  /** GitHub Pages: published without a password. */
+  open?: boolean;
 }
 
 const LOG_KEY = "publishLog";
@@ -214,6 +224,16 @@ export async function unpublish(
     result = "deleted";
   }
   removeRecord(key, target.id);
+  // Even if this Mac didn't list it: another Mac may have.
+  if (target.kind === "pages") {
+    try {
+      await updateIndex(rec.account, (entries) => withoutEntry(entries, rec.id));
+    } catch (err) {
+      throw new Error(
+        `Deleted the page, but couldn't take it off your index page: ${err instanceof Error ? err.message : String(err)}`,
+      );
+    }
+  }
   return result;
 }
 
@@ -314,6 +334,10 @@ export interface PublishOutcome {
   linked: number;
   /** Linked documents that couldn't be published, with why. */
   skipped: string[];
+  /** GitHub Pages: the index page, when this page is listed on it. */
+  indexUrl?: string;
+  /** GitHub Pages: the page is published, but the index couldn't be updated. */
+  indexError?: string;
 }
 
 /**
@@ -394,14 +418,14 @@ async function publishText(
   markdown: string,
   target: PublishTarget,
   asNew: boolean,
-  extra: { sha?: string; account?: string; password?: string } = {},
-): Promise<{ url: string; updated: boolean; marker?: string }> {
+  extra: { sha?: string; account?: string; password?: string; open?: boolean; listed?: boolean } = {},
+): Promise<{ id: string; url: string; title: string; updated: boolean; marker?: string }> {
   const title = displayTitle(doc).replace(
     /\.(md|markdown|mdown|mkdn|mkd|txt)$/i,
     "",
   );
   const html = target.format === "html";
-  const contents = html ? buildExportHtml(markdown, title) : markdown;
+  const contents = html ? buildExportHtml(markdown, title, { footer: true }) : markdown;
   const previous = asNew ? undefined : publishedFor(doc)[target.id];
   let id = "";
   let url = "";
@@ -414,7 +438,11 @@ async function publishText(
       : extra.account
     : undefined;
 
-  if (target.kind === "pages") {
+  // Sync and linked documents without a choice keep the page as it was.
+  const open = target.kind === "pages" && (extra.open ?? previous?.open ?? false);
+  if (target.kind === "pages" && open) {
+    ({ id, url, marker } = await publishOpen(markdown, title, previous?.id, account));
+  } else if (target.kind === "pages") {
     ({ id, url, marker } = await publishProtected(
       doc,
       markdown,
@@ -446,6 +474,8 @@ async function publishText(
     sync: previous?.sync,
     sha: extra.sha ?? previous?.sha,
     account,
+    open: open || undefined,
+    listed: (extra.listed ?? previous?.listed) || undefined,
   });
   const key = keyForDoc(doc);
   if (key) {
@@ -460,10 +490,56 @@ async function publishText(
       url,
       at: Date.now(),
       updated: !!previous,
+      open: open || undefined,
     });
   }
   useStore.getState().bumpPublished();
-  return { url, updated: !!previous, marker };
+  return { id, url, title, updated: !!previous, marker };
+}
+
+/**
+ * A public page: the rendered page as it is, under a random name like a
+ * protected one. `marker` (random, in the page) tells when the host serves it.
+ */
+async function publishOpen(
+  markdown: string,
+  title: string,
+  existingId: string | undefined,
+  account: string | undefined,
+): Promise<{ id: string; url: string; marker: string }> {
+  const pageId = existingId ?? newPageId();
+  const marker = newPageId();
+  const page = buildExportHtml(markdown, title, {
+    footer: true,
+    head: `<meta name="md-viewer-publish" content="${marker}">`,
+  });
+  const file = await writePublishTemp(`${pageId}.html`, page);
+  const out = await publishPages(file, pageId, account ?? null);
+  return { ...out, marker };
+}
+
+/**
+ * Change the account's index page: read it from the repo (so every Mac edits
+ * the same list), apply `change`, write it back if that changed anything.
+ * Returns its link.
+ */
+async function updateIndex(
+  account: string | undefined,
+  change: (entries: IndexEntry[]) => IndexEntry[],
+): Promise<string> {
+  const { url, html } = await pagesIndexGet(account ?? null);
+  const entries = parseIndex(html);
+  const next = change(entries);
+  if (JSON.stringify(next) === JSON.stringify(entries)) return url;
+  const owner = new URL(url).hostname.split(".")[0];
+  const page = standalonePage(renderIndexBody(next, owner), `Pages by ${owner}`, { css: INDEX_CSS, footer: true });
+  return pagesIndexPut(await writePublishTemp("index.html", page), account ?? null);
+}
+
+/** Whether a page is on the account's index page now (the repo's copy). */
+export async function isListed(id: string, account: string | undefined): Promise<boolean> {
+  const { html } = await pagesIndexGet(account ?? null);
+  return parseIndex(html).some((e) => e.id === id);
 }
 
 /**
@@ -488,7 +564,7 @@ async function publishProtected(
   if (password.length < MIN_PASSWORD)
     throw new Error(`Use a password of at least ${MIN_PASSWORD} characters.`);
   const pageId = existingId ?? newPageId();
-  const { page, marker } = await encryptPage(buildExportHtml(markdown, title), password, pageId);
+  const { page, marker } = await encryptPage(buildExportHtml(markdown, title, { footer: true }), password, pageId);
   const file = await writePublishTemp(`${pageId}.html`, page);
   const out = await publishPages(file, pageId, account ?? null);
   await pagesPasswordSet(out.id, password);
@@ -576,6 +652,10 @@ export async function publishDoc(
     account?: string;
     /** Password-protected pages: also used for the linked documents. */
     password?: string;
+    /** GitHub Pages: publish without a password (linked documents too). */
+    open?: boolean;
+    /** GitHub Pages: list this document (not its linked ones) on the index page. */
+    listed?: boolean;
     onProgress?: (text: string) => void;
   } = {},
 ): Promise<PublishOutcome> {
@@ -597,6 +677,7 @@ export async function publishDoc(
           {
             account: options.account,
             password: options.password,
+            open: options.open,
           },
         );
         for (const href of hrefs) urls.set(href, url);
@@ -612,9 +693,35 @@ export async function publishDoc(
   const out = await publishText(doc, markdown, target, !!options.asNew, {
     account: options.account,
     password: options.password,
+    open: options.open,
+    listed: options.listed,
   });
   await copyToClipboard(out.url);
-  return { ...out, linked: linkedCount, skipped };
+  const result: PublishOutcome = { ...out, linked: linkedCount, skipped };
+
+  // The page is up either way; an index that couldn't be updated is reported.
+  // Checked every time (not just when this Mac listed it): the page may have
+  // been listed from another Mac.
+  if (target.kind === "pages") {
+    const rec = publishedFor(doc)[target.id];
+    const listed = !!rec?.listed;
+    const entry: IndexEntry = {
+      id: out.id,
+      title: out.title,
+      url: out.url,
+      locked: !rec?.open,
+      at: Date.now(),
+    };
+    try {
+      const indexUrl = await updateIndex(rec?.account, (entries) =>
+        listed ? withEntry(entries, entry) : withoutEntry(entries, out.id),
+      );
+      if (listed) result.indexUrl = indexUrl;
+    } catch (err) {
+      result.indexError = err instanceof Error ? err.message : String(err);
+    }
+  }
+  return result;
 }
 
 /** How often published GitHub documents are checked for changes (ms). */

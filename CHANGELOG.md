@@ -5,9 +5,32 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **GitHub Pages** (was *Password-protected page*) can publish without a
+  password: uncheck **Require a password** for a plain public page.
+- An index page for your GitHub Pages, `<you>.github.io/md-viewer-pages/`,
+  listing the pages you choose with **Show on my index page** (on by default
+  for public pages, off for protected ones, which show with a lock). It stays
+  one list across Macs, and unpublishing takes a page off it.
+- Published and exported HTML pages have an outline: a rail of dashes at the
+  left, one per heading, that opens into the list of headings on hover and
+  marks the section you're reading. Hidden on narrow screens and in print.
+- Published and exported HTML pages (password-protected pages, HTML gists,
+  **Export as HTML**) have a light/dark toggle in the corner: match the system,
+  light, or dark, remembered in the reader's browser. The password prompt uses
+  the same choice.
+- Pages md-viewer publishes (GitHub Pages, the index page, HTML gists) end
+  with a small "Published with md-viewer" footer. Export as HTML doesn't add it.
+
 ### Changed
 - Checkboxes and radio buttons use the theme's colors (yellow accent, theme
   background, dark mode) instead of the system blue, matching the dropdowns.
+- The password prompt of a protected page uses md-viewer's colors (yellow
+  button, warm accents) instead of blue.
+
+### Fixed
+- Code blocks in published and exported HTML pages had no syntax colors; they
+  are highlighted now, in light and dark.
 
 ## [0.16.4] — 2026-10-21
 

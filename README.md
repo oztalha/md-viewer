@@ -124,10 +124,15 @@ along with it, so the links in the shared copy work too.
 
 - **Secret GitHub Gist:** anyone with the link can read it. With several `gh`
   accounts, pick which one owns it.
-- **Password-protected page:** md-viewer encrypts the page in the app and
-  hosts it on your own GitHub Pages; readers type the password once per
-  device. A strong password is generated for you and kept in your Keychain.
-  Nothing to set up: the first publish creates the repo for you.
+- **GitHub Pages:** hosts the page on your own GitHub Pages, as a plain
+  public page or, with **Require a password**, encrypted in the app so readers
+  type the password once per device. A strong password is generated for you
+  and kept in your Keychain. Pages you pick are listed on your index page,
+  `<you>.github.io/md-viewer-pages/`, protected ones with a lock. Nothing to
+  set up: the first publish creates the repo for you.
+- **Published pages read well:** they follow the reader's light or dark mode
+  (with a toggle in the corner), highlight code, and have an outline at the
+  side that jumps to any heading.
 - **Keep in sync with GitHub:** for a document opened from GitHub, the
   published copy follows the repo while md-viewer is open, whoever pushes.
 - **Anywhere else:** **Edit targets…** adds places through a command or a

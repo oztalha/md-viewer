@@ -1,7 +1,9 @@
-//! Password-protected pages on the publisher's own GitHub Pages: a public repo
-//! `<login>/md-viewer-pages` holding pages the app encrypted (src/pageCrypt.ts),
-//! named by random ids. GitHub only stores ciphertext. Passwords live in the
-//! macOS Keychain so republishing keeps the same password without asking.
+//! Pages on the publisher's own GitHub Pages: a public repo
+//! `<login>/md-viewer-pages` holding pages named by random ids, either
+//! encrypted by the app (src/pageCrypt.ts; GitHub only stores ciphertext) or
+//! public, plus an optional `index.html` listing the pages the user chose
+//! (src/pageIndex.ts). Passwords live in the macOS Keychain so republishing
+//! keeps the same password without asking.
 
 use crate::publish::{account_token, gh_as};
 use std::process::{Command, Stdio};
@@ -16,6 +18,10 @@ fn valid_id(id: &str) -> bool {
 
 fn page_url(login: &str, id: &str) -> String {
     format!("https://{}.github.io/{REPO}/{id}.html", login.to_lowercase())
+}
+
+fn index_url(login: &str) -> String {
+    format!("https://{}.github.io/{REPO}/", login.to_lowercase())
 }
 
 /// `gh api …` as the chosen account: Ok(stdout), or Err((is_404, message)).
@@ -72,7 +78,7 @@ pub struct PageListing {
     url: String,
 }
 
-/// The protected pages in the account's repo, so pages published from an
+/// The pages (public or protected) in the account's repo, so pages published from an
 /// unsaved document or another Mac still show up in Published Documents.
 /// No repo yet: none.
 #[tauri::command]
@@ -96,8 +102,8 @@ pub async fn pages_list(account: Option<String>) -> Result<Vec<PageListing>, Str
     .map_err(|e| e.to_string())?
 }
 
-/// Create the repo (public: free GitHub Pages needs that; the content is
-/// encrypted) and turn on Pages, if not done yet. Returns the default branch.
+/// Create the repo (public: free GitHub Pages needs that; names are random
+/// and protected pages encrypted) and turn on Pages, if not done yet. Returns the default branch.
 fn ensure_repo(token: &Option<String>, login: &str) -> Result<String, String> {
     let repo = format!("repos/{login}/{REPO}");
     let branch = match api(token, &[&repo, "--jq", ".default_branch"]) {
@@ -107,7 +113,7 @@ fn ensure_repo(token: &Option<String>, login: &str) -> Result<String, String> {
             &[
                 "-X", "POST", "user/repos",
                 "-f", &format!("name={REPO}"),
-                "-f", "description=Encrypted pages published by md-viewer. Each page needs its password.",
+                "-f", "description=Pages published by md-viewer.",
                 "-F", "private=false",
                 "-F", "auto_init=true",
                 "-F", "has_issues=false",
@@ -160,17 +166,53 @@ fn ensure_repo(token: &Option<String>, login: &str) -> Result<String, String> {
     Ok(branch)
 }
 
+/// The blob sha of `name` on `branch`, or None if it doesn't exist yet.
+fn file_sha(token: &Option<String>, login: &str, branch: &str, name: &str) -> Result<Option<String>, String> {
+    let path = format!("repos/{login}/{REPO}/contents/{name}");
+    match api(token, &[&path, "-f", &format!("ref={branch}"), "-X", "GET", "--jq", ".sha"]) {
+        Ok(sha) => Ok(Some(sha)),
+        Err((true, _)) => Ok(None),
+        Err((false, e)) => Err(e),
+    }
+}
+
+/// Create or replace `name` in the repo. A conflict (another Mac wrote it in
+/// between) re-reads the sha and tries once more.
+fn put_file(token: &Option<String>, login: &str, branch: &str, name: &str, bytes: &[u8]) -> Result<(), String> {
+    use base64::Engine;
+    let path = format!("repos/{login}/{REPO}/contents/{name}");
+    let content = base64::engine::general_purpose::STANDARD.encode(bytes);
+    let mut last = String::new();
+    for _ in 0..2 {
+        // Generic message: nothing about the document goes into the repo.
+        let mut body = serde_json::json!({ "message": "Update page", "content": content, "branch": branch });
+        if let Some(sha) = file_sha(token, login, branch, name)? {
+            body["sha"] = sha.into();
+        }
+        // Through a file: a page can be larger than a command line allows.
+        let input = std::env::temp_dir().join(format!("md-viewer-pages-{}.json", name.replace('.', "-")));
+        std::fs::write(&input, body.to_string()).map_err(|e| e.to_string())?;
+        let result = api(token, &["-X", "PUT", &path, "--input", &input.display().to_string(), "--jq", ".content.name"]);
+        let _ = std::fs::remove_file(&input);
+        match result {
+            Ok(_) => return Ok(()),
+            Err((_, e)) if e.contains("HTTP 409") => last = e,
+            Err((_, e)) => return Err(e),
+        }
+    }
+    Err(last)
+}
+
 #[derive(serde::Serialize)]
 pub struct PublishedPage {
     id: String,
     url: String,
 }
 
-/// Upload an encrypted page (a file the frontend wrote) as `<id>.html`,
+/// Upload a page (a file the frontend wrote, encrypted or not) as `<id>.html`,
 /// creating the repo on first use. The same id updates the same page.
 #[tauri::command]
 pub async fn publish_pages(file: String, id: String, account: Option<String>) -> Result<PublishedPage, String> {
-    use base64::Engine;
     if !valid_id(&id) {
         return Err(format!("Invalid page id: {id:?}"));
     }
@@ -178,29 +220,65 @@ pub async fn publish_pages(file: String, id: String, account: Option<String>) ->
         let token = account_token(&account)?;
         let login = login(&token)?;
         let branch = ensure_repo(&token, &login)?;
-        let path = format!("repos/{login}/{REPO}/contents/{id}.html");
-        let sha = match api(&token, &[&path, "-f", &format!("ref={branch}"), "-X", "GET", "--jq", ".sha"]) {
-            Ok(sha) => Some(sha),
-            Err((true, _)) => None,
+        let bytes = std::fs::read(&file).map_err(|e| format!("Could not read {file}: {e}"))?;
+        put_file(&token, &login, &branch, &format!("{id}.html"), &bytes)?;
+        Ok(PublishedPage { url: page_url(&login, &id), id })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[derive(serde::Serialize)]
+pub struct PagesIndex {
+    /// The index page's link (`https://<login>.github.io/md-viewer-pages/`).
+    url: String,
+    /// The current index.html, or None if there's none yet.
+    html: Option<String>,
+}
+
+/// The account's index page as it is in the repo now (not the possibly stale
+/// copy GitHub Pages serves), so every Mac updates the same list.
+#[tauri::command]
+pub async fn pages_index_get(account: Option<String>) -> Result<PagesIndex, String> {
+    use base64::Engine;
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = account_token(&account)?;
+        let login = login(&token)?;
+        let url = index_url(&login);
+        let branch = match api(&token, &[&format!("repos/{login}/{REPO}"), "--jq", ".default_branch"]) {
+            Ok(branch) => branch,
+            Err((true, _)) => return Ok(PagesIndex { url, html: None }),
             Err((false, e)) => return Err(e),
         };
+        let path = format!("repos/{login}/{REPO}/contents/index.html");
+        let encoded = match api(&token, &[&path, "-f", &format!("ref={branch}"), "-X", "GET", "--jq", ".content"]) {
+            Ok(encoded) => encoded,
+            Err((true, _)) => return Ok(PagesIndex { url, html: None }),
+            Err((false, e)) => return Err(e),
+        };
+        // The API wraps base64 at 60 columns.
+        let clean: String = encoded.chars().filter(|c| !c.is_whitespace()).collect();
+        let bytes = base64::engine::general_purpose::STANDARD
+            .decode(clean)
+            .map_err(|e| format!("Could not read the index page: {e}"))?;
+        let html = String::from_utf8(bytes).map_err(|e| format!("Could not read the index page: {e}"))?;
+        Ok(PagesIndex { url, html: Some(html) })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+/// Write the index page (a file the frontend built), creating the repo on
+/// first use. Returns its link.
+#[tauri::command]
+pub async fn pages_index_put(file: String, account: Option<String>) -> Result<String, String> {
+    tauri::async_runtime::spawn_blocking(move || {
+        let token = account_token(&account)?;
+        let login = login(&token)?;
+        let branch = ensure_repo(&token, &login)?;
         let bytes = std::fs::read(&file).map_err(|e| format!("Could not read {file}: {e}"))?;
-        // Generic message: nothing about the document goes into the repo.
-        let mut body = serde_json::json!({
-            "message": "Update page",
-            "content": base64::engine::general_purpose::STANDARD.encode(bytes),
-            "branch": branch,
-        });
-        if let Some(sha) = sha {
-            body["sha"] = sha.into();
-        }
-        // Through a file: a page can be larger than a command line allows.
-        let input = std::env::temp_dir().join(format!("md-viewer-pages-{id}.json"));
-        std::fs::write(&input, body.to_string()).map_err(|e| e.to_string())?;
-        let result = api_ok(&token, &["-X", "PUT", &path, "--input", &input.display().to_string(), "--jq", ".content.name"]);
-        let _ = std::fs::remove_file(&input);
-        result?;
-        Ok(PublishedPage { url: page_url(&login, &id), id })
+        put_file(&token, &login, &branch, "index.html", &bytes)?;
+        Ok(index_url(&login))
     })
     .await
     .map_err(|e| e.to_string())?
@@ -374,5 +452,6 @@ mod tests {
             super::page_url("SenaOz", "ab"),
             "https://senaoz.github.io/md-viewer-pages/ab.html"
         );
+        assert_eq!(super::index_url("SenaOz"), "https://senaoz.github.io/md-viewer-pages/");
     }
 }

@@ -52,7 +52,8 @@ function Published() {
   const close = () => useStore.getState().setPublishedOpen(false);
   const tick = useStore((s) => s.publishTick);
   const [query, setQuery] = useState("");
-  // Protected pages on GitHub that this Mac's history doesn't know about.
+  // Pages on GitHub Pages that this Mac's history doesn't know about (public
+  // or protected: Copy password says when there's no password saved).
   const [repoPages, setRepoPages] = useState<{ id: string; url: string }[]>([]);
   useEffect(() => {
     let live = true;
@@ -69,7 +70,7 @@ function Published() {
   const extra = repoPages
     .filter((r) => !known.has(r.id))
     .filter((r) =>
-      pageMatches({ title: "Password-protected page", key: r.url, url: r.url, id: r.id, targetLabel: "" }, query),
+      pageMatches({ title: "GitHub Pages page", key: r.url, url: r.url, id: r.id, targetLabel: "" }, query),
     );
   // A pasted protected-page link that isn't listed (an unsaved doc, or
   // published from another Mac): still offer its password if it's saved here.
@@ -132,7 +133,7 @@ function Published() {
           )}
           {extra.map((r) => (
             <div key={r.id} className="pub-row">
-              <div className="pub-title">Password-protected page</div>
+              <div className="pub-title">GitHub Pages page</div>
               <div className="pub-meta">On your GitHub Pages; not in this Mac's publish history.</div>
               <div className="pub-link">
                 <a href={r.url} onClick={link(r.url)} title={r.url}>
@@ -173,7 +174,7 @@ function Published() {
                     {p.url.replace(/^https?:\/\//, "")}
                   </a>
                   <CopyButton text={p.url} tip="Copy link" />
-                  {protectedPageId(p.url) && <CopyPassword id={protectedPageId(p.url)!} />}
+                  {protectedPageId(p.url) && !p.open && <CopyPassword id={protectedPageId(p.url)!} />}
                 </div>
               </div>
             ))
