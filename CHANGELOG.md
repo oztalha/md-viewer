@@ -5,6 +5,11 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Show in File Browser** in the right-click menu of a remote document: the
+  remote browser opens at the file's folder with the file highlighted, like
+  Reveal in Finder for local files.
+
 ## [0.17.2] — 2026-10-23
 
 ### Added

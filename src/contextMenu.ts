@@ -59,7 +59,14 @@ export async function showTileContextMenu(docId: string): Promise<void> {
     // No leading separator on an untitled doc (the menu is then just Close Tab).
     ...(hasFile ? [separator()] : []),
     ...(path ? [item("Reveal in Finder", () => void revealItemInDir(path))] : []),
-    ...(doc.remote ? [item("Download…", () => void downloadDoc(docId))] : []),
+    ...(doc.remote
+      ? [
+          // The remote twin of Reveal in Finder: the browser opens at the
+          // file's folder with the file highlighted.
+          item("Show in File Browser", () => useStore.getState().setRemoteBrowser("open")),
+          item("Download…", () => void downloadDoc(docId)),
+        ]
+      : []),
     item("Close Tab", () => void useStore.getState().closeTab(docId), "close-pane"),
   ]);
 
