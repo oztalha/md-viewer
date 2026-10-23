@@ -2123,7 +2123,7 @@ dependencies = [
 
 [[package]]
 name = "md-viewer"
-version = "0.17.2"
+version = "0.17.3"
 dependencies = [
  "base64 0.22.1",
  "core-foundation",

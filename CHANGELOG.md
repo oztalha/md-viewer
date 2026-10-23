@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.17.3] — 2026-10-23
+
 ### Added
 - **Show in File Browser** in the right-click menu of a remote document: the
   remote browser opens at the file's folder with the file highlighted, like
@@ -514,6 +516,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.17.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.3
 [0.17.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.2
 [0.17.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.1
 [0.17.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.0
