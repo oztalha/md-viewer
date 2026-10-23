@@ -5,6 +5,10 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Added
+- **Copy** in the preview's right-click menu when text is selected (the same
+  clean copy as ⌘C).
+
 ## [0.17.1] — 2026-10-22
 
 ### Fixed
