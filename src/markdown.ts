@@ -174,11 +174,12 @@ md.use(mathKatex, { enableFencedBlocks: true, throwOnError: false });
 
 // ```mermaid fences become a placeholder carrying the source; mermaid.ts draws
 // the diagram into it after render (Mermaid is async, this pipeline isn't).
-// The source stays visible as code until then, and in exported HTML.
+// The source stays visible as code until then. Exported and published pages
+// keep the placeholder and draw it with pageMermaid.ts.
 const renderFence = md.renderer.rules.fence!;
 md.renderer.rules.fence = (tokens, idx, options, env, self) => {
   const token = tokens[idx];
-  if (token.info.trim().split(/\s+/)[0] !== "mermaid" || (env as { exporting?: boolean }).exporting) {
+  if (token.info.trim().split(/\s+/)[0] !== "mermaid") {
     return renderFence(tokens, idx, options, env, self);
   }
   const src = md.utils.escapeHtml(token.content);

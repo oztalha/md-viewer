@@ -60,6 +60,8 @@ src-tauri/capabilities/  Tauri ACL: which core commands the webview may call
   placeholder holding its source, and `mermaid.ts` draws it in after each
   update (loaded on first use; SVGs cached by theme + source). Read the source
   from the placeholder's `<code>`: DOMPurify strips data- attributes here.
+  Exported and published pages keep the placeholder; `pageMermaid.ts` draws
+  it there with the CDN build of the same Mermaid version.
 - All rendered HTML goes through DOMPurify. KaTeX (math) is synchronous, so it
   fits the per-block cache.
 - Tables wider than the text column get `.table-wide` (measured after render

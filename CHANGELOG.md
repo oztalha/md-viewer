@@ -19,6 +19,20 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 ### Fixed
 - Publishing to GitHub Pages without a password hid the **Account** picker,
   so the page went to whichever account was used last.
+### Added
+- Published and exported pages that open with a title keep it in a slim
+  bar at the top once you scroll past it; click it to go back to the top.
+
+### Changed
+- The outline on published and exported pages slides open and closed on
+  hover instead of snapping.
+- On phones and narrow windows, published and exported pages get the outline
+  as a menu behind a button at the top left (it was hidden there).
+
+### Fixed
+- Mermaid diagrams now draw in published pages and exported HTML (they
+  showed as code). Like math, they load from a CDN when the page opens; if it
+  can't load, the diagram's source is shown.
 
 ## [0.17.4] — 2026-10-23
 
