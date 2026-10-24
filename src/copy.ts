@@ -36,21 +36,32 @@ function clean(node: Node): void {
   }
 }
 
-export function onPreviewCopy(event: ClipboardEvent): void {
+/** The current selection as clean HTML plus plain text, or null if none. */
+export function selectionClip(): { html: string; text: string } | null {
   const selection = window.getSelection();
-  if (!selection || selection.isCollapsed || !event.clipboardData) return;
+  if (!selection || selection.isCollapsed || !selection.toString()) return null;
   const holder = document.createElement("div");
   for (let i = 0; i < selection.rangeCount; i++) holder.append(selection.getRangeAt(i).cloneContents());
   clean(holder);
-  const html = holder.innerHTML;
-  const text = selection.toString();
+  return { html: holder.innerHTML, text: selection.toString() };
+}
+
+/** Put a clip on the native clipboard (see the module comment for why native). */
+export function writeClip({ html, text }: { html: string; text: string }): Promise<void> {
+  return writeHtml(`<meta charset="utf-8">${html}`, text);
+}
+
+export function onPreviewCopy(event: ClipboardEvent): void {
+  const clip = selectionClip();
+  if (!clip || !event.clipboardData) return;
+  const { html, text } = clip;
   // Synchronous fallback first, then replace it with the clean native copy.
   event.clipboardData.setData("text/html", html);
   event.clipboardData.setData("text/plain", text);
   event.preventDefault();
   // After WebKit has written its copy (it does so once this handler returns).
   setTimeout(() => {
-    writeHtml(`<meta charset="utf-8">${html}`, text).catch((err) =>
+    writeClip(clip).catch((err) =>
       void import("@tauri-apps/api/core").then((m) => m.invoke("log_error", { message: `copy: ${err}` })),
     );
   }, 50);

@@ -20,6 +20,38 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
   showed as code). Like math, they load from a CDN when the page opens; if it
   can't load, the diagram's source is shown.
 
+## [0.17.4] — 2026-10-23
+
+### Fixed
+- Updating a document with **Also publish linked documents** unchecked put
+  its links back to local file paths in the published copy. Links to linked
+  documents already published to the same place now keep pointing at their
+  pages; only the main document is republished.
+
+## [0.17.3] — 2026-10-23
+
+### Added
+- **Show in File Browser** in the right-click menu of a remote document: the
+  remote browser opens at the file's folder with the file highlighted, like
+  Reveal in Finder for local files.
+
+## [0.17.2] — 2026-10-23
+
+### Added
+- **Copy** in the preview's right-click menu when text is selected (the same
+  clean copy as ⌘C).
+
+## [0.17.1] — 2026-10-22
+
+### Fixed
+- A file reached through a symlinked folder (say `/home/me/x.md` and
+  `/local/home/me/x.md`) counted as two files for publishing, so publishing it
+  (or a document linking to it) through the other path made a second page.
+  Publish records now follow the file's real path; existing records still
+  match.
+- A rare editor error ("scanTile …") when switching from the preview back to
+  the editor (⇧⌘V): the editor looked up a line that wasn't laid out yet.
+
 ## [0.17.0] — 2026-10-21
 
 ### Added
@@ -507,6 +539,10 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.17.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.4
+[0.17.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.3
+[0.17.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.2
+[0.17.1]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.1
 [0.17.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.0
 [0.16.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.4
 [0.16.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.16.3

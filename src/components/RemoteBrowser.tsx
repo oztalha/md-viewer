@@ -110,6 +110,11 @@ function Browser({ mode }: { mode: "open" | "save" }) {
   // True once the user types/pastes in the path bar; a listing that finishes
   // afterwards must not overwrite what they entered.
   const pathEdited = useRef(false);
+  // Opened from a remote document: its file is highlighted (and scrolled to,
+  // once) in the folder the browser starts in. That folder as the remote shell
+  // resolved it, so a symlinked path still matches.
+  const startDir = useRef<string | null>(null);
+  const revealed = useRef(false);
 
   const load = useCallback(async (h: string, dir: string, fromTyping = false) => {
     if (!fromTyping) pathEdited.current = false;
@@ -137,6 +142,7 @@ function Browser({ mode }: { mode: "open" | "save" }) {
             : 1
           : a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: "base" }),
       );
+      startDir.current ??= result.dir;
       setListing(result);
       if (!pathEdited.current) setPathDraft(result.dir);
       localStorage.setItem(HOST_KEY, h);
@@ -525,7 +531,11 @@ function Browser({ mode }: { mode: "open" | "save" }) {
               )}
               {entries.map((entry) => {
                 const doc = DOC_RE.test(entry.name);
-                const selected = mode === "save" && !entry.isDir && entry.name === fileName;
+                const selected =
+                  !entry.isDir &&
+                  (mode === "save"
+                    ? entry.name === fileName
+                    : !!initial.name && listing.dir === startDir.current && entry.name === initial.name);
                 return (
                   <div
                     key={entry.name}
@@ -533,6 +543,12 @@ function Browser({ mode }: { mode: "open" | "save" }) {
                       selected ? " selected" : ""
                     }`}
                     title={entry.name}
+                    ref={(el) => {
+                      if (el && selected && mode === "open" && !revealed.current) {
+                        revealed.current = true;
+                        el.scrollIntoView({ block: "center" });
+                      }
+                    }}
                     onContextMenu={(e) => {
                       e.preventDefault();
                       void showEntryMenu(joinPath(listing.dir, entry.name), entry.isDir);

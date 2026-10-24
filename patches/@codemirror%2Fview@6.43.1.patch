@@ -1,0 +1,30 @@
+diff --git a/dist/index.cjs b/dist/index.cjs
+index 732c5935f9474646bed546d9d9431f654b295005..d9f7c2628a2fa1e76bc5c40ae27be8e0a23bc772 100644
+--- a/dist/index.cjs
++++ b/dist/index.cjs
+@@ -3810,6 +3810,10 @@ function posAtCoords(view, coords, precise, scanY) {
+     let line = view.docView.lineAt(block.from, 2);
+     if (!line || line.length != block.length)
+         line = view.docView.lineAt(block.from, -2);
++    // md-viewer patch: the line can be missing from the DOM while the editor
++    // is being laid out (e.g. right after a collapsed pane expands).
++    if (!line)
++        return new PosAssoc(block.from, 1);
+     return new InlineCoordsScan(view, x, y, view.textDirectionAt(block.from)).scanTile(line, block.from);
+ }
+ class InlineCoordsScan {
+diff --git a/dist/index.js b/dist/index.js
+index 0c0b3ee0a2923f3b3b581e146ed6d3f436497e52..bae98b3de7a305133d74d13d1250f20179811c3d 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -3806,6 +3806,10 @@ function posAtCoords(view, coords, precise, scanY) {
+     let line = view.docView.lineAt(block.from, 2);
+     if (!line || line.length != block.length)
+         line = view.docView.lineAt(block.from, -2);
++    // md-viewer patch: the line can be missing from the DOM while the editor
++    // is being laid out (e.g. right after a collapsed pane expands).
++    if (!line)
++        return new PosAssoc(block.from, 1);
+     return new InlineCoordsScan(view, x, y, view.textDirectionAt(block.from)).scanTile(line, block.from);
+ }
+ class InlineCoordsScan {

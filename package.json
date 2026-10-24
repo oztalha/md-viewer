@@ -1,7 +1,7 @@
 {
   "name": "md-viewer",
   "private": true,
-  "version": "0.17.0",
+  "version": "0.17.4",
   "description": "A minimal, fast, native-feeling markdown editor/viewer for macOS.",
   "author": "Max Leiter",
   "license": "MIT",
@@ -61,5 +61,8 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "typescript": "~5.8.3",
     "vite": "^7.0.4"
+  },
+  "patchedDependencies": {
+    "@codemirror/view@6.43.1": "patches/@codemirror%2Fview@6.43.1.patch"
   }
 }

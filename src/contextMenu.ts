@@ -7,6 +7,7 @@ import { isPinned, removeRecent, togglePin } from "./recent";
 import { remoteUrl } from "./remote";
 import { parseOpenSpec } from "./remote";
 import { basename } from "./types";
+import { selectionClip, writeClip } from "./copy";
 
 /**
  * Native right-click menu for a tab/document. Built fresh each time so it
@@ -26,6 +27,11 @@ export async function showTileContextMenu(docId: string): Promise<void> {
   const spec = doc.remote ? remoteUrl(doc.remote) : (doc.path ?? "");
 
   const separator = () => PredefinedMenuItem.new({ item: "Separator" });
+  // Text selected in the preview: offer Copy (taken now, before the menu
+  // opens), the same clean copy as ⌘C.
+  const anchor = window.getSelection()?.anchorNode;
+  const inPreview = !!(anchor instanceof Element ? anchor : anchor?.parentElement)?.closest(".preview");
+  const clip = inPreview ? selectionClip() : null;
   // Show each action's shortcut (the user's current binding) in the menu.
   const settings = useSettings.getState().settings;
   const item = (text: string, action: () => void, keyId?: string) => {
@@ -34,6 +40,12 @@ export async function showTileContextMenu(docId: string): Promise<void> {
   };
 
   const items = await Promise.all([
+    ...(clip
+      ? [
+          MenuItem.new({ text: "Copy", accelerator: "CmdOrCtrl+C", action: () => void writeClip(clip) }),
+          separator(),
+        ]
+      : []),
     ...(hasFile
       ? [
           item("Reload", () => void useStore.getState().reloadDoc(docId), "reload"),
@@ -47,7 +59,14 @@ export async function showTileContextMenu(docId: string): Promise<void> {
     // No leading separator on an untitled doc (the menu is then just Close Tab).
     ...(hasFile ? [separator()] : []),
     ...(path ? [item("Reveal in Finder", () => void revealItemInDir(path))] : []),
-    ...(doc.remote ? [item("Download…", () => void downloadDoc(docId))] : []),
+    ...(doc.remote
+      ? [
+          // The remote twin of Reveal in Finder: the browser opens at the
+          // file's folder with the file highlighted.
+          item("Show in File Browser", () => useStore.getState().setRemoteBrowser("open")),
+          item("Download…", () => void downloadDoc(docId)),
+        ]
+      : []),
     item("Close Tab", () => void useStore.getState().closeTab(docId), "close-pane"),
   ]);
 
