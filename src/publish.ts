@@ -157,7 +157,10 @@ function loadLog(): PublishLogEntry[] {
   const raw = localStorage.getItem(LOG_KEY);
   if (raw) {
     try {
-      return JSON.parse(raw) as PublishLogEntry[];
+      // Publishes from before pages could go without a password.
+      return (JSON.parse(raw) as PublishLogEntry[]).map((e) =>
+        e.targetLabel === "Password-protected page" ? { ...e, targetLabel: "GitHub Pages" } : e,
+      );
     } catch {
       return [];
     }

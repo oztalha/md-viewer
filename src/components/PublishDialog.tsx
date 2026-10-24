@@ -4,7 +4,6 @@ import { useStore } from "../store";
 import {
   confirmUnpublish,
   ghAccounts,
-  pagesLive,
   pagesPasswordGet,
   pagesStatus,
   publishTargets,
@@ -16,7 +15,6 @@ import {
   isListed,
   linkExistingPage,
   linkedDocs,
-  publishDoc,
   publishErrorKey,
   publishedFor,
   resolveRealKey,
@@ -25,6 +23,8 @@ import {
   verifyPublished,
 } from "../publish";
 import { keyForDoc } from "../annotations";
+import { startPublish } from "../publishJob";
+import type { PublishJob } from "../publishJob";
 import { displayTitle } from "../types";
 import { CopyButton } from "./CopyButton";
 import { Select } from "./Select";
@@ -44,7 +44,7 @@ function timeAgo(at: number): string {
 
 type Status =
   | { kind: "idle" }
-  | { kind: "busy"; label: string; detail?: string }
+  | { kind: "busy"; label: string; detail?: string; title?: string }
   | {
       kind: "done";
       url: string;
@@ -61,6 +61,20 @@ type Status =
     }
   | { kind: "removed"; label: string; deleted: boolean }
   | { kind: "error"; message: string };
+
+/** The dialog's view of the store's publish job. */
+function jobStatus(job: PublishJob, docId: string | undefined): Status {
+  const st = job.status;
+  if (st.kind === "busy")
+    return {
+      kind: "busy",
+      label: job.label,
+      detail: st.detail,
+      title: job.docId === docId ? undefined : job.title,
+    };
+  if (st.kind === "error") return st;
+  return { ...st, label: job.label };
+}
 
 /** File → Publish… (⇧⌘P): pick a target; the link is copied when done. */
 export function PublishDialog() {
@@ -81,7 +95,9 @@ function Publish() {
   const [linkError, setLinkError] = useState<string | null>(null);
   // On unless turned off once: otherwise links to local files break once published.
   const [withLinked, setWithLinked] = useState(localStorage.getItem(LINKED_KEY) !== "0");
-  const [status, setStatus] = useState<Status>({ kind: "idle" });
+  // Unpublishing and linking; publishing itself is the store's job, which
+  // outlives the dialog.
+  const [localStatus, setStatus] = useState<Status>({ kind: "idle" });
   // gh accounts for gists: the last one picked if still logged in, else gh's active one.
   const [accounts, setAccounts] = useState<{
     logins: string[];
@@ -104,6 +120,17 @@ function Publish() {
   // Switching documents while the dialog is open starts fresh; a previous
   // document's result would otherwise show as if it were this one's.
   const docId = doc?.id;
+  // A finished publish is old news once seen here: drop it on open (it ended
+  // while closed) and on close (the corner indicator would repeat it).
+  useEffect(() => {
+    const clearSettled = () => {
+      const job = useStore.getState().publishJob;
+      if (job && job.status.kind !== "busy" && job.live !== "waiting")
+        useStore.getState().setPublishJob(null);
+    };
+    clearSettled();
+    return clearSettled;
+  }, []);
   useEffect(() => {
     void resolveRealKey(useStore.getState().docs[docId ?? ""]);
     setStatus((cur) => (cur.kind === "busy" ? cur : { kind: "idle" }));
@@ -124,7 +151,6 @@ function Publish() {
   // Latest publish(), for the window-level Enter handler below.
   const publishRef = useRef<() => void>(() => {});
   const openSavedRef = useRef<() => void>(() => {});
-  const inFlight = useRef(false);
   const publishButton = useRef<HTMLButtonElement | null>(null);
 
   // Targets (re)load on open and after the targets editor closes.
@@ -169,7 +195,17 @@ function Publish() {
   const syncError = useStore((s) =>
     target && docKey ? s.publishErrors[publishErrorKey(docKey, target.id)] : undefined,
   );
+  // The running publish shows whatever document is open (one at a time); a
+  // finished one only for its own document and target.
+  const job = useStore((s) => s.publishJob);
+  const jobShown =
+    job && (job.status.kind === "busy" || (job.docId === docId && job.targetId === selected))
+      ? job
+      : null;
+  const status: Status = jobShown ? jobStatus(jobShown, docId) : localStatus;
   const busy = status.kind === "busy";
+  // Only removing a page keeps the dialog open; a publish carries on closed.
+  const removing = localStatus.kind === "busy";
   // Targets whose links carry the page id (so a pasted link can be linked).
   // Linking needs somewhere to keep the record: a saved file.
   const canLink =
@@ -270,31 +306,22 @@ function Publish() {
   // page with a new password. Saving first keeps one page and one password.
   const needsSaveFirst = protectedPage && !keyForDoc(doc);
 
-  const publish = async () => {
-    if (!doc || !target || busy || inFlight.current || passwordTooShort || needsSaveFirst) return;
-    inFlight.current = true;
+  const publish = () => {
+    if (!doc || !target || busy || passwordTooShort || needsSaveFirst) return;
     localStorage.setItem(LAST_TARGET_KEY, target.id);
-    setStatus({ kind: "busy", label: target.label });
-    try {
-      const out = await publishDoc(doc, target, {
-        asNew,
-        linked: withLinked && linked.length > 0,
-        account:
-          target.kind === "gist" || target.kind === "pages"
-            ? account || undefined
-            : undefined,
-        password: protectedPage ? password : undefined,
-        open: pagesTarget ? !requirePassword : undefined,
-        listed: pagesTarget ? listed : undefined,
-        onProgress: (detail) =>
-          setStatus({ kind: "busy", label: target.label, detail }),
-      });
-      setStatus({ kind: "done", ...out, label: target.label, locked: protectedPage });
-    } catch (err) {
-      setStatus({ kind: "error", message: err instanceof Error ? err.message : String(err) });
-    } finally {
-      inFlight.current = false;
-    }
+    setStatus({ kind: "idle" });
+    void startPublish(doc, target, {
+      asNew,
+      linked: withLinked && linked.length > 0,
+      account:
+        target.kind === "gist" || target.kind === "pages"
+          ? account || undefined
+          : undefined,
+      password: protectedPage ? password : undefined,
+      open: pagesTarget ? !requirePassword : undefined,
+      listed: pagesTarget ? listed : undefined,
+      locked: protectedPage,
+    });
   };
   // Open a published page in the browser and close the dialog.
   const openAndClose = (url: string) => {
@@ -302,29 +329,9 @@ function Publish() {
     close();
   };
 
-  // A protected page goes live after a GitHub Pages build: wait for this
-  // version before offering Open, so the link never looks broken.
-  const [live, setLive] = useState<"waiting" | "live" | "slow" | null>(null);
-  const doneUrl = status.kind === "done" ? status.url : null;
-  const doneMarker = status.kind === "done" ? status.marker : undefined;
-  useEffect(() => {
-    if (!doneUrl || !doneMarker) return setLive(null);
-    setLive("waiting");
-    let stopped = false;
-    const started = Date.now();
-    void (async () => {
-      while (!stopped) {
-        const ok = await pagesLive(doneUrl, doneMarker).catch(() => false);
-        if (stopped) return;
-        if (ok) return setLive("live");
-        if (Date.now() - started > 180_000) return setLive("slow");
-        await new Promise((r) => setTimeout(r, 4000));
-      }
-    })();
-    return () => {
-      stopped = true;
-    };
-  }, [doneUrl, doneMarker]);
+  // GitHub Pages goes live after a build (publishJob waits for it); Open is
+  // offered once it serves this version, so the link never looks broken.
+  const live = jobShown?.live ?? null;
   const waitingForPages = live === "waiting";
 
   const takeDown = async () => {
@@ -383,7 +390,7 @@ function Publish() {
   };
 
   return (
-    <div className="settings-backdrop" onClick={() => !busy && close()}>
+    <div className="settings-backdrop" onClick={() => !removing && close()}>
       <div
         className="remote-prompt publish-dialog"
         onClick={(event) => event.stopPropagation()}
@@ -412,7 +419,7 @@ function Publish() {
                       setSelected(t.id);
                       setAsNew(false);
                       setLinking(false);
-                      if (status.kind !== "busy") setStatus({ kind: "idle" });
+                      if (localStatus.kind !== "busy") setStatus({ kind: "idle" });
                     }}
                   />
                   <span className="publish-target-label">{t.label}</span>
@@ -429,7 +436,7 @@ function Publish() {
           </div>
         )}
 
-        {(target?.kind === "gist" || protectedPage) &&
+        {(target?.kind === "gist" || pagesTarget) &&
           accounts &&
           accounts.logins.length > 0 && (
             <label className="publish-asnew publish-account">
@@ -678,7 +685,8 @@ function Publish() {
 
         {status.kind === "busy" && (
           <p className="publish-status">
-            Publishing to {status.label}…{status.detail ? ` ${status.detail}` : ""}
+            {status.title ? `Publishing “${status.title}” to` : "Publishing to"} {status.label}…
+            {status.detail ? ` ${status.detail}` : ""}
           </p>
         )}
         {status.kind === "removed" && (
@@ -701,7 +709,8 @@ function Publish() {
         {status.kind === "done" && live === "waiting" && (
           <p className="publish-status publish-waiting">
             Getting it ready on GitHub Pages, usually under a minute. The link
-            is copied and will work as soon as this says it's live.
+            is copied and will work as soon as this says it's live; you can
+            close this meanwhile.
           </p>
         )}
         {status.kind === "done" && live === "live" && (
@@ -746,8 +755,13 @@ function Publish() {
           >
             Edit targets…
           </button>
-          <button className="remote-prompt-cancel" onClick={close} disabled={busy}>
-            {status.kind === "done" ? "Close" : "Cancel"}
+          <button
+            className="remote-prompt-cancel"
+            onClick={close}
+            disabled={removing}
+            data-tip={busy ? "Keeps publishing; progress shows in the corner" : undefined}
+          >
+            {status.kind === "done" || busy ? "Close" : "Cancel"}
           </button>
           {existing && status.kind !== "done" && (
             <button

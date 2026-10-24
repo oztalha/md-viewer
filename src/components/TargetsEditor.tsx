@@ -123,7 +123,7 @@ function kindOf(t: Json): Kind {
 
 const KIND_LABEL: Record<Kind, string> = {
   gist: "Gist",
-  pages: "Protected",
+  pages: "Pages",
   command: "Command",
   mcp: "MCP",
 };

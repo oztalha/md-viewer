@@ -5,6 +5,17 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- Publishing no longer holds the dialog open: close it (Esc, Close, or click
+  outside) and the publish carries on, with progress, the GitHub Pages wait
+  and then **Open ↗** and **Copy link** in a small panel in the corner.
+- The GitHub Pages target is called **GitHub Pages** everywhere, including
+  publish settings saved when it was still "Password-protected page".
+
+### Fixed
+- Publishing to GitHub Pages without a password hid the **Account** picker,
+  so the page went to whichever account was used last.
+
 ## [0.17.4] — 2026-10-23
 
 ### Fixed

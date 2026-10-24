@@ -6,8 +6,9 @@ your Mac, on any machine you can `ssh` to, and in GitHub repos.**
 Read and edit markdown wherever it lives: a dev box, a cloud desktop, the
 machine your coding agent runs on, or a repo. When something rewrites a file
 you have open, it **reloads on its own**. And when someone else needs to read
-it, **Publish** turns it into a link: a secret gist, a password-protected page,
-or any place you set up, kept up to date as the file changes.
+it, **Publish** turns it into a link: a secret gist, a page on your GitHub
+Pages (with or without a password), or any place you set up, kept up to date
+as the file changes.
 
 ![Remote files open as tabs, with the host shown in the title bar](docs/remote-tabs.png)
 
