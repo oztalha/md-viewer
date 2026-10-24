@@ -5,6 +5,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Fixed
+- Updating a document with **Also publish linked documents** unchecked put
+  its links back to local file paths in the published copy. Links to linked
+  documents already published to the same place now keep pointing at their
+  pages; only the main document is republished.
+
 ## [0.17.3] — 2026-10-23
 
 ### Added

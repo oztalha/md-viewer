@@ -766,6 +766,12 @@ export async function publishDoc(
     }
     markdown = rewriteLinks(markdown, urls);
     options.onProgress?.(displayTitle(doc));
+  } else {
+    // Linked documents aren't republished, but links to the ones already
+    // published here still point at their pages; only never-published ones
+    // stay as file paths.
+    for (const { doc: linked } of linkedDocs(doc)) await resolveRealKey(linked);
+    markdown = rewriteLinks(markdown, publishedLinks(doc, target.id));
   }
 
   const out = await publishText(doc, markdown, target, !!options.asNew, {
