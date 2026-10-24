@@ -121,7 +121,7 @@ function Published() {
         <div className="pub-list">
           {unlisted && (
             <div className="pub-row">
-              <div className="pub-title">Password-protected page</div>
+              <div className="pub-title">GitHub Pages page</div>
               <div className="pub-meta">Not in this Mac's publish history.</div>
               <div className="pub-link">
                 <a href={query.trim()} onClick={link(query.trim())} title={query.trim()}>

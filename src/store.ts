@@ -1,6 +1,7 @@
 import { Transaction } from "@codemirror/state";
 import { create } from "zustand";
 import type { Doc, LeafNode, TabView, ViewMode } from "./types";
+import type { PublishJob } from "./publishJob";
 import { basename, displayTitle, isCodePath, isDataPath, isDirty, isImagePath, isPristine } from "./types";
 import {
   askToSave,
@@ -102,6 +103,8 @@ interface AppState {
   publishTick: number;
   /** Failed GitHub syncs, by `publishErrorKey(doc key, target id)`. */
   publishErrors: Record<string, string>;
+  /** The publish in progress (or just finished); runs on with the dialog closed. */
+  publishJob: PublishJob | null;
   /** Whether the publish targets editor is showing. */
   targetsEditorOpen: boolean;
   /** Preview find bar (⌘F outside the editor). */
@@ -136,6 +139,7 @@ interface AppState {
   setPublishedOpen(open: boolean): void;
   bumpPublished(): void;
   setPublishError(key: string, message: string | null): void;
+  setPublishJob(job: PublishJob | null): void;
   setTargetsEditorOpen(open: boolean): void;
   setContent(docId: string, content: string): void;
   toggleSidebar(): void;
@@ -223,6 +227,7 @@ export const useStore = create<AppState>()((set, get) => ({
   publishedOpen: false,
   publishTick: 0,
   publishErrors: {},
+  publishJob: null,
   targetsEditorOpen: false,
   changedOnDisk: {},
   findOpen: false,
@@ -317,6 +322,10 @@ export const useStore = create<AppState>()((set, get) => ({
     if (message === null) delete next[key];
     else next[key] = message;
     set({ publishErrors: next });
+  },
+
+  setPublishJob(job) {
+    set({ publishJob: job });
   },
 
   setTargetsEditorOpen(open) {

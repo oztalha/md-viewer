@@ -3,6 +3,8 @@
 **File → Publish…** (⇧⌘P) sends the current document somewhere you can share
 it, and copies the link. From the keyboard: ⇧⌘P, Enter to publish, Enter
 again to open the page (or ⌘↩ to open an existing link without publishing).
+You can close the dialog while it publishes (or while GitHub Pages builds):
+it carries on, and a small panel in the corner shows progress, then the link.
 **⇧⌘L** opens a document's most recent published link straight away. Publishing the same document to the same place again
 **updates** it, so the link stays the same. The publish icon in the title bar
 shows where a document is published, with clickable links.

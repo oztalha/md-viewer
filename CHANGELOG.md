@@ -5,6 +5,20 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+### Changed
+- Publishing no longer holds the dialog open: close it (Esc, Close, or click
+  outside) and the publish carries on, with progress, the GitHub Pages wait
+  and then **Open ↗** and **Copy link** in a small panel in the corner.
+- The GitHub Pages target is called **GitHub Pages** everywhere, including
+  publish settings saved when it was still "Password-protected page".
+- A new look for your GitHub Pages index page: your avatar and page count,
+  pages as cards with readable dates, a filter box once there are six or
+  more, and the footer at the bottom of the window. It takes effect on the
+  next publish that updates the index.
+
+### Fixed
+- Publishing to GitHub Pages without a password hid the **Account** picker,
+  so the page went to whichever account was used last.
 ### Added
 - Published and exported pages that open with a title keep it in a slim
   bar at the top once you scroll past it; click it to go back to the top.

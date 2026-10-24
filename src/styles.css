@@ -3080,6 +3080,61 @@ html.no-caret-animation .editor .cm-cursor {
   }
 }
 
+/* Publish: a publish going on with the dialog closed (below dialogs) */
+.publish-progress {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 330;
+  width: min(380px, calc(100vw - 32px));
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.22);
+  font-size: 12.5px;
+  animation: pop-in 140ms ease-out;
+}
+.publish-progress-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.publish-progress-text {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.publish-progress-spin {
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid var(--fg-faint);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.9s linear infinite;
+}
+.publish-progress-sub {
+  color: var(--fg-muted);
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+.publish-progress-close {
+  all: unset;
+  flex: none;
+  padding: 0 4px;
+  font-size: 16px;
+  line-height: 1;
+  color: var(--fg-muted);
+  cursor: default;
+}
+.publish-progress-close:hover {
+  color: var(--fg);
+}
+
 /* Publish: take a published copy down */
 .publish-unpublish {
   all: unset;

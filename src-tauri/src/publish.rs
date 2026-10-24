@@ -129,6 +129,14 @@ fn protected_page() -> Target {
     builtin("protected-page", "GitHub Pages", "pages")
 }
 
+/// Configs saved before pages could go without a password still carry the
+/// old built-in label; a label the user picked stays.
+fn relabel_legacy(t: &mut Target) {
+    if t.id == "protected-page" && t.label == "Password-protected page" {
+        t.label = protected_page().label;
+    }
+}
+
 fn load_config() -> Result<Config, String> {
     let path = config_path();
     match std::fs::read_to_string(&path) {
@@ -138,6 +146,7 @@ fn load_config() -> Result<Config, String> {
             // Resolve the kind once so the frontend gets it explicitly.
             for t in &mut config.targets {
                 t.kind = Some(t.kind().to_string());
+                relabel_legacy(t);
                 for s in t.create.iter_mut().chain(t.update.iter_mut()) {
                     s.run = s.command.is_some();
                 }
@@ -782,6 +791,16 @@ mod tests {
     fn finds_first_url() {
         assert_eq!(first_url("Created https://gist.github.com/abc123.\n").as_deref(), Some("https://gist.github.com/abc123"));
         assert_eq!(first_url("no link here"), None);
+    }
+
+    #[test]
+    fn relabels_the_old_pages_label_only() {
+        let mut old = builtin("protected-page", "Password-protected page", "pages");
+        relabel_legacy(&mut old);
+        assert_eq!(old.label, "GitHub Pages");
+        let mut custom = builtin("protected-page", "My pages", "pages");
+        relabel_legacy(&mut custom);
+        assert_eq!(custom.label, "My pages");
     }
 
     #[test]
