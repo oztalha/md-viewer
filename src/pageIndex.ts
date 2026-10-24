@@ -57,13 +57,45 @@ const LOCK =
 
 /** Styles the index adds to the shared page stylesheet. */
 export const INDEX_CSS = `
-.pages-index { list-style: none; padding: 0; }
-.pages-index li { display: flex; align-items: baseline; gap: 10px; padding: 10px 0; margin: 0; border-bottom: 1px solid var(--border); }
-.pages-index a { flex: 1; min-width: 0; }
-.pages-index .lock { color: var(--fg-muted); flex: none; align-self: center; }
-.pages-index time { color: var(--fg-muted); font-size: .85em; font-variant-numeric: tabular-nums; }
-.pages-owner { color: var(--fg-muted); margin-top: -.3em; }
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1 0 auto; width: 100%; max-width: 46rem; }
+.page-footer { width: 100%; max-width: 46rem; }
+.pages-head { display: flex; align-items: center; gap: 14px; margin: .4em 0 1.4em; }
+.pages-head img { width: 48px; height: 48px; border-radius: 50%; border: 1px solid var(--border); flex: none; }
+.pages-head h1 { margin: 0; font-size: 1.6em; border: none; padding: 0; }
+.pages-owner { margin: .15em 0 0; color: var(--fg-muted); font-size: .9em; }
+.pages-owner a { color: inherit; }
+.pages-filter { width: 100%; box-sizing: border-box; margin: 0 0 1em; padding: 8px 12px; font: inherit; font-size: .92em; color: var(--fg); background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; outline: none; }
+.pages-filter:focus { border-color: var(--accent); }
+.pages-index { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.pages-index li { margin: 0; }
+.pages-index a { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 10px; color: var(--fg); text-decoration: none; transition: background .12s, border-color .12s; }
+.pages-index a:hover { background: var(--bg-secondary); border-color: var(--accent); text-decoration: none; }
+.pages-title { flex: 1; min-width: 0; font-weight: 500; overflow-wrap: anywhere; }
+.pages-index .lock { color: var(--fg-muted); flex: none; }
+.pages-index time { flex: none; color: var(--fg-muted); font-size: .85em; font-variant-numeric: tabular-nums; }
+.pages-empty, .pages-none { color: var(--fg-muted); text-align: center; padding: 2em 0; }
+@media (max-width: 520px) { .pages-index a { flex-wrap: wrap; } .pages-title { flex-basis: 100%; } }
 `.trim();
+
+/** Above this many pages the index gets a filter box. */
+const FILTER_FROM = 6;
+
+const FILTER_SCRIPT = `(function () {
+  var box = document.querySelector(".pages-filter"), none = document.querySelector(".pages-none");
+  if (!box) return;
+  box.addEventListener("input", function () {
+    var q = box.value.trim().toLowerCase(), shown = 0;
+    document.querySelectorAll(".pages-index li").forEach(function (li) {
+      var hit = li.textContent.toLowerCase().indexOf(q) >= 0;
+      li.hidden = !hit;
+      if (hit) shown++;
+    });
+    none.hidden = shown > 0;
+  });
+})();`;
+
+const DATE = new Intl.DateTimeFormat("en-US", { year: "numeric", month: "short", day: "numeric", timeZone: "UTC" });
 
 /** The index's body (newest first) with its list embedded for the next update. */
 export function renderIndexBody(entries: IndexEntry[], owner: string): string {
@@ -71,13 +103,21 @@ export function renderIndexBody(entries: IndexEntry[], owner: string): string {
   const items = sorted
     .map((e) => {
       const day = new Date(e.at).toISOString().slice(0, 10);
-      return `<li><a href="${escapeHtml(e.url)}">${escapeHtml(e.title || "Untitled")}</a>${e.locked ? LOCK : ""}<time datetime="${day}">${day}</time></li>`;
+      return `<li><a href="${escapeHtml(e.url)}"><span class="pages-title">${escapeHtml(e.title || "Untitled")}</span>${e.locked ? LOCK : ""}<time datetime="${day}">${DATE.format(e.at)}</time></a></li>`;
     })
     .join("\n");
   // `<` escaped, so a title can't end the script element early.
   const data = JSON.stringify(sorted).replace(/</g, "\\u003c");
-  return `<h1>Pages</h1>
-<p class="pages-owner">Published by ${escapeHtml(owner)}</p>
-${sorted.length ? `<ul class="pages-index">\n${items}\n</ul>` : "<p>Nothing listed yet.</p>"}
-<script type="application/json" id="${DATA_ID}">${data}</script>`;
+  const who = escapeHtml(owner);
+  const count = `${sorted.length} page${sorted.length === 1 ? "" : "s"}`;
+  const list = sorted.length
+    ? `${sorted.length >= FILTER_FROM ? `<input class="pages-filter" type="search" placeholder="Filter ${count}" aria-label="Filter pages">\n` : ""}<ul class="pages-index">\n${items}\n</ul>
+<p class="pages-none" hidden>No page matches.</p>`
+    : `<p class="pages-empty">Nothing listed yet.</p>`;
+  return `<header class="pages-head">
+<img src="https://github.com/${who}.png?size=96" alt="" onerror="this.remove()">
+<div><h1>Pages</h1><p class="pages-owner">by <a href="https://github.com/${who}">${who}</a> · ${count}</p></div>
+</header>
+${list}
+<script type="application/json" id="${DATA_ID}">${data}</script>${sorted.length >= FILTER_FROM ? `\n<script>${FILTER_SCRIPT}</script>` : ""}`;
 }
