@@ -5,6 +5,8 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ## [Unreleased]
 
+## [0.18.0] — 2026-10-24
+
 ### Changed
 - Publishing no longer holds the dialog open: close it (Esc, Close, or click
   outside) and the publish carries on, with progress, the GitHub Pages wait
@@ -557,6 +559,7 @@ Initial version: semi-WYSIWYG markdown editor with live preview, tiled panes,
 CSV/TSV tables, preview annotations, Prettier formatting, HTML export, and
 opening/editing files over SSH.
 
+[0.18.0]: https://github.com/oztalha/md-viewer/releases/tag/v0.18.0
 [0.17.4]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.4
 [0.17.3]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.3
 [0.17.2]: https://github.com/oztalha/md-viewer/releases/tag/v0.17.2
