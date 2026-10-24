@@ -98,6 +98,9 @@ function Publish() {
   // Unpublishing and linking; publishing itself is the store's job, which
   // outlives the dialog.
   const [localStatus, setStatus] = useState<Status>({ kind: "idle" });
+  // Set while (and after) removing a page: the dialog then shows that, not
+  // the last publish job's result, so a finished job's error can't hide it.
+  const [removalShown, setRemovalShown] = useState(false);
   // gh accounts for gists: the last one picked if still logged in, else gh's active one.
   const [accounts, setAccounts] = useState<{
     logins: string[];
@@ -137,6 +140,7 @@ function Publish() {
     setAsNew(false);
     void verifyPublished(useStore.getState().docs[docId ?? ""], true);
     setLinking(false);
+    setRemovalShown(false);
   }, [docId]);
 
   const load = () =>
@@ -202,7 +206,7 @@ function Publish() {
     job && (job.status.kind === "busy" || (job.docId === docId && job.targetId === selected))
       ? job
       : null;
-  const status: Status = jobShown ? jobStatus(jobShown, docId) : localStatus;
+  const status: Status = jobShown && !removalShown ? jobStatus(jobShown, docId) : localStatus;
   const busy = status.kind === "busy";
   // Only removing a page keeps the dialog open; a publish carries on closed.
   const removing = localStatus.kind === "busy";
@@ -310,6 +314,7 @@ function Publish() {
     if (!doc || !target || busy || passwordTooShort || needsSaveFirst) return;
     localStorage.setItem(LAST_TARGET_KEY, target.id);
     setStatus({ kind: "idle" });
+    setRemovalShown(false);
     void startPublish(doc, target, {
       asNew,
       linked: withLinked && linked.length > 0,
@@ -352,6 +357,7 @@ function Publish() {
       deletes ? "Delete" : "Forget",
     );
     if (!ok) return;
+    setRemovalShown(true);
     setStatus({ kind: "busy", label: target.label, detail: "removing" });
     try {
       const result = await unpublish(doc, target);
@@ -419,7 +425,10 @@ function Publish() {
                       setSelected(t.id);
                       setAsNew(false);
                       setLinking(false);
-                      if (localStatus.kind !== "busy") setStatus({ kind: "idle" });
+                      if (localStatus.kind !== "busy") {
+                        setStatus({ kind: "idle" });
+                        setRemovalShown(false);
+                      }
                     }}
                   />
                   <span className="publish-target-label">{t.label}</span>

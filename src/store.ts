@@ -622,7 +622,7 @@ export const useStore = create<AppState>()((set, get) => ({
     const path = await pickSavePath(suggested);
     if (!path) return;
     try {
-      await writeTextFile(path, buildExportHtml(source, title));
+      await writeTextFile(path, await buildExportHtml(source, title));
     } catch (err) {
       await showError(String(err));
     }

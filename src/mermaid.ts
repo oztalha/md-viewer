@@ -9,6 +9,8 @@
  * re-renders a diagram; a theme switch re-renders them in the new colours.
  */
 
+import { staticDiagram } from "./pageMermaid";
+
 type MermaidApi = typeof import("mermaid").default;
 
 let loading: Promise<MermaidApi> | null = null;
@@ -84,6 +86,52 @@ export async function renderMermaid(root: ParentNode): Promise<void> {
     block.innerHTML = svg;
     block.dataset.rendered = theme;
   }
+}
+
+/**
+ * Draw the diagram placeholders in a page's HTML for a published or exported
+ * page: each becomes its SVG in the light and the dark theme (shown by the
+ * reader's theme, see pageMermaid.ts), so the page loads no script. A diagram
+ * that can't be drawn keeps its placeholder, which shows the source.
+ */
+export async function drawDiagrams(html: string): Promise<string> {
+  if (!html.includes('class="mermaid-block"')) return html;
+  const holder = document.createElement("template");
+  holder.innerHTML = html;
+  const blocks = [...holder.content.querySelectorAll<HTMLElement>(".mermaid-block")];
+  const api = await mermaid();
+  const draw = async (source: string, theme: "default" | "dark"): Promise<string> => {
+    api.initialize({
+      startOnLoad: false,
+      securityLevel: "strict",
+      theme,
+      fontFamily: "inherit",
+      suppressErrorRendering: true,
+      themeVariables: { useGradient: false },
+    });
+    const id = `mdv-page-mermaid-${++counter}`;
+    try {
+      await api.parse(source);
+      return (await api.render(id, source)).svg;
+    } finally {
+      document.getElementById(id)?.remove();
+      document.getElementById(`d${id}`)?.remove();
+    }
+  };
+  try {
+    for (const block of blocks) {
+      const source = block.querySelector("code")?.textContent ?? "";
+      try {
+        const [light, dark] = [await draw(source, "default"), await draw(source, "dark")];
+        block.innerHTML = staticDiagram(light, dark);
+      } catch {
+        // Leave the placeholder: the page shows the diagram's source.
+      }
+    }
+  } finally {
+    configuredTheme = ""; // the preview re-initializes for its own theme
+  }
+  return holder.innerHTML;
 }
 
 /** Re-render diagrams in every preview (after a theme change). */

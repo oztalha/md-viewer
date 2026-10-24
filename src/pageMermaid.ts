@@ -1,42 +1,26 @@
 /**
- * Mermaid diagrams in published and exported pages. The fence arrives as the
- * preview's placeholder (source as code), and this module script draws it with
- * the CDN build of the Mermaid version the app renders with, redrawing when the
- * reader's theme changes. Offline, or on a bad diagram, the source stays shown.
+ * Mermaid diagrams in published and exported pages. The app draws each
+ * diagram when the page is built (see `drawDiagrams` in mermaid.ts), once in
+ * the light and once in the dark theme, and the page shows the one matching
+ * the reader's theme. No script is loaded: a password-protected page must not
+ * run third-party code once it's decrypted, and pages share an origin.
+ * A diagram that can't be drawn keeps its source, shown as code.
  */
-import mermaidPackage from "mermaid/package.json";
-
-const MERMAID_JS = `https://cdn.jsdelivr.net/npm/mermaid@${mermaidPackage.version}/dist/mermaid.esm.min.mjs`;
 
 export const MERMAID_CSS = `
 .mermaid-block { margin: 1em 0; text-align: center; overflow-x: auto; }
 .mermaid-block svg { max-width: 100%; height: auto; }
 .mermaid-block pre { text-align: left; }
+.mermaid-dark { display: none; }
+:root[data-theme="dark"] .mermaid-light { display: none; }
+:root[data-theme="dark"] .mermaid-dark { display: block; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .mermaid-light { display: none; }
+  :root:not([data-theme="light"]) .mermaid-dark { display: block; }
+}
 `.trim();
 
-// Same settings as the app (mermaid.ts): strict security, no gradient borders.
-export const MERMAID_SCRIPT = `import mermaid from "${MERMAID_JS}";
-const root = document.documentElement;
-const blocks = [...document.querySelectorAll(".mermaid-block")];
-const sources = blocks.map((b) => b.querySelector("code")?.textContent ?? "");
-const media = matchMedia("(prefers-color-scheme: dark)");
-let drawn = "";
-let n = 0;
-const draw = async () => {
-  const theme = (root.dataset.theme ? root.dataset.theme === "dark" : media.matches) ? "dark" : "default";
-  if (theme === drawn) return;
-  drawn = theme;
-  mermaid.initialize({ startOnLoad: false, securityLevel: "strict", theme, fontFamily: "inherit", suppressErrorRendering: true, themeVariables: { useGradient: false } });
-  for (const [i, block] of blocks.entries()) {
-    const id = "mdv-mermaid-" + ++n;
-    try {
-      block.innerHTML = (await mermaid.render(id, sources[i])).svg;
-    } catch {
-      document.getElementById("d" + id)?.remove();
-    }
-  }
-};
-let queue = draw();
-const redraw = () => { queue = queue.then(draw, draw); };
-new MutationObserver(redraw).observe(root, { attributes: true, attributeFilter: ["data-theme"] });
-media.addEventListener("change", redraw);`;
+/** A drawn diagram: both theme versions, one shown at a time by MERMAID_CSS. */
+export function staticDiagram(lightSvg: string, darkSvg: string): string {
+  return `<div class="mermaid-light">${lightSvg}</div><div class="mermaid-dark">${darkSvg}</div>`;
+}

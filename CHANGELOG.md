@@ -31,8 +31,12 @@ the format is based on [Keep a Changelog](https://keepachangelog.com).
 
 ### Fixed
 - Mermaid diagrams now draw in published pages and exported HTML (they
-  showed as code). Like math, they load from a CDN when the page opens; if it
-  can't load, the diagram's source is shown.
+  showed as code). The app draws them when it builds the page, in light and
+  dark, so pages (password-protected ones included) run no diagram script
+  from anywhere else. A diagram that can't be drawn shows its source.
+- After a failed publish, **Unpublish** showed the old error instead of its
+  own progress, and Publish stayed clickable while the page was being
+  removed.
 
 ## [0.17.4] — 2026-10-23
 

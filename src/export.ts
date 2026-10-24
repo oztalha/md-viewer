@@ -3,7 +3,7 @@ import katexPackage from "katex/package.json";
 import { THEME_INIT, THEME_TOGGLE } from "./pageTheme";
 import { OUTLINE_CSS, OUTLINE_SCRIPT } from "./pageOutline";
 import { FOOTER_CSS, FOOTER_HTML } from "./pageFooter";
-import { MERMAID_CSS, MERMAID_SCRIPT } from "./pageMermaid";
+import { MERMAID_CSS } from "./pageMermaid";
 import { TITLE_BAR_CSS, TITLE_BAR_SCRIPT } from "./pageTitleBar";
 
 // Exported files are standalone, so math styling comes from the CDN build of
@@ -116,16 +116,20 @@ ${body}
 ${extra.footer ? `${FOOTER_HTML}\n` : ""}<script>${THEME_TOGGLE}</script>
 <script>${OUTLINE_SCRIPT}</script>
 <script>${TITLE_BAR_SCRIPT}</script>
-${mermaid ? `<script type="module">${MERMAID_SCRIPT}</script>\n` : ""}</body>
+</body>
 </html>
 `;
 }
 
 /** Build a complete standalone HTML document from markdown source. */
-export function buildExportHtml(
+export async function buildExportHtml(
   source: string,
   title: string,
   extra: { head?: string; footer?: boolean } = {},
-): string {
-  return standalonePage(renderDocumentHtml(source), title, extra);
+): Promise<string> {
+  let body = renderDocumentHtml(source);
+  // Diagrams are drawn here, so the page itself loads no diagram script.
+  // Loaded on demand: Mermaid is large and needs the webview's DOM.
+  if (body.includes('class="mermaid-block"')) body = await (await import("./mermaid")).drawDiagrams(body);
+  return standalonePage(body, title, extra);
 }
